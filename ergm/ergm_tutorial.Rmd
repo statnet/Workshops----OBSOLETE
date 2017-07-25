@@ -3,7 +3,6 @@ title: "Exponential Random Graph Models (ERGMs) using statnet"
 author: "NASN 2017 - Washington, DC"
 output:
   html_document:
-    css: style.css
     fig_width: 8
     highlight: kate
     theme: cosmo
