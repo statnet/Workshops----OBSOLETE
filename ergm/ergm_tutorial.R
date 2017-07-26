@@ -1,6 +1,3 @@
-## ----setup, include=FALSE------------------------------------------------
-library(knitr)
-knitr::opts_chunk$set(cache=T, comment=NA)
 
 ## ----eval=FALSE----------------------------------------------------------
 install.packages('statnet')
@@ -18,9 +15,6 @@ install.packages('latticeExtra')
 
 ## ----results='hide', message=FALSE---------------------------------------
 library(statnet)
-
-## ----results='hide', message=FALSE---------------------------------------
-library(ergm)
 library(sna)
 
 ## ----eval=FALSE----------------------------------------------------------

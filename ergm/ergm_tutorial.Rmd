@@ -21,7 +21,7 @@ _Last updated `r Sys.Date()`_
 *This tutorial is a joint product of the Statnet Development Team:* 
 
 Martina Morris (University of Washington)  
-Steven M. Goodreau (University of Washington)
+Steven M. Goodreau (University of Washington)  
 Mark S. Handcock (University of California, Los Angeles)  
 Carter T. Butts (University of California, Irvine)  
 David R. Hunter (Penn State University)  
@@ -158,14 +158,12 @@ summary(flomodel.01) # The fitted model object
 How should we interpret the coefficient from this model? The log-odds of any tie existing is:
 
 $$
-
 \small{
 \begin{eqnarray*}
 & = & -1.609\times\mbox{change in the number of ties}\\
 & = & -1.609\times1
 \end{eqnarray*}
 }
-
 $$
 
 for all ties, since the addition of any tie to the network always changes
@@ -174,14 +172,12 @@ the number of ties by 1 for a tie toggled from 0 to 1 (or by -1 for a tie toggle
 The corresponding probability is:
 
 $$
-
 \small{
 \begin{eqnarray*}
 & = & \exp(-1.609)/(1+\exp(-1.609))\\
 & = & 0.1667
 \end{eqnarray*}
 }
-
 $$
 
 which corresponds to the density we observe in the flomarriage network: there are 20 ties and (16 choose 2 = 16*15/2 =) 120 dyads.

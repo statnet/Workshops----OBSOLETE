@@ -1,21 +1,18 @@
-## ----setup, include=FALSE------------------------------------------------
-library(knitr)
-knitr::opts_chunk$set(cache=T, comment=NA, fig.align='center')
 
 ## ----eval=FALSE----------------------------------------------------------
-## install.packages('ergm.ego')
+install.packages('ergm.ego')
 
 ## ----eval=FALSE----------------------------------------------------------
-## library(help='ergm.ego')
+library(help='ergm.ego')
 
 ## ----eval=FALSE----------------------------------------------------------
-## help('ergm.ego-terms')
+help('ergm.ego-terms')
 
 ## ------------------------------------------------------------------------
 library(ergm.ego)
 
 ## ----eval=FALSE----------------------------------------------------------
-## sessionInfo()
+sessionInfo()
 
 ## ----cache=FALSE---------------------------------------------------------
 set.seed(1)
@@ -26,6 +23,7 @@ mesa <- faux.mesa.high
 
 ## ------------------------------------------------------------------------
 plot(mesa, vertex.col="Grade")
+legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 
 ## ------------------------------------------------------------------------
 mesa.ego <- as.egodata(mesa) # Warning because there were no vertex names in the first place.
@@ -54,15 +52,18 @@ head(test$alters)
 ## ------------------------------------------------------------------------
 table(mesa.ego$egos$Sex, exclude=NULL)
 table(mesa.ego$egos$Race, exclude=NULL)
-plot(table(mesa.ego$egos$Grade), ylab="frequency")
+barplot(table(mesa.ego$egos$Grade), 
+        main="Mesa Grade Distribution", ylab="frequency")
 
 # compare egos and alters...
 
 par(mfrow=c(1,2))
-plot(table(mesa.ego$egos$Race, exclude=NULL)/nrow(mesa.ego$egos),
-      ylab="percent", main="Egos")
-plot(table(mesa.ego$alters$Race, exclude=NULL)/nrow(mesa.ego$alters),
-      ylab="percent", main="Alters")
+barplot(table(mesa.ego$egos$Race, exclude=NULL)/nrow(mesa.ego$egos),
+        main="Ego Race Distn", ylab="percent",
+        ylim = c(0,0.5))
+barplot(table(mesa.ego$alters$Race, exclude=NULL)/nrow(mesa.ego$alters),
+        main="Alter Race Distn", ylab="percent",
+        ylim = c(0,0.5))
 
 ## ------------------------------------------------------------------------
 # to get the crosstabulated counts of ties:
@@ -102,7 +103,6 @@ summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego$egos)*100)
 # to get the frequency counts
 
 degreedist.egodata(mesa.ego)
-
 degreedist.egodata(mesa.ego, by="Sex")
 
 # to get the proportion at each degree level
@@ -127,8 +127,8 @@ fit.edges$ppopsize
 fit.edges$popsize
 
 ## ---- echo=F, eval=F-----------------------------------------------------
-## summary(ergm.ego(mesa.ego ~ edges,
-##                  control = control.ergm.ego(ppopsize=1000)))
+summary(ergm.ego(mesa.ego ~ edges,
+                 control = control.ergm.ego(ppopsize=1000)))
 
 ## ------------------------------------------------------------------------
 mcmc.diagnostics(fit.edges)
@@ -163,7 +163,7 @@ fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1)
 summary(fit.full)
 
 ## ----eval=FALSE----------------------------------------------------------
-## mcmc.diagnostics(fit.full)
+mcmc.diagnostics(fit.full)
 
 ## ------------------------------------------------------------------------
 plot(gof(fit.full, GOF="model"))
@@ -183,6 +183,7 @@ summary(sim.full ~ edges + degree(0:1)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 plot(sim.full, vertex.col="Grade")
+legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 
 ## ------------------------------------------------------------------------
 sim.full2 <- simulate(fit.full, popsize=network.size(mesa)*2)
@@ -225,11 +226,11 @@ round(param.compare, 3)
 
 ## ----eval=FALSE----------------------------------------------------------
 ## # MCMC diagnostics.
-## mcmc.diagnostics(egofit)
+mcmc.diagnostics(egofit)
 
 ## ----eval=FALSE----------------------------------------------------------
 ## # Check whether the model converged to the right statistics:
-## plot(gof(egofit, GOF="model"))
+plot(gof(egofit, GOF="model"))
 
 ## ------------------------------------------------------------------------
 plot(gof(egofit, GOF="degree"))
