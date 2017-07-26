@@ -1,0 +1,18 @@
+ergm:
+
+
+tergm:
+
+
+ergm.ego:
+
+embed WALS movie?
+ask Pavel about sums for node based egostats in Table 2
+
+ask why brg generates unable to match target stats
+
+data("faux.mesa.high")
+mesa <- faux.mesa.high
+mesa.ego <- as.egodata(mesa)
+degreedist.egodata(mesa.ego, brg=T)
+

@@ -1,0 +1,6 @@
+base
+knitr
+statnet.common
+network
+ergm
+ergm.ego

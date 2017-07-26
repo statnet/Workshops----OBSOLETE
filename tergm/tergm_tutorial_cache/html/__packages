@@ -1,0 +1,17 @@
+base
+knitr
+statnet.common
+network
+ergm
+networkDynamic
+tergm
+ergm.count
+sna
+statnet
+tsna
+lattice
+RColorBrewer
+latticeExtra
+animation
+ndtv
+htmlwidgets
