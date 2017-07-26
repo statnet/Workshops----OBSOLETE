@@ -3,11 +3,16 @@ library(knitr)
 knitr::opts_chunk$set(comment=NA)
 
 ## ----eval=FALSE----------------------------------------------------------
-install.packages('statnet')
-install.packages('tsna')
-install.packages('ndtv')
-install.packages('htmlwidgets')
-install.packages('latticeExtra')
+## install.packages('statnet')
+## install.packages('tsna')
+## install.packages('ndtv')
+## install.packages('htmlwidgets')
+
+## ----eval=FALSE----------------------------------------------------------
+## update.packages('name.of.package')
+
+## ----eval=FALSE----------------------------------------------------------
+## install.packages('latticeExtra')
 
 ## ----results='hide', message=FALSE---------------------------------------
 library(statnet)
@@ -19,7 +24,7 @@ library(htmlwidgets)
 
 ## ----eval=FALSE----------------------------------------------------------
 ## # latest versions:  tergm 3.4.0, ergm 3.7.1, network 1.13.0, networkDynamic 0.9.0 (as of 7/24/2017)
-sessionInfo()
+## sessionInfo()
 
 ## ------------------------------------------------------------------------
 set.seed(0)
@@ -29,10 +34,7 @@ data(samplk)
 ls()
 
 ## ------------------------------------------------------------------------
-samplist <- list()
-samplist[[1]] <- samplk1
-samplist[[2]] <- samplk2
-samplist[[3]] <- samplk3
+samplist <- list(samplk1,samplk2,samplk3)
 sampdyn <- networkDynamic(network.list=samplist)
 
 ## ------------------------------------------------------------------------
@@ -61,7 +63,7 @@ plotPaths(sampdyn, tp)
 
 
 ## ------------------------------------------------------------------------
-table(edgeDuration(sampdyn, mode='duration')) # Note heterogeneity
+table(edgeDuration(sampdyn, mode='duration', subject='spells')) # Note bimodality
 
 ## ------------------------------------------------------------------------
 library(ndtv)
@@ -89,7 +91,7 @@ samp.fit <- stergm(samplist,
 	formation= ~edges+mutual+cyclicalties+transitiveties,
 	dissolution = ~edges+mutual+cyclicalties+transitiveties,
 	estimate = "CMLE",
-  times=1:3
+	times=c(1:3)
 	)
 
 ## ------------------------------------------------------------------------
@@ -135,17 +137,17 @@ stergm.sim.1 <- simulate.stergm(stergm.fit.1, nsim=1,
     time.slices = 1000)
 
 ## ---- eval=FALSE, show=FALSE---------------------------------------------
-slice.par=list(start = 0, end = 25, interval=1, aggregate.dur=1, rule="any")
-compute.animation(stergm.sim.1, slice.par = slice.par)
-render.par=list(tween.frames=5,show.time=T,
-                 show.stats="~edges+gwesp(0,fixed=T)")
-wealthsize <- log(get.vertex.attribute(flobusiness, "wealth")) * 2/3
-render.animation(stergm.sim.1,render.par=render.par,
-                 edge.col="darkgray",displaylabels=T,
-                  label.cex=.8,label.col="blue",
-                  vertex.cex=wealthsize)
-x11()
-ani.replay()
+## slice.par=list(start = 0, end = 25, interval=1, aggregate.dur=1, rule="any")
+## compute.animation(stergm.sim.1, slice.par = slice.par)
+## render.par=list(tween.frames=5,show.time=T,
+##                 show.stats="~edges+gwesp(0,fixed=T)")
+## wealthsize <- log(get.vertex.attribute(flobusiness, "wealth")) * 2/3
+## render.animation(stergm.sim.1,render.par=render.par,
+##                  edge.col="darkgray",displaylabels=T,
+##                  label.cex=.8,label.col="blue",
+##                  vertex.cex=wealthsize)
+## x11()
+## ani.replay()
 
 ## ------------------------------------------------------------------------
 summary(flobusiness~edges+gwesp(0,fixed=T))
@@ -162,6 +164,7 @@ stergm.sim.1.df <- as.data.frame(stergm.sim.1)
 names(stergm.sim.1.df)
 stergm.sim.1.df[1,]
 mean(stergm.sim.1.df$duration)
+mean(edgeDuration(stergm.sim.1, mode='duration', subject='spells'))
 
 ## ------------------------------------------------------------------------
 theta.diss.100 <- log(99)
