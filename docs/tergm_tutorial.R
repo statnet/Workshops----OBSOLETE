@@ -9,9 +9,6 @@ knitr::opts_chunk$set(comment=NA)
 ## install.packages('htmlwidgets')
 
 ## ----eval=FALSE----------------------------------------------------------
-## update.packages('name.of.package')
-
-## ----eval=FALSE----------------------------------------------------------
 ## install.packages('latticeExtra')
 
 ## ----results='hide', message=FALSE---------------------------------------
@@ -19,11 +16,9 @@ library(statnet)
 library(tsna)
 library(latticeExtra)
 library(ndtv)
-library(animation)
 library(htmlwidgets)
 
 ## ----eval=FALSE----------------------------------------------------------
-## # latest versions:  tergm 3.4.0, ergm 3.7.1, network 1.13.0, networkDynamic 0.9.0 (as of 7/24/2017)
 ## sessionInfo()
 
 ## ------------------------------------------------------------------------
@@ -86,7 +81,7 @@ proximity.timeline(short.stergm.sim,default.dist=6,
 ##             estimate= `insert method`
 ##         )
 
-## ----results='hide'------------------------------------------------------
+## ----results="hide", message=FALSE---------------------------------------
 samp.fit <- stergm(samplist,
 	formation= ~edges+mutual+cyclicalties+transitiveties,
 	dissolution = ~edges+mutual+cyclicalties+transitiveties,
@@ -97,13 +92,15 @@ samp.fit <- stergm(samplist,
 ## ------------------------------------------------------------------------
 summary(samp.fit)
 
-## ----results='hide'------------------------------------------------------
+## ----results="hide", message=FALSE---------------------------------------
 samp.fit.2 <- stergm(samplist,
   formation= ~edges+mutual+cyclicalties+transitiveties,
 	dissolution = ~edges+mutual+cyclicalties+transitiveties,
 	estimate = "CMLE",
   times=1:2
 	)
+
+## ------------------------------------------------------------------------
 summary(samp.fit.2)
 
 ## ------------------------------------------------------------------------
@@ -128,26 +125,32 @@ dev.off()
 ## ------------------------------------------------------------------------
 stergm.fit.1
 names(stergm.fit.1)
-stergm.fit.1$formation
-stergm.fit.1$formation.fit
 summary(stergm.fit.1)
 
 ## ------------------------------------------------------------------------
 stergm.sim.1 <- simulate.stergm(stergm.fit.1, nsim=1, 
     time.slices = 1000)
 
-## ---- eval=FALSE, show=FALSE---------------------------------------------
-## slice.par=list(start = 0, end = 25, interval=1, aggregate.dur=1, rule="any")
-## compute.animation(stergm.sim.1, slice.par = slice.par)
-## render.par=list(tween.frames=5,show.time=T,
-##                 show.stats="~edges+gwesp(0,fixed=T)")
-## wealthsize <- log(get.vertex.attribute(flobusiness, "wealth")) * 2/3
-## render.animation(stergm.sim.1,render.par=render.par,
-##                  edge.col="darkgray",displaylabels=T,
-##                  label.cex=.8,label.col="blue",
-##                  vertex.cex=wealthsize)
-## x11()
-## ani.replay()
+## ---- message=FALSE, cache=FALSE-----------------------------------------
+wealthsize <- log(get.vertex.attribute(flobusiness, "wealth")) * 2/3
+slice.par=list(start = 0, 
+               end = 25, 
+               interval=1, 
+               aggregate.dur=1, 
+               rule="any")
+compute.animation(stergm.sim.1, slice.par = slice.par)
+render.par=list(tween.frames=5,
+                show.time=T,
+                show.stats="~edges+gwesp(0,fixed=T)")
+plot.par=list(edge.col="darkgray",
+              displaylabels=T,
+              label.cex=.8,
+              label.col="blue",
+              vertex.cex=wealthsize)
+render.d3movie(stergm.sim.1,
+               render.par=render.par,
+               plot.par=plot.par,
+               output.mode = 'htmlWidget')
 
 ## ------------------------------------------------------------------------
 summary(flobusiness~edges+gwesp(0,fixed=T))
@@ -169,12 +172,13 @@ mean(edgeDuration(stergm.sim.1, mode='duration', subject='spells'))
 ## ------------------------------------------------------------------------
 theta.diss.100 <- log(99)
 
-## ------------------------------------------------------------------------
+## ---- results="hide", message=FALSE--------------------------------------
 ergm.fit1 <- ergm(flobusiness ~ edges + gwesp(0, fixed=T))
+
+## ------------------------------------------------------------------------
 summary(ergm.fit1)
 theta.form <- ergm.fit1$coef 
 theta.form
-
 
 ## ------------------------------------------------------------------------
 theta.form[1] <- theta.form[1] - theta.diss.100

@@ -84,7 +84,7 @@ mixingmatrix.egodata(mesa.ego, "Race", rowprob=T)
 nrow(mesa.ego$alters)
 
 # mean degree
-nrow(mesa.ego$egos)/nrow(mesa.ego$alters)
+nrow(mesa.ego$alters)/nrow(mesa.ego$egos)
 
 
 ## overall degree distribution
