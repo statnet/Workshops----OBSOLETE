@@ -1,6 +1,6 @@
 ---
 title: "Exponential Random Graph Models (ERGMs) using statnet"
-author: "NASN 2017 - Washington, DC"
+author: "Statnet Development Team"
 output:
   html_document:
     fig_width: 8
@@ -32,71 +32,78 @@ For general questions and comments, please refer to the `statnet` users group an
 http://statnet.csde.washington.edu/statnet_users_group.shtml
 
 
+## Introduction to this workshop/tutorial.
 
-## 1. Getting Started
+This workshop and tutorial provide an overview of 
+statistical modeling of
+network data with *Exponential family Random Graph Models* (ERGMs)
+using `statnet` software.  This online tutorial is also designed
+for self-study, with example code and self-contained data.
+The `statnet` packages we will be demonstrating are:
 
-Open an R session, and set your working directory to the location
-where you would like to save this work.
+* `network` -- storage and manipulation of network data
+* `sna` -- descriptive statistics and graphics for exploratory network analysis`
+* `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
 
-To install the most commonly used packages in the statnet suite: 
+All `statnet` packages are open-source, written for the **R** computing
+environment, and published on CRAN.  The source repositories are hosted
+on [GitHub](statnet.github.io).  
+
+### Prerequisites
+
+This workshop assumes basic familiarity with **R**, experience with
+network concepts, terminology and data, and familiarity with the
+general framework for statistical modeling and inference.  While
+previous experience with ERGMs is not required, some of the topics
+covered here may be difficult to understand without a strong
+background in linear and generalized linear models in statistics.
+
+### Software installation
+
+Minimally, you will need to install the latest version of **R**
+[(available here)](https://cran.r-project.org)
+and the `statnet` packages above to
+run the code presented here.  
+The workshops are conducted using the free version of `Rstudio`
+[(available here)](https://rstudio.org).
+
+To install the packages for this tutorial, 
+open an R session and type: 
 
 ```{r,eval=FALSE}
-install.packages('statnet')
+install.packages(c('statnet', 'sna'))
 library(statnet)
 ```
 
-Or, to only install the specific statnet packages needed for this
-tutorial:
-
-```{r,eval=FALSE}
-install.packages('ergm') # will install the network package
-install.packages('sna')
-```
-
-
-After the first time, to update the packages one can either repeat
-the commands above, or use:
-
-```{r,eval=FALSE}
-update.packages('name.of.package')
-```
+Note that the 'statnet' package is actually a wrapper that automatically
+installs the most commonly used packages in the statnet suite, so this
+will include more packages than we will be using in this tutorial.  You
+can install just the individual packages if you prefer.
 
 For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm:
 
 ```{r,eval=FALSE}
 install.packages('latticeExtra')
+require(latticeExtra)
 ```
 
-Make sure the packages are attached:
+Check your package versions against this:
 
-```{r,results='hide', message=FALSE}
-library(statnet)
-```
-
-or 
-
-```{r,results='hide', message=FALSE}
-library(ergm)
-library(sna)
-```
-
-Check package version
-
-
-```{r,eval=FALSE}
-# latest versions:  ergm 3.7.1 and network 1.13.0 (as of 7/24/2017)
+```{r}
 sessionInfo()
 ```
 
-
-Set seed for simulations -- this is not necessary, but it ensures that we all get the same results (if we execute the same commands in the same order).
+Set a seed for simulations -- this is not necessary, but it ensures that 
+you will get the same results as the online tutorial (if we execute the same commands in the same order).
 ```{r}
 set.seed(0)
 ```
 
-## 2. Statistical network modeling; the *summary* and *ergm* commands, and supporting functions
+## 1. Statistical network modeling with ERGMs
 
-Exponential-family random graph models (ERGMs) represent a general class of models based in exponential-family theory for specifying the probability distribution 
+Exponential-family random graph models (ERGMs) represent a 
+general class of models based in exponential-family theory 
+for specifying the probability distribution 
 for a set of random graphs or networks. Within this framework, one can---among other tasks---obtain maximum-likehood estimates for the parameters of a specified model 
 for a given data set; test individual models for goodness-of-fit, perform various types of model comparison; and simulate additional networks with the underlying probability 
 distribution implied by that model.
@@ -108,9 +115,9 @@ P(Y=y)=\frac{\exp(\theta'g(y))}{k(\theta)}
 $$
 
 
-where Y is the random variable for the state of the network (with realization y), $g(y)$ is a vector of model statistics for network y, 
+where $Y$ is the random variable for the state of the network (with realization $y$), $g(y)$ is a vector of model statistics for network $y$, 
 $\theta$ is the vector of coefficients for those statistics, and $k(\theta)$ represents the quantity in the numerator summed over all possible networks 
-(typically constrained to be all networks with the same node set as y).
+(typically constrained to be all networks with the same node set as $y$).
 
 This can be re-expressed in terms of the conditional log-odds of a single tie between two actors:
 
@@ -129,47 +136,86 @@ where $y^{+}_{ij}$ is defined as $y^{c}_{ij}$ along with $y_{ij}$ set to 1, and 
 
 This emphasizes that the coefficient $\theta$ can be interpreted as the log-odds of an individual tie conditional on all others. 
 
-The model terms $g(y)$ are functions of network statistics that we hypothesize may be more or less common than what would be expected in a simple random graph (where all ties have the same probability).  For example, specific degree distributions, or triad configurations, or homophily on nodal attributes.  We will explore some of these terms in this tutorial, and links to more information are provided in [section 3.](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation)  
+The model terms $g(y)$ in an ERGM are *network statistics*, functions of network configurations that we hypothesize may be more or less common than what would be expected in a simple random graph (where all ties have the same probability).  For example, specific degree distributions, triad configurations, or homophily on nodal attributes.  Unlike traditional
+covariates in a linear model, network statistics are not exogenous
+measures, they are functions of the network itself, typically sums
+of dyad states or products of dyad states that represent 
+specific configurations. 
+
+We will explore some of these terms in this 
+tutorial, and links to more information are provided in 
+[section 3.](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation)  
 
 One key distinction in model terms is worth keeping in mind:  terms are either _dyad independent_ or _dyad dependent_.  Dyad independent terms (like nodal homophily terms) imply no dependence between dyads---the presence or absence of a tie may depend on nodal attributes, but not on the state of other ties.  Dyad dependent terms (like degree terms, or triad terms), by contrast, imply dependence between dyads.  Such terms have very different effects, and much of what is different about network models comes from the complex cascading effects that these terms introduce.  A model with dyad dependent terms also requires a different estimation algorithm, and you will see some different components in the output. 
 
-We'll start by running some simple models to demonstrate the use of the "summary" and "ergm" commands.  The ergm package contains several network data sets that we will use for demonstration purposes here.
+###The `summary` and `ergm` functions, and supporting functions
+
+We'll start by running some simple models to demonstrate the most
+commonly used functions for ERG modeling.
+
+The ergm package contains several network data sets that we will use for demonstration purposes.
 
 ```{r}
 data(package='ergm') # tells us the datasets in our packages
 ```
 
-###Bernoulli model
-
-We begin with the simplest possible model, the Bernoulli or Erdos-Renyi
-model, which contains only one term to capture the density of the network as a function of a homogenous edge probability.  The ergm-term for this is ***edge***.
-We'll fit this simple model to Padgett's Florentine marriage network.  As with all data analysis, we start by looking at our data: using graphical and numerical descriptives.
+We'll use Padgett's data on Renaissance Florentine families for 
+this example.  As with all data analysis, we start by looking at our data: using graphical and numerical descriptives.
 
 ```{r}
 data(florentine) # loads flomarriage and flobusiness data
-flomarriage # Let's look at the flomarriage network properties
+flomarriage # Look at the flomarriage network properties (uses `network`)
 par(mfrow=c(1,2)) # Setup a 2 panel plot (for later)
-plot(flomarriage, main="Florentine Marriage", cex.main=0.8) # Plot the flomarriage network
-summary(flomarriage~edges) # Look at the $g(y)$ statistic for this model
-flomodel.01 <- ergm(flomarriage~edges) # Estimate the model 
-summary(flomodel.01) # The fitted model object
+plot(flomarriage, main="Florentine Marriage", 
+     cex.main=0.8, 
+     label = network.vertex.names(flomarriage)) # Plot the network
 ```
 
-How should we interpret the coefficient from this model? The log-odds of any tie existing is:
+The syntax for specifying a model in the `ergm` package follows **R**'s
+formula convention:
+
+$$ my.network $\sim$ my.vector.of.model.terms $$
+
+This syntax is used for both the `summary` and `ergm` functions.  The
+`summary` function simply returns the numerical values of the
+network statistics in the model.  The `ergm` function estimates
+the model with those statistics.
+
+####A simple Bernoulli ("Erdos/Renyi") model
+
+We begin with the simplest possible model, 
+it contains only one term that represents the overall
+density of the network.  The ergm-term for this is `edges`.
+
+```{r}
+summary(flomarriage ~ edges) # Look at the $g(y)$ statistic for this model
+flomodel.01 <- ergm(flomarriage ~ edges) # Estimate the model 
+summary(flomodel.01) # Look at the fitted model object
+```
+
+Note that the network statistic `edges` is the number of ties
+in the network -- $\sum{y_{ij}}$.
+
+This simple model specifies a single homogeneous 
+probability for all ties,
+which is captured by the coefficient on the `edges` term.  
+How should we interpret this coefficient? The easiest way is
+to return to the logit form of the ERGM.
+The log-odds that a tie is present is:
 
 $$
 \small{
 \begin{eqnarray*}
-& = & -1.609\times\mbox{change in the number of ties}\\
-& = & -1.609\times1
+logit(p(y)) &=& \theta \times \delta(g(y)) \\
+& = & -1.609 \times \mbox{change in the number of ties}\\
+& = & -1.609 \times 1
 \end{eqnarray*}
 }
 $$
 
-for all ties, since the addition of any tie to the network always changes
-the number of ties by 1 for a tie toggled from 0 to 1 (or by -1 for a tie toggled from 1 to 0).
+for every tie, since the addition of any tie to the network always increases the total number of ties by 1.
 
-The corresponding probability is:
+The corresponding probability is obtained by taking the expit of $\theta$:
 
 $$
 \small{
@@ -180,19 +226,27 @@ $$
 }
 $$
 
-which corresponds to the density we observe in the flomarriage network: there are 20 ties and (16 choose 2 = 16*15/2 =) 120 dyads.
+Note that corresponds to the density we observe in the 
+flomarriage network: there are 20 ties and (16 choose 2 = 16*15/2 =) 120 dyads.
 
-###Triad formation
+####Triad formation
 
 Let's add a term often thought to be a measure of
-"clustering": the number of completed triangles.  The ergm-term for this is ***triangle***.
-This is a dyad dependent term.  As a result, the estimation algorithm automatically changes to MCMC, and because this is a form of stochastic estimation your results may differ slightly.
+"clustering": the number of completed triangles.  
+The ergm-term for this is `triangle`.
+This is an example of a dyad dependent term: the status of dyad
+$y_{ij}$ depends on the status of two other dyads, $y_{ik}$ and $y_{jk}$.
+As a result, the estimation algorithm automatically changes to MCMC, and because this is a form of stochastic estimation your results may differ slightly.
 
 ```{r}
 summary(flomarriage~edges+triangle) # Look at the g(y) stats for this model
 flomodel.02 <- ergm(flomarriage~edges+triangle) 
 summary(flomodel.02)
 ```
+
+The network statistic `triangle` is the number of defined as the number of
+triangles
+in the network -- $\sum{y_{ij}y_{ik}y_{jk}} \div 3$.
 
 Now, how should we interpret coefficients?
 
@@ -228,7 +282,7 @@ names(flomodel.02) # the ERGM object contains lots of components.
 flomodel.02$coef # you can extract/inspect individual components
 ```
 
-###Nodal covariates: effects on mean degree
+####Nodal covariates: effects on mean degree
 
 We can test whether edge probabilities are a function of wealth.  This is a nodal covariate, so we use the ergm-term **nodecov**.
 
@@ -260,7 +314,7 @@ $$
 }
 $$
 
-<br>
+
 
 * for a tie between two nodes with minimum wealth, the conditional log-odds is:  
 $-2.59 + 0.01*(3+3) = -2.53$
@@ -272,7 +326,7 @@ $-2.59 + 0.01*(146+3) = -1.1$
 
 Note:  This model specification does not include a term for homophily by wealth.  It just specifies a relation between wealth and mean degree.  To specify homophily on wealth, you would use the ergm-term ***absdiff*** [see section 3 below for more information on ergm-terms](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation)
 
-###Nodal covariates:  Homophily
+####Nodal covariates:  Homophily
 
 Let's try a larger network, a simulated mutual friendship network based on one of the schools from the Add Health study.  Here, we'll examine the homophily in friendships by grade and race.  Both are discrete attributes so we use the ergm-term ***nodematch***.
 
@@ -314,7 +368,7 @@ summary(mesa ~edges + nodematch('Grade',diff=T) + nodematch('Race',diff=T))
 
 See also the ergm-term ***nodemix*** for fitting mixing patterns other than homophily on discrete nodal attributes.
 
-###Directed ties
+####Directed ties
 
 Let's try a model for a directed network, and examine the tendency for ties to be reciprocated ("mutuality").  The ergm-term for this is ***mutual***.  We'll fit this model to the third wave of the classic Sampson Monastery data, and we'll start by taking a look at the network.
 
@@ -369,7 +423,8 @@ missnet_bad[4,6] <- missnet_bad[4,9] <- missnet_bad[5,6] <- 0
 summary(missnet_bad)
 summary(ergm(missnet_bad~edges))
 ```
-The coefficient is smaller now because the missing ties are counted as "0", and translates to a conditional tie probability of 6.67%.  It's a small difference in this case (and a small network, with little missing data).
+The coefficient is smaller now because the missing ties are counted as "0", and this translates to a conditional tie probability of 6.67%.  
+It's a small difference in this case (and a small network, with little missing data).
 
 
 MORAL:  If you have missing data on ties, be sure to identify them by assigning the "NA" code.  This is particularly important if you're reading in data as an edgelist, as all dyads without edges are implicitly set to "0" in this case.
@@ -387,6 +442,9 @@ on a dataset)
 * calls to `simulate` (to simulate networks from an ergm model
 fit)
 
+Because these terms are not exogeneous measures, but functions of
+the dyad states in the network, they must be calculated for
+the network that is being modeled.
 Many ERGM terms are simple counts of configurations (e.g., edges, nodal degrees, stars, triangles), but others are more complex functions of these configurations (e.g., geometrically weighted degrees and shared partners).  In theory, any configuration (or function of configurations) can be a term in an ERGM.  In practice, however, these terms have to be constructed before they can be used---that is, one has to explicitly write an algorithm that defines and calculates the network statistic of interest.  This is another key way that ERGMs differ from traditional linear and general linear models.
 
 The terms that can be used in a model also depend on the type of network being analyzed:  directed or undirected, one-mode or two-mode ("bipartite"), binary or valued edges.
@@ -409,15 +467,16 @@ Finally, note that models with only dyad independent terms are estimated in stat
 
 ### Coding new ergm-terms
 
-We have recently released a new package (`ergm.userterms`)
-that makes it much easier to write one's
-own ergm-terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  Alternatively, the tutorial can be found in the 
+There is a `statnet` package --- `ergm.userterms` ---
+that provides the utilities needed to write new
+ergm-terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
+also be found in the 
 [*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides from the workshop we teach on coding ergm-terms can be found
 [here](https://statnet.csde.washington.edu/trac/attachment/wiki/Sunbelt2013/EUT%20tutorial%20slides.pptx).
 
 Note that writing up new `ergm` terms requires some knowledge of 
 C and the ability
-to build R from source (although the latter is covered in the tutorial, the many environments for building R and the rapid changes in these environments make these instructions obsolete quickly). 
+to build R from source.  While the latter is covered in the tutorial, the many environments for building R and the rapid changes in these environments make these instructions obsolete quickly. 
  
 
 
@@ -487,7 +546,8 @@ For more technical details on the approach, see
 
 ## 6. Diagnostics: troubleshooting and checking for model degeneracy
 
-The computational algorithms in `ergm` use MCMC to estimate
+The computational algorithms in `ergm` use MCMC (with a
+Metropolis-Hastings sampler) to estimate
 the likelihood function when dyad dependent terms are in the model.
 Part of this process involves simulating
 a set of networks to use as a sample for approximating the unknown component of the likelihood: the $k(\theta)$ term in the denominator. 

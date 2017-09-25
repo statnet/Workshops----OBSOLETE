@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Egocentric Network Data Analysis with ERGMs using Statnet"
-author: "NASN 2017 - Washington DC"
+author: "Statnet Development Team"
 output:
   html_document:
     fig_width: 8
@@ -35,6 +35,30 @@ For general questions and comments, please refer to the
 [`statnet` wiki](statnet.org/wiki)
 and the `statnet` users group and mailing list   
 http://statnet.org/statnet_users_group.shtml
+
+## Introduction to this workshop/tutorial.
+
+This workshop and tutorial provide an introduction to 
+key features of the packages that the
+`statnet` suite provides for statistical modeling of
+network data with *Exponential family Random Graph Models* (ERGMs).
+The packages we will be using are:
+
+* `network` -- storage and manipulation of network data
+* `sna` -- descriptive statistics and graphics for exploratory network analysis`
+* `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
+
+All `statnet` packages are open-source, written for the **R** computing
+environment, and published on CRAN.  The source repositories are hosted
+on [GitHub](statnet.github.io).  
+
+### Prerequisites
+
+This workshop assumes basic familiarity with **R**, experience with
+network concepts, terminology and data, and familiarity with the
+general framework for statistical modeling and inference.  
+
+The workshops are conducted using `Rstudio`.
 
 
 
@@ -791,7 +815,7 @@ just as we can in `ergm` with a `network` object.
 nrow(mesa.ego$alters)
 
 # mean degree
-nrow(mesa.ego$egos)/nrow(mesa.ego$alters)
+nrow(mesa.ego$alters)/nrow(mesa.ego$egos)
 
 
 ## overall degree distribution

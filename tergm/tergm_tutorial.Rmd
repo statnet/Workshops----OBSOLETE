@@ -1,6 +1,6 @@
 ---
 title: Temporal Exponential Random Graph Models (TERGMs) for dynamic network modeling in statnet
-author: "NASN 2017 - Washington, DC"
+author: "Statnet Development Team"
 output:
   html_document:
     fig_width: 8
@@ -411,7 +411,7 @@ Visually, we can sum this up as:
 
 In `statnet`, an ERGM is specified using R's formula notation:
 
-$$ my.network $\sim$ my.vector.of.model.terms $$
+$$ my.network \sim my.vector.of.model.terms $$
 
 For a call to `stergm`, there is one dynamic network, but two formulas. These are now passed as three separate arguments: the network(s) (argument `nw`), the formation formula (argument `formation`), 
 and the dissolution formula (argument `dissolution`).  The latter two take the form of a one-sided formula.  E.g.:
@@ -454,7 +454,7 @@ In this case, we will specify the same terms in both the formation and dissoluti
 
 In the following code, we pass five arguments: the network list that we want to model (`samplist`), the formation formula, the dissolution formula, the fitting algorithm (CMLE since we have a network panel), and the list of time slices we wish to model:
 
-```{r,results='hide'}
+```{r,results="hide", message=FALSE}
 samp.fit <- stergm(samplist,
 	formation= ~edges+mutual+cyclicalties+transitiveties,
 	dissolution = ~edges+mutual+cyclicalties+transitiveties,
@@ -465,6 +465,8 @@ samp.fit <- stergm(samplist,
 
 ```
 Fitting formation:  
+
+Starting maximum likelihood estimation via MCMLE:
 Iteration 1 of at most 20:  
 
 ====== Lots of output snipped ======
@@ -484,13 +486,20 @@ this is a small sparse network, so the amount of information available for testi
 
 If one wishes to include only a subset of times from one's network series, one can alter the `times` argument:
 
-```{r,results='hide'}
+```{r,results="hide", message=FALSE}
 samp.fit.2 <- stergm(samplist,
   formation= ~edges+mutual+cyclicalties+transitiveties,
 	dissolution = ~edges+mutual+cyclicalties+transitiveties,
 	estimate = "CMLE",
   times=1:2
 	)
+```
+
+```
+====== Lots of output snipped again ======
+```
+
+```{r}
 summary(samp.fit.2)
 ```
 
@@ -756,14 +765,17 @@ theta.diss.100 <- log(99)
 ```
 
 First, we treat the formation process as if it were a stand-alone cross-sectional model, and estimate it using a standard cross-sectional ERGM. 
-We did, in fact, fit this cross-sectional model earlier:
+(We fit this same formation model in an earlier call to `stergm`, so
+will snip the output here):
+
+```{r, results="hide", message=FALSE}
+ergm.fit1 <- ergm(flobusiness ~ edges + gwesp(0, fixed=T))
+```
 
 ```{r}
-ergm.fit1 <- ergm(flobusiness ~ edges + gwesp(0, fixed=T))
 summary(ergm.fit1)
 theta.form <- ergm.fit1$coef 
 theta.form
-
 ```
 
 Then, we subtract the values of the dissolution $\theta$ from each of the corresponding values in the formation model. 
