@@ -123,14 +123,15 @@ The work on `ergm.ego` was originally motivated by a specific question
 in the field of HIV epidemiology---Does network structure help
 explain the persistent racial disparities in HIV prevalence in the 
 United States?  
+
 An African American today is 10 times more likely than
-a white American to be living with HIV/AIDS.  
+a white American to be living with HIV/AIDS.
 The disparity begins early in life, persists through to old age,
 and is evident among all risk groups:  heterosexuals, men who have sex with
 men (MSM), and injection drug users.  The disproportionate risks faced
-by heterosexual African-American women are especially steep.  In 2010, an African-American woman was over 40 times more likely to be diagnosed with HIV than a heterosexual white man.
+by heterosexual African-American women are especially steep.  In 2010, an African-American woman was over 40 times more likely to be diagnosed with HIV than a heterosexual white man (Figure 1).
 
-<div style="width:75%; height=75%">
+<div style="width:50%; height=50%">
 ![Figure 1](images/HIVDiagnoses.png)
 </div>
 
@@ -163,8 +164,9 @@ But `ergm.ego` allows us to test the network hypothesis with egocentrically samp
 
 First, `ergm.ego` allows us to assess whether empirical patterns of homophily and concurrency are in the predicted directions and statistically significant.  We do this in the usual way -- comparing sequential model fits with terms that represent the hypotheses of interests, and t-tests for their coefficients.  We will discuss these terms in more detail in later sections, but here we test the concurrency effects with "monogamy bias" terms.
 
+<div style="width:80%; height=80%">
 ![Table 1](images/AOASTable2.png)
-
+</div>
 *Result:*  Yes, the homophily and concurrency effects are in the predicted directions and statistically significant.
 
 Next, we can assess the goodness of fit of each model in the way we usually do in ERGMs, by checking whether the models reproduce observed nework properties that are *not* in the model.  We do this here by simulating from each model and comparing the fits to the full observed degree distribution:
@@ -412,10 +414,11 @@ With alter-alter ties
 Not Egocentric for other reasons, but estimable
 : * Mean degree ($g_{k}(y,x)=2|y|/|N|$): $e _ i$ doesn't know how big the network is [^1]
 
-
-![Table 2](images/Table1.png) shows some examples of egocentric statistics,
+The table below (from Krivitsky & Morris 2017)
+shows some examples of egocentric statistics,
 and gives their representations in terms of of 
-$h_{k}(\cdot)$. 
+$h_{k}(\cdot)$.
+![Examples of egocentric statistics](images/Table1.png)  
 
 [^1]:
 This does not mean that the mean degree  itself cannot be estimated from egocentric data, only that our inferential results might not apply.
