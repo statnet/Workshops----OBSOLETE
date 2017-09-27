@@ -19,8 +19,9 @@ knitr::opts_chunk$set(comment=NA)
 
 _Last updated: `r Sys.Date()`_
 
-![Network movies!](images/netmovie.gif)
-
+<div style="width:60%; height=60%">
+![Network Movies!](images/netmovie.gif)
+</div>
 
 
 *This tutorial is a joint product of the Statnet Development Team:* 

@@ -130,7 +130,9 @@ and is evident among all risk groups:  heterosexuals, men who have sex with
 men (MSM), and injection drug users.  The disproportionate risks faced
 by heterosexual African-American women are especially steep.  In 2010, an African-American woman was over 40 times more likely to be diagnosed with HIV than a heterosexual white man.
 
+<div style="width:75%; height=75%">
 ![Figure 1](images/HIVDiagnoses.png)
+</div>
 
 
 Empirical studies repeatedly find that these disparities cannot be explained by individual behavior, or biological differences.  
@@ -188,11 +190,13 @@ One metric for network exposure is the probability of being in a component of si
 
 `ergm.ego` provides a powerful analytic framework that uses extremely limited network data and testable models to investigate the unobservable patterns of complete network connectivity that are consistent with the sampled data.
 
-The principles of egocentric inference can be extended to temporal ERGMs (TERGMs).  While we will not that in this workshop, you can get a sense of what this makes possible in another paper that sought to evaluate the network hypothsis for racial disparities in HIV in the US (Morris et al. 2009).  In that paper, egocentric data from the National Longitudinal Survey of Adolescent Health (AddHealth) was analyzed, and an example of the resulting dynamic complete network simulation can be found in this "network movie": 
+The principles of egocentric inference can be extended to temporal ERGMs (TERGMs).  While we will not cover that in this workshop, an example can
+be found in another paper that sought to evaluate the network hypothsis for racial disparities in HIV in the US (Morris et al. 2009).  In that paper, egocentric data from the National Longitudinal Survey of Adolescent Health (AddHealth) was analyzed, and an example of the resulting dynamic complete network simulation (on 10,000 nodes) can be found in this ["network movie"](http://statnet.org/movies). 
 
-![sample network movie](images/netmovie.gif)
-
-statnet.org/movies/.
+The movie below is another simpler example -- an epidemic spreading on a small dynamic contact network that is simulated with a STERGM estimated from egocentrically sampled network data.  The movie was produced by the R packages `EpiModel` and `ndtv`, which are based on the `statnet` tools (and are also available on CRAN).
+<div style="width:50%; height=50%">
+![](images/netmovie.gif)
+</div>
 
 
 
@@ -290,7 +294,7 @@ Cons:
 : * Requires knowledge of the *population* distribution of actor attributes used in the model.
 
 #### Design-based
-**Krivitsky and Morris (2017)** Use design-based estimators for sufficient statistics of the ERGM of interest and then transfer their properties to the ERGM estimate.
+**Krivitsky and Morris (2017)** Use design-based estimators for sufficient statistics of the ERGM of interest and then transfers their properties to the ERGM estimate.
 
 Pros:
 : * Does not require alters to be identifiable.
@@ -324,19 +328,15 @@ $y _ i=\{j\in N: y _ {ij}=1\}$ | the set of $i$'s network neighbors.
 
 Parameter   | Meaning
 ----------- | -----------------------------------------------------------------
+$e_{N}$ | the **egocentric census**, the information retained by the minimal egocentric sampling design when all nodes are sampled
+$S\subseteq N$ | the set of egos in a sample
+$e_{S}$ | the data contained in an egocentric sample
 $e_i$ | the "egocentric" view of network $y$ from the point of view of actor $i$ ("ego"), with the following parts:
 $e^e_i \equiv x_i$ | $i$'s own attributes
 $e^a_i \equiv (x_{j})_{j\in y_i}$ | an unordered list of attribute vectors of $i$'s immediate neighbors ("alters"), but **not** their identities (indices in $N$)
 $e^e_{i,k}\equiv x_{i,k}$ | The $k$th attribute/covariate observed on ego $i$
 $e^a_{i,k}\equiv( x_{j,k})_{j\in y_i}$ | and its alters.
 
-And finally,
-
-Parameter   | Meaning
------------ | -----------------------------------------------------------------
-$e_{N}$ | the **egocentric census**, the information retained by the minimal egocentric sampling design when all nodes are sampled
-$S\subseteq N$ | the set of egos in a sample
-$e_{S}$ | the data contained in an egocentric sample
 
 <!-- Note that the statistical inference here is more straightforward than -->
 <!-- inference from data on complete networks.  For complete networks  -->
@@ -712,7 +712,7 @@ legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 Now, let's turn this into an egodata object:
 
 ```{r}
-mesa.ego <- as.egodata(mesa) # Warning because there were no vertex names in the first place.
+mesa.ego <- as.egodata(mesa) # Generates warning because there are no vertex IDs.
 ```
 
 Take a look at this object -- there are several ways to do this:
@@ -794,7 +794,7 @@ of the counts of ties by the attribute selected, or the conditional row probabil
 
 mixingmatrix.egodata(mesa.ego,"Grade")
 
-# contrast with the network's mixmatrix:
+# contrast with the original network crosstab:
 
 mixingmatrix(mesa, "Grade")
 
@@ -804,11 +804,9 @@ mixingmatrix.egodata(mesa.ego, "Grade", rowprob=T)
 mixingmatrix.egodata(mesa.ego, "Race", rowprob=T)
 ```
 
-And we can look at the observed number of ties, mean degree, and degree
-distributions.  We construct the edgelist with ego and alter attributes (called "ties").  But note that for the degree distribution we can use the
-`summary` function with the NHSLS `ergm.ego` object,
-just as we can in `ergm` with a `network` object.
-
+We can also examine the observed number of ties, 
+mean degree, and degree
+distributions.
 
 ```{r}
 # ties
@@ -818,16 +816,20 @@ nrow(mesa.ego$alters)
 nrow(mesa.ego$alters)/nrow(mesa.ego$egos)
 
 
-## overall degree distribution
+# overall degree distribution
 summary(mesa.ego ~ degree(0:20))
 
-## by sex, and race
+# and stratified by sex
 summary(mesa.ego ~ degree(0:13, by="Sex"))
-summary(mesa.ego ~ degree(0:13, by="Race"))
 ```
 
-The summary function has an egodata specific argument, `scaleto`, that
-allows you to scale the summary statistics to a network of arbitrary size.
+For the degree distribution we used
+the`summary`function in the same way that we would use it in 
+`ergm` with a `network` object.
+But the summary function also has an egodata 
+specific argument, `scaleto`, that
+allows you to scale the summary statistics 
+to a network of arbitrary size.
 So, for example, we can obtain the degree distribution scaled to a network
 of size 100,000, or a network that is 100 times larger than the sample.
 
@@ -844,8 +846,8 @@ this is not a problem for estimation, but one should be careful with descriptive
 statistics that expect integer values.  The second scaling does result in integer
 counts because it is a multiple of the sample size.
 
-Finally, we can get plot the degree distribution instead, which may provide a
-summary that is easier to interpret, using another `egodata` specific function:
+We can plot the degree distribution
+using another `egodata` specific function:
 `degreedist.egodata`.  As with the `mixingmatrix` function, this can return either
 the counts or the proportions at each degree.
 
@@ -921,12 +923,12 @@ the closer $N'$ is to $N$ (usually larger).
 the longer the estimation takes.
 
 * *Sample weights* -- In general, it is good practice for the
-smallest sample weight to produce at least 1 observations in the 
+smallest sample weight to produce at least 1 observation in the 
 pseudo-population network, though more is better.
 
 This leads to different guidelines for data with and without weights.
 
-Simulation studies in Krivitsky & Morris (2015) suggest that a good rule of thumb
+Simulation studies in Krivitsky & Morris (2017) suggest that a good rule of thumb
 is to have a minimum pseudo-population size of 1,000 for unweighted data.  For
 weighted data the pseudo-populations size should be at least
 1 * sampleSize/smallestWeight (or 3 * sampleSize/smallestWeight to be safe), or 1000 (whichever is larger).
@@ -938,10 +940,10 @@ In `ergm.ego`, $|N'|$ is controlled by a combination of four factors:
 * the `control.ergm.ego` control parameter `ppopsize` (default: `"auto"`),
 * the `control.ergm.ego` control parameter `ppopsize.mul` (default: 1).
 
-If `ppopsize` is left at its defualt (`"auto"`),
+If `ppopsize` is left at its default (`"auto"`),
 
-* If `popsize` is left at 1, $|S|\times$`ppopsize.mul`.
-* If `popsize` is specified, use $|N|\times$`ppopsize.mul`.
+* If `popsize` is left at 1, `ppopsize` $=|S|\times$`ppopsize.mul`.
+* If `popsize` is specified (as |N|), `ppopsize` $=|N|\times$`ppopsize.mul`.
 
 You can also force one of these two regimes by setting `ppopsize` to `"samp"` or `"pop"`, respectively, or set it to a number to force a particular $|N'|$ ignoring `ppopsize.mul`.
 
@@ -953,7 +955,8 @@ For more information, see
 
 We will give an example below.
 
-In both cases, the scaling will ultimately only affect the estimate of the *edges*
+In both cases, the scaling will only affect the estimate 
+of the *edges*
 term, and we will demonstrate this below.
 
 Let's start with simple edges-only model to see what's the same and what
@@ -965,7 +968,9 @@ summary(fit.edges)
 ```
 
 This is a simple model, for a homogenous tie probability -- a Bernoulli random
-graph with the mean degree observed in our sampled data.
+graph with the mean degree observed in our sampled data.  The
+only difference in the syntax from standard ergm is the function
+call to `ergm.ego`.
 Let's look under the hood at the components that are output to the
 `fit.edges` object:
 
@@ -1147,11 +1152,10 @@ summary(sim.full2~edges + degree(0:1)
 
 ```
 
-We only demostrate the functionality here, but it is in fact a powerful way to
-diagnose other structural properties of the fitted model.  We refer you to the
-section on egocentric estimation in the ERGM workshop tutorial.  That section does
-not deal with statistical inference for the coefficients, it focuses instead on
-using simulation to identify systematic lack of fit and revise a model. 
+We only demostrate the functionality briefly here, but this
+kind of simulation is a powerful way to
+diagnose structural properties of the fitted model,
+and to identify and remedy systematic lack of fit. 
 
 ### 6d. Example of parameter recovery and sampling based on Faux Magnolia High:
 
@@ -1202,8 +1206,12 @@ egofit <- ergm.ego(fmh.ego~edges+degree(0:3)+nodefactor("Race")+nodematch("Race"
 modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) # A convendience function.
 
 # Parameters recovered:
-param.compare <- cbind(coef(fit.ergm), coef(egofit)[-1], (coef(fit.ergm)-coef(egofit)[-1])/modse(egofit)[-1])
-colnames(param.compare) <- c("Full nw est", "Ego census est", "diff Z")
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofit)[-1],
+                       (coef(fit.ergm)-coef(egofit)[-1])/modse(egofit)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Ego census est", 
+                             "diff Z")
 round(param.compare, 3)
 ```
 
@@ -1238,13 +1246,21 @@ egofitN <- ergm.ego(fmh.egosampN ~ edges+degree(0:3)+nodefactor("Race")
                                  +absdiff("Grade"),popsize=N)
 
 # compare the coef
-param.compare <- cbind(coef(fit.ergm), coef(egofit)[-1], coef(egofitN)[-1])
-colnames(param.compare) <- c("Full nw est", "Ego census est", "Sample N est")
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofit)[-1], 
+                       coef(egofitN)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Ego census est", 
+                             "Sample N est")
 round(param.compare, 3)
                  
 # compare the s.e.'s
-se.compare <- cbind(modse(fit.ergm), modse(egofit)[-1], modse(egofitN)[-1])
-colnames(se.compare) <- c("Full nw SE", "Ego census SE", "Sample N SE")
+se.compare <- cbind(modse(fit.ergm), 
+                    modse(egofit)[-1], 
+                    modse(egofitN)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Ego census SE", 
+                          "Sample N SE")
 round(se.compare, 3)
 ```
 
@@ -1258,13 +1274,25 @@ egofitN4 <- ergm.ego(fmh.egosampN4~edges+degree(0:3)+nodefactor("Race")
                      +nodematch("Race")+nodefactor("Sex")+nodematch("Sex")
                      +absdiff("Grade"), popsize=N)
 # compare the coef
-param.compare <- cbind(coef(fit.ergm), coef(egofit)[-1], coef(egofitN)[-1], coef(egofitN4)[-1])
-colnames(param.compare) <- c("Full nw est", "Ego census est", "Sample N est", "Sample N/4 est")
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofit)[-1], 
+                       coef(egofitN)[-1], 
+                       coef(egofitN4)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Ego census est", 
+                             "Sample N est", 
+                             "Sample N/4 est")
 round(param.compare, 3)
                  
 # compare the s.e.'s
-se.compare <- cbind(modse(fit.ergm), modse(egofit)[-1], modse(egofitN)[-1], modse(egofitN4)[-1])
-colnames(se.compare) <- c("Full nw SE", "Ego census SE", "Sample N SE", "Sample N/4 SE")
+se.compare <- cbind(modse(fit.ergm), 
+                    modse(egofit)[-1], 
+                    modse(egofitN)[-1], 
+                    modse(egofitN4)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Ego census SE", 
+                          "Sample N SE", 
+                          "Sample N/4 SE")
 round(se.compare, 3)
 ```
 
@@ -1288,14 +1316,22 @@ Which standard errors are improved by this sampling scheme?
 ```{r}
 # compare the coef
 
-param.compare <- cbind(coef(fit.ergm), coef(egofitN4)[-1], coef(egofitN4w)[-1])
-colnames(param.compare) <- c("Full nw est", "Sample N/4 est", "Oversampled")
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofitN4)[-1], 
+                       coef(egofitN4w)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Sample N/4 est", 
+                             "Oversampled")
 round(param.compare, 3)
                  
 # compare the s.e.'s
 
-se.compare <- cbind(modse(fit.ergm),  modse(egofitN4)[-1], modse(egofitN4w)[-1])
-colnames(se.compare) <- c("Full nw SE", "Sample N/4 SE", "Oversampled SE")
+se.compare <- cbind(modse(fit.ergm),  
+                    modse(egofitN4)[-1], 
+                    modse(egofitN4w)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Sample N/4 SE", 
+                          "Oversampled SE")
 round(se.compare, 3)
 
 ```

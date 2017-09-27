@@ -165,10 +165,13 @@ this example.  As with all data analysis, we start by looking at our data: using
 ```{r}
 data(florentine) # loads flomarriage and flobusiness data
 flomarriage # Look at the flomarriage network properties (uses `network`)
-par(mfrow=c(1,2)) # Setup a 2 panel plot (for later)
+par(mfrow=c(1,2)) # Setup a 2 panel plot
 plot(flomarriage, main="Florentine Marriage", 
      cex.main=0.8, 
      label = network.vertex.names(flomarriage)) # Plot the network
+wealth <- flomarriage %v% 'wealth' # %v% references vertex attributes
+wealth
+plot(flomarriage, vertex.cex=wealth/25, main="Florentine marriage by wealth", cex.main=0.8) # Plot the network with vertex size proportional to wealth
 ```
 
 The syntax for specifying a model in the `ergm` package follows **R**'s
@@ -287,8 +290,6 @@ flomodel.02$coef # you can extract/inspect individual components
 We can test whether edge probabilities are a function of wealth.  This is a nodal covariate, so we use the ergm-term **nodecov**.
 
 ```{r}
-wealth <- flomarriage %v% 'wealth' # %v% references vertex attributes
-wealth
 summary(wealth) # summarize the distribution of wealth
 plot(flomarriage, vertex.cex=wealth/25, main="Florentine marriage by wealth", cex.main=0.8) # network plot with vertex size proportional to wealth
 summary(flomarriage~edges+nodecov('wealth')) # observed statistics for the model
@@ -732,7 +733,7 @@ Carter T. Butts buttsc@uci.edu
 Steven M. Goodreau goodreau@u.washington.edu  
 Skye Bender-deMoll skyebend@skyeome.net  
 Martina Morris morrism@u.washington.edu  
-Pavel N. Krivitsky pavel@uow.edu.au
+Pavel N. Krivitsky pavel@uow.edu.au  
 Samuel M. Jenness samuel.m.jenness@emory.edu
 
 
