@@ -177,7 +177,7 @@ plot(flomarriage, vertex.cex=wealth/25, main="Florentine marriage by wealth", ce
 The syntax for specifying a model in the `ergm` package follows **R**'s
 formula convention:
 
-$$ my.network $\sim$ my.vector.of.model.terms $$
+$$ my.network \sim my.vector.of.model.terms $$
 
 This syntax is used for both the `summary` and `ergm` functions.  The
 `summary` function simply returns the numerical values of the
