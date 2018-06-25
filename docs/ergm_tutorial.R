@@ -142,7 +142,7 @@ mcmc.diagnostics(fit)
 
 ## ---- eval=FALSE---------------------------------------------------------
 fit <- ergm(flobusiness~edges+degree(1), 
-control=control.ergm(MCMC.interval=1)
+control=control.ergm(MCMC.interval=1))
 
 ## ------------------------------------------------------------------------
 data('faux.magnolia.high')
