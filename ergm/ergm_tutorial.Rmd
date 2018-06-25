@@ -241,7 +241,7 @@ This is an example of a dyad dependent term: the status of dyad
 $y_{ij}$ depends on the status of two other dyads, $y_{ik}$ and $y_{jk}$.
 As a result, the estimation algorithm automatically changes to MCMC, and because this is a form of stochastic estimation your results may differ slightly.
 
-```{r}
+```{r, message = FALSE}
 summary(flomarriage~edges+triangle) # Look at the g(y) stats for this model
 flomodel.02 <- ergm(flomarriage~edges+triangle) 
 summary(flomodel.02)
@@ -381,7 +381,7 @@ plot(samplk3)
 summary(samplk3~edges+mutual)
 ```
 The plot now shows the direction of a tie, and the $g(y)$ statistics for this model in this network are 56 total ties, and 15 mutual dyads (so 30 of the 56 ties are mutual ties). 
-```{r}
+```{r, message = F}
 sampmodel.01 <- ergm(samplk3~edges+mutual)
 summary(sampmodel.01)
 ```
@@ -458,7 +458,7 @@ For a list of available terms that can be used to specify an ERGM, type:
 help('ergm-terms')
 ```
 
-A table of commonly used terms can be found [here](http://statnet.csde.washington.edu/EpiModel/nme/2014/d2-ergmterms.html)
+A table of commonly used terms can be found [here](https://statnet.github.io/nme/d2-ergmterms.html)
 
 A more complete discussion of many of these terms can be found in
 the 'Specifications'
@@ -575,11 +575,11 @@ In the worst case scenario, we end up not being able to obtain coefficent estima
 
 Below we show a simple example of a model that converges, and one that doesn't, and how to use the MCMC diagnostics to improve a model that isn't converging.
 
-###What it looks like when a model converges properly
+### What it looks like when a model converges properly
 
 We will first consider a simulation where the algorithm works using the program defaults, and observe the behavior of the MCMC estimation algorithm using the `mcmc.diagnostics` function.
 
-```{r}
+```{r, message = F}
 summary(flobusiness~edges+degree(1))
 fit <- ergm(flobusiness~edges+degree(1))
 mcmc.diagnostics(fit)
@@ -590,8 +590,8 @@ This is what you want to see in the MCMC diagnostics:  the MCMC sample statistic
 There are many control parameters for the MCMC algorithm ("help(control.ergm)"), and we'll play with some of these below.  To see what the algorithm is doing at each step, you can drop the sampling interval down to 1:
 
 ```{r, eval=FALSE}
-fit <- ergm(flobusiness~edges+degree(1), 
-control=control.ergm(MCMC.interval=1)
+fit <- ergm(flobusiness~edges+degree(1),
+            control=control.ergm(MCMC.interval=1))
 ```
 
 This runs a version with every network returned, and might be useful if you are trying to debug a bad model fit.
@@ -607,6 +607,7 @@ plot(magnolia, vertex.cex=.5)
 summary(magnolia~edges+triangle)
 ```
 
+But, if we try to fit this "simple" model:
 ```{r, eval=F}
 fit <- ergm(magnolia~edges+triangle)
 ```
@@ -629,12 +630,33 @@ Very interesting. In the process of trying to fit this model, the algorithm head
 
 
 
-```{r,eval=T}
-fit <- ergm(magnolia~edges+triangle, control=control.ergm(MCMLE.maxit=2))
+```{r, eval=T, message=F, warning = F}
+fit <- ergm(magnolia~edges+triangle, 
+            control=control.ergm(MCMLE.maxit=2))
 
 ```
 
-```{r, eval=T, results='hide',fig.show='asis'}
+```
+Starting maximum likelihood estimation via MCMLE:
+
+Iteration 1 of at most 2:
+Optimizing with step length 0.707275631968435.
+The log-likelihood improved by 8.688.
+
+Iteration 2 of at most 2:
+Optimizing with step length 1.
+The log-likelihood improved by 3.539.
+
+Step length converged once. Increasing MCMC sample size.
+
+MCMLE estimation did not converge after 2 iterations. The estimated coefficients may not be accurate. Estimation may be resumed by passing the coefficients as initial values; see 'init' under ?control.ergm for details.
+
+ ... (output snipped)
+
+This model was fit using MCMC.  To examine model diagnostics and check for degeneracy, use the mcmc.diagnostics() function.
+```
+
+```{r, eval=T, results='hide', fig.show='asis'}
 mcmc.diagnostics(fit)
 ```
 
@@ -649,9 +671,29 @@ for a more intuitive description and empirical application see
 [Goodreau, Kitts & Morris, 2009](http://link.springer.com/article/10.1353/dem.0.0045) )
 
 
-```{r}
-fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),verbose=T)
+```{r, message = F, warning = F}
+fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),
+            verbose=T)
 mcmc.diagnostics(fit)
+```
+
+```
+Evaluating network in model.
+
+Initializing Metropolis-Hastings proposal(s):
+ ergm:MH_TNT
+
+Initializing model.
+Using initial method 'MPLE'.
+
+ ... (output snipped)
+ 
+Step length converged twice. Stopping.
+Evaluating log-likelihood at the estimate.
+
+This model was fit using MCMC.  To examine model diagnostics and check for degeneracy, use the mcmc.diagnostics() function.
+
+ ... (output snipped)
 ```
 
 Better, but not great. Here we'll change two things -- add some more reasonable terms to the model, and add in some robustness to the fitting algorithm by making the MCMC simulation longer.
@@ -659,7 +701,8 @@ Better, but not great. Here we'll change two things -- add some more reasonable 
 ```{r}
 fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T)+nodematch('Grade')+
               nodematch('Race')+nodematch('Sex'),
-            control = control.ergm(MCMC.samplesize=50000,MCMC.interval=1000),
+            control = control.ergm(MCMC.samplesize=50000,
+                                   MCMC.interval=1000),
             verbose=T)
 ```
 
@@ -698,32 +741,54 @@ While the `ergm` package has had this capability for many years (and old ERGM wo
 We now have a separate workshop/tutorial for `ergm.ego`, so we no longer cover this material in the current ERGM workshop.  As always, this workshop material can be found online at the statnet wiki.
 
 
-## 8. Additional functionality in the statnet family of packages
+## 8. Additional functionality in statnet and other packages
 
-### Additional functionality
+`statnet` is actually a suite of packages that are designed to work together, and provide tools for a wide range of different types of network data analysis.  Examples include temporal network models and dynamic network vizualizations, analysis of egocentrically sampled network data, multilevel network modeling, latent cluster models and network diffusion and epidemic models.  Development is ongoing, and there are new packages, and new functionality added to existing packages on a regular basis. 
 
-Packages that developed by statnet team that are not covered in this tutorial:
-
-* classical social network analysis (`sna` package)
-* temporal ergms for dynamic networks (`tergm` package)
-* estimation/simulation of ergms from egocentrically sampled data (`ergm.ego` package)
-* relational event models for networks (`relevent` package)
-* latent space and latent cluster analysis (`latentnet` package)
-* MLE estimation for degree distributions (negative binomial, Poisson,
-scale-free, etc.) (`degreenet` package)
-* simulation of bipartite networks with given degree distributions (`networksis` package)
-* hierarchical ERGMs (`hergm` package)
-* ERGMs for valued ties (`ergm` package)
-* network movie maker (`ndtv` package)
-* network modeling of infectious disease and social diffusion processes (`EpiModel` package) 
-
-Any of these not in the ergm base package are in stand-alone packages
-that can be downloaded from CRAN.
+All of these packages can be downloaded from CRAN.
 For more detailed information, please visit the `statnet`
 webpage [www.statnet.org](http://statnet.org).  
 
-We also place our tutorials from many different workshops online on the [statnet wiki](https://statnet.csde.washington.edu/trac).
 
+### Current statnet packages
+
+Packages developed by statnet team that are not covered in this tutorial:
+
+* `sna` -- classical social network analysis utilities
+* `tsna` -- descriptive statistics for temporal network data
+* `tergm` -- temporal ergms for dynamic networks
+* `ergm.ego`-- estimation/simulation of ergms from egocentrically sampled data 
+* `ergm.count` -- models for tie count network data
+* `ergm.rank` -- models for tie rank network data
+* `relevent` -- relational event models for networks
+* `latentnet` -- latent space and latent cluster analysis
+* `degreenet` -- MLE estimation for degree distributions (negative binomial, Poisson, scale-free, etc.) 
+* `networksis` -- simulation of bipartite networks with given degree distributions 
+* `ndtv` package -- network movie maker
+* `EpiModel` -- network modeling of infectious disease and social diffusion processes  
+
+Many of these have associated training workshops.  Our tutorials 
+can be found online, either on the 
+[new GitHub statnet wiki](https://statnet.github.io/Workshops) or the
+[old statnet wiki](https://statnet.csde.washington.edu/trac).  Everything
+will eventually be moved over to the GitHub wiki
+
+
+### Additional functionality in base ergm
+
+* ERGMs for valued ties
+
+
+### Extensions by other developers
+
+There are now a number of excellent packages developed by others that extend the functionality of statnet.  The easiest way to find these is to
+look at the "reverse depends" of the `ergm` package on 
+[CRAN](https://cran.org/packages).  Examples include:
+
+* `Bergm` -- Bayesian Exponential Random Graph Models
+* `btergm` -- Temporal Exponential Random Graph Models by Bootstrapped Pseudolikelihood
+* `hergm` -- hierarchical ERGMs for multi-level network data
+* `xergm` -- extensions to ERGM modeling
 
 ### Statnet Commons: The development group
 

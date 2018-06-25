@@ -159,3 +159,8 @@ a.headrsel:hover,a.headrsel:active {
 img {
   padding: 8px;
 }
+
+/* Italic font */
+em {
+    font-style: italic !important;
+}
