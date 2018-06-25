@@ -1,24 +1,16 @@
+## ----setup, include=FALSE------------------------------------------------
+library(knitr)
+knitr::opts_chunk$set(cache=T, comment=NA)
 
 ## ----eval=FALSE----------------------------------------------------------
-install.packages('statnet')
-library(statnet)
+## install.packages(c('statnet', 'sna'))
+## library(statnet)
 
 ## ----eval=FALSE----------------------------------------------------------
-install.packages('ergm') # will install the network package
-install.packages('sna')
+## install.packages('latticeExtra')
+## require(latticeExtra)
 
-## ----eval=FALSE----------------------------------------------------------
-update.packages('name.of.package')
-
-## ----eval=FALSE----------------------------------------------------------
-install.packages('latticeExtra')
-
-## ----results='hide', message=FALSE---------------------------------------
-library(statnet)
-library(sna)
-
-## ----eval=FALSE----------------------------------------------------------
-# latest versions:  ergm 3.7.1 and network 1.13.0 (as of 7/24/2017)
+## ------------------------------------------------------------------------
 sessionInfo()
 
 ## ------------------------------------------------------------------------
@@ -29,14 +21,21 @@ data(package='ergm') # tells us the datasets in our packages
 
 ## ------------------------------------------------------------------------
 data(florentine) # loads flomarriage and flobusiness data
-flomarriage # Let's look at the flomarriage network properties
-par(mfrow=c(1,2)) # Setup a 2 panel plot (for later)
-plot(flomarriage, main="Florentine Marriage", cex.main=0.8) # Plot the flomarriage network
-summary(flomarriage~edges) # Look at the $g(y)$ statistic for this model
-flomodel.01 <- ergm(flomarriage~edges) # Estimate the model 
-summary(flomodel.01) # The fitted model object
+flomarriage # Look at the flomarriage network properties (uses `network`)
+par(mfrow=c(1,2)) # Setup a 2 panel plot
+plot(flomarriage, main="Florentine Marriage", 
+     cex.main=0.8, 
+     label = network.vertex.names(flomarriage)) # Plot the network
+wealth <- flomarriage %v% 'wealth' # %v% references vertex attributes
+wealth
+plot(flomarriage, vertex.cex=wealth/25, main="Florentine marriage by wealth", cex.main=0.8) # Plot the network with vertex size proportional to wealth
 
 ## ------------------------------------------------------------------------
+summary(flomarriage ~ edges) # Look at the $g(y)$ statistic for this model
+flomodel.01 <- ergm(flomarriage ~ edges) # Estimate the model 
+summary(flomodel.01) # Look at the fitted model object
+
+## ---- message = FALSE----------------------------------------------------
 summary(flomarriage~edges+triangle) # Look at the g(y) stats for this model
 flomodel.02 <- ergm(flomarriage~edges+triangle) 
 summary(flomodel.02)
@@ -50,8 +49,6 @@ names(flomodel.02) # the ERGM object contains lots of components.
 flomodel.02$coef # you can extract/inspect individual components
 
 ## ------------------------------------------------------------------------
-wealth <- flomarriage %v% 'wealth' # %v% references vertex attributes
-wealth
 summary(wealth) # summarize the distribution of wealth
 plot(flomarriage, vertex.cex=wealth/25, main="Florentine marriage by wealth", cex.main=0.8) # network plot with vertex size proportional to wealth
 summary(flomarriage~edges+nodecov('wealth')) # observed statistics for the model
@@ -86,7 +83,7 @@ samplk3
 plot(samplk3)
 summary(samplk3~edges+mutual)
 
-## ------------------------------------------------------------------------
+## ---- message = F--------------------------------------------------------
 sampmodel.01 <- ergm(samplk3~edges+mutual)
 summary(sampmodel.01)
 
@@ -113,7 +110,7 @@ summary(missnet_bad)
 summary(ergm(missnet_bad~edges))
 
 ## ----eval=FALSE----------------------------------------------------------
-help('ergm-terms')
+## help('ergm-terms')
 
 ## ------------------------------------------------------------------------
 flomodel.03.sim <- simulate(flomodel.03,nsim=10)
@@ -135,14 +132,14 @@ mesamodel.02.gof <- gof(mesamodel.02~degree + esp + distance,
 plot(mesamodel.02.gof)
 
 
-## ------------------------------------------------------------------------
+## ---- message = F--------------------------------------------------------
 summary(flobusiness~edges+degree(1))
 fit <- ergm(flobusiness~edges+degree(1))
 mcmc.diagnostics(fit)
 
 ## ---- eval=FALSE---------------------------------------------------------
-fit <- ergm(flobusiness~edges+degree(1), 
-control=control.ergm(MCMC.interval=1))
+## fit <- ergm(flobusiness~edges+degree(1),
+##             control=control.ergm(MCMC.interval=1))
 
 ## ------------------------------------------------------------------------
 data('faux.magnolia.high')
@@ -151,23 +148,26 @@ plot(magnolia, vertex.cex=.5)
 summary(magnolia~edges+triangle)
 
 ## ---- eval=F-------------------------------------------------------------
-fit <- ergm(magnolia~edges+triangle)
+## fit <- ergm(magnolia~edges+triangle)
 
-## ----eval=T--------------------------------------------------------------
-fit <- ergm(magnolia~edges+triangle, control=control.ergm(MCMLE.maxit=2))
+## ---- eval=T, message=F, warning = F-------------------------------------
+fit <- ergm(magnolia~edges+triangle, 
+            control=control.ergm(MCMLE.maxit=2))
 
 
-## ---- eval=T, results='hide',fig.show='asis'-----------------------------
+## ---- eval=T, results='hide', fig.show='asis'----------------------------
 mcmc.diagnostics(fit)
 
-## ------------------------------------------------------------------------
-fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),verbose=T)
+## ---- message = F, warning = F-------------------------------------------
+fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),
+            verbose=T)
 mcmc.diagnostics(fit)
 
 ## ------------------------------------------------------------------------
 fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T)+nodematch('Grade')+
               nodematch('Race')+nodematch('Sex'),
-            control = control.ergm(MCMC.samplesize=50000,MCMC.interval=1000),
+            control = control.ergm(MCMC.samplesize=50000,
+                                   MCMC.interval=1000),
             verbose=T)
 
 ## ------------------------------------------------------------------------
