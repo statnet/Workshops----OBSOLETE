@@ -1,0 +1,1294 @@
+\documentclass[11pt]{article}
+\usepackage[Q=yes]{examplep}
+\usepackage[round]{natbib}
+\usepackage{hyperref,geometry}
+\geometry{verbose,tmargin=3cm,bmargin=3cm,lmargin=3cm,rmargin=3cm}
+\setlength{\parskip}{\smallskipamount}
+
+
+<<setup, cache=FALSE, echo=FALSE, results='hide'>>=
+library(knitr)
+opts_chunk$set(echo=TRUE,tidy=TRUE,cache=TRUE,autodep=TRUE,concordance=TRUE,error=FALSE,size='small',message=FALSE)
+options(width=55, useFancyQuotes = FALSE, continue="  ")
+@
+
+
+
+
+\usepackage{color,csquotes}
+\usepackage{verbatim}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{url}
+
+\newcommand{\notes}[1]{\textbf{#1}}
+
+% Frequently used symbols
+\def\y{\boldsymbol{y}}
+\def\Y{\boldsymbol{Y}}
+\def\covariate{\boldsymbol{x}}
+\def\weight{\boldsymbol{w}}
+\def\covariates{\mathbb{X}}
+\def\e{\boldsymbol{e}}
+\def\actors{{N}}
+\newcommand{\actorsnot}[1]{\actors\setsub\left\{#1\right\}}
+\newcommand{\distuples}[1]{\actors^{#1\ne}}
+\def\nactors{ n }
+\def\cnmap{\boldsymbol{\eta}}
+\def\linpred{\boldsymbol{\eta}}
+\def\linpar{\boldsymbol{\beta}}
+\def\sendeff{\boldsymbol{\delta}}
+\def\recveff{\boldsymbol{\gamma}}
+\def\Z{\boldsymbol{Z}}
+\def\nnatpar{ p }
+\def\latdim{ d }
+\def\curvpar{\boldsymbol{\theta}}
+\def\curvpars{\boldsymbol{\Theta}}
+\def\natcurvpars{\boldsymbol{\Theta}_{\text{N}}}
+\def\designpar{\boldsymbol{\psi}}
+\def\ncurvpar{ q }
+\def\meanpar{\boldsymbol{\mu}}
+\def\genstatsymbol{g}
+\def\genstats{\boldsymbol{\genstatsymbol}}
+\newcommand{\genstat}[1]{\boldsymbol{\genstatsymbol}_{\text{#1}}}
+\def\target{\boldsymbol{t}}
+\def\Design{\boldsymbol{D}}
+\def\design{\boldsymbol{d}}
+\def\dyadvals{\mathbb{S}}
+\def\maxdyadvals{ s }
+\def\Borel{ \mathfrak{B} }
+
+\def\changeijv{\boldsymbol{\Delta}\sij}
+\newcommand{\promote}[2]{\Delta_{#1,#2}^\nearrow}
+\def\setsub{\backslash}
+
+\newcommand{\EN}[3]{\left#1 #3 \right#2}
+\newcommand{\en}[3]{#1 #3 #2}
+
+
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\logit}{logit}
+\DeclareMathOperator{\N}{N}
+\DeclareMathOperator{\Geometric}{Geometric}
+\DeclareMathOperator{\Multinomial}{Multinomial}
+\DeclareMathOperator{\Inv}{Inv}
+\DeclareMathOperator{\MVN}{MVN}
+\DeclareMathOperator{\Bernoulli}{Bernoulli}
+\DeclareMathOperator{\Exponential}{Exponential}
+\DeclareMathOperator{\ERGM}{ERGM}
+\DeclareMathOperator{\RandomChoose}{RandomChoose}
+\DeclareMathOperator{\0}{0}
+\def\dysY{\mathbb{Y}}
+\def\netsY{\mathcal{Y}}
+\def\iid{{\stackrel{\mathrm{i.i.d.}}{\sim}}}
+\def\ind{{\stackrel{\mathrm{ind.}}{\sim}}}
+\DeclareMathOperator{\LN}{LN}
+\DeclareMathOperator{\InvChiSq}{Inv\chi^2}
+\DeclareMathOperator{\Dirichlet}{Dirichlet}
+\DeclareMathOperator{\Poisson}{Poisson}
+\DeclareMathOperator{\Binomial}{Binomial}
+\DeclareMathOperator{\Uniform}{Uniform}
+\DeclareMathOperator{\Prob}{Pr}
+\DeclareMathOperator{\Lik}{L}
+\DeclareMathOperator{\lateff}{d}
+
+
+\def\M{P}
+\def\h{h}
+\def\Mteg{\M_{\curvpar;\cnmap,\genstats}}
+\def\Mref{\M_\h}
+\def\Mtheg{\M_{\curvpar;\Mref,\cnmap,\genstats}}
+
+
+\def\sigY{\mathsf{Y}}
+
+\def\Pteg{\Prob_{\curvpar;\genstats}}
+\def\Pheg{\Prob_{\h,\genstats}}
+\def\Eteg{\E_{\curvpar;\genstats}}
+\def\fteg{f_{\curvpar;\genstats}}
+\DeclareMathOperator{\Odds}{Odds}
+\def\offset{_\text{o}}
+\def\normc{\kappa}
+\def\ceg{\normc_{\genstats}}
+\def\cegoff{\normc_{\genstats\offset,\cnmap,\genstats}}
+\def\cheg{\normc_{\h,\genstats}}
+\def\chegoff{\normc_{\h,\genstat\offset,\genstats}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\ilogit}{logit^{-1}}
+\def\reals{\mathbb{R}}
+\def\naturals{\mathbb{N}}
+\def\BB{\mathbb{B}}
+\def\ij{{i,j}}
+\def\ji{{j,i}}
+\def\pij{{(i,j)}}
+\def\pji{{(j,i)}}
+\def\ipjp{{i',j'}}
+\def\pipjp{{(i',j')}}
+\def\tij{\oplus\pij}
+\def\ijdysY{{\pij\in\dysY}}
+\def\ynetsY{{\y\in\netsY}}
+\def\ypnetsY{{\y'\in\netsY}}
+\def\sij{_{i,j}}
+\def\sijk{_{i,j,k}}
+\def\sik{_{i,k}}
+\def\l{l}
+\def\sil{_{i,\l}}
+\def\sji{_{j,i}}
+\def\sli{_{\l,i}}
+\def\slj{_{\l,j}}
+\def\slk{_{\l,k}}
+\def\sipjp{_{i',j'}}
+\def\Yij{\Y\!\sij}
+\def\yij{\y\sij}
+\def\Yji{\Y\!\sji}
+\def\yji{\y\sji}
+\def\ytij{\y\tij}
+\def\Yyij{\Yij=\yij}
+\def\Yy{\Y=\y}
+\def\sobs{_{\text{obs}}}
+\def\smis{_{\text{mis}}}
+\def\Yobs{\Y\sobs}
+\def\yobs{\y\sobs}
+\def\Ymis{\Y\smis}
+\def\ymis{\y\smis}
+\def\Yyobs{\Yobs=\yobs}
+\def\Yymis{\Ymis=\ymis}
+\def\half{\frac{1}{2}}
+\def\jplus{j^{\scalebox{0.6}{+}}}
+\makeatletter
+\newcommand{\myrel}[3][.3]{\binrel@{#3}%
+  \binrel@@{\mathop{\kern\z@#3}\limits^{\vbox to #1\ex@{\kern-\tw@\ex@
+\hbox{\scriptsize #2}\vss}}}}
+\makeatother
+\newcommand{\pref}[1][]{\myrel{\ensuremath{\,\,#1}}{\succ}}
+\newcommand{\npref}[1][]{\myrel[-0.2]{\ensuremath{#1}}{\nsucc}}
+\newcommand{\indiff}[1][]{\myrel{\ensuremath{#1}}{\cong}}
+
+
+\newcommand{\yat}[1]{\y^{t#1}}
+\newcommand{\Yat}[1]{\Y^{t#1}}
+\newcommand{\Yyat}[1]{\Yat{#1}=\yat{#1}}
+\newcommand{\Yya}[1]{\Y^{#1}=y^{#1}}
+
+%\newcommand{\natpar}[1][]{\cnmap#1(\curvpar)}
+%\newcommand{\natparS}[1]{\cnmap(\curvpar^{#1})}
+\newcommand{\natpar}[1][]{\curvpar#1}
+\newcommand{\natparS}[1]{\curvpar^{#1}}
+
+% exp with parentheses
+\newcommand{\myexp}[1]{\exp\mathchoice{\left(#1\right)}{(#1)}{(#1)}{(#1)}}
+\newcommand{\I}[1]{\mathbb{I}\left(#1\right)}
+\newcommand{\egopref}[4]{#1_{#2:\,#3\pref #4}}
+\newcommand{\ypref}[3]{\egopref{\y}{#1}{#2}{#3}}
+\newcommand{\yvpref}[3]{\egopref{\yv}{#1}{#2}{#3}}
+%\newcommand{\egopref}[4]{\I{#1_{#2,#3}\pref #1_{#2,#4}}}
+\newcommand{\egoswapr}[4]{#1^{#2:\,#3\rightleftarrows#4}}
+
+\def\ipromotej{\promote{i}{j}}
+\newcommand{\promotev}[2]{\boldsymbol{\Delta}_{#1,#2}^\nearrow}
+\def\ipromotejv{\promotev{i}{j}}
+
+
+\newcommand{\pkg}[1]{\texttt{#1}}
+\newcommand{\proglang}[1]{\textsf{#1}}
+
+\def\indep{\perp\!\!\!\perp}
+\newcommand{\condind}[3]{#1 \indep #2 \,|\, #3}
+\newcommand{\code}[1]{\Q{#1}}
+
+\providecommand{\abs}[1]{\left\lvert#1\right\rvert}
+
+\def\t{^{\mathsf{T}}}
+\def\c{^{\mathsf{c}}}
+\newcommand{\fromthru}[2]{\left\{#1\,..\,#2\right\}}
+
+\newcommand{\innerprod}[2]{{#1}^\top{#2}}
+
+\newcommand{\centercol}[1]{\multicolumn{1}{c}{#1}}
+\newcommand{\coef}[2]{$#1$ $(#2)$}
+\newcommand{\scoef}[2]{$\mathbf{#1}$ $(#2)$}
+
+\def\Mct{\mu}
+\def\Mlbg{\lambda}
+\def\drefdct{\frac{d\Mref}{d\Mct}}
+\def\drefdlbg{\frac{d\Mref}{d\Mlbg}}
+\def\dtegdref{\frac{d\Mteg}{d\Mref}}
+\def\dtegdct{\frac{d\Mteg}{d\Mct}}
+
+
+\begin{document}
+
+
+
+
+
+\title{Modeling valued networks with \emph{statnet}}
+\author{Pavel N. Krivitsky, Carter T. Butts,\\ The Statnet Development Team}
+\maketitle
+
+\tableofcontents
+
+\section{Getting the software}
+
+If you have not already done so, please make sure that you have a reasonably new version of R, preferably the latest (\Sexpr{packageDescription("base")$Version}) \citep{R13r}. Then, download and install the latest versions of the Statnet \citep{HaHu08s,GoHa08s} packages, in particular \pkg{ergm} version \Sexpr{packageDescription("ergm")$Version} \citep{HuHa08e,HaHu13e}, \pkg{ergm.count} version \Sexpr{packageDescription("ergm.count")$Version} \citep{Kr13e}, \pkg{ergm.rank} version \Sexpr{packageDescription("ergm.rank")$Version}, \pkg{latentnet} version \Sexpr{packageDescription("latentnet")$Version} \citep{KrHa13l}, and their dependencies. You can accomplish this by typing:
+
+<<install packages, eval=FALSE>>=
+install.packages("ergm.count")
+install.packages("ergm.rank")
+install.packages("latentnet")
+update.packages()
+@
+<<load libraries, results='hide', cache=FALSE, message=FALSE>>=
+library(ergm.count)
+library(ergm.rank)
+library(latentnet)
+@ 
+
+\section{\pkg{network} and edge attributes}
+
+\code{network} \citep{Bu08n,BuHa13n} objects have three types of attributes:
+\begin{description}
+\item[network attributes] attributes which pertain to the whole network and include such information as network size, directedness, and multiplicity; 
+\item[vertex attributes] attributes which pertain to the individual vertices in the network and include such information as vertex label, as well as group assignment or some other property of the individual being represented; 
+\item[edge attributes] attributes which pertain to edges in the network and include such information as edge value.
+\end{description}
+
+An edge attribute is only defined for edges that exist in the
+network. Thus, in a matter of speaking, to set an edge value, one
+first has to \emph{create} an edge and then \emph{set} its attribute.
+
+As with network and vertex attributes, edge attributes that have
+been set can be listed with \code{list.edge.attributes}. Every network
+has at least one edge attribute: \code{"na"}, which, if set to
+\code{TRUE}, marks an edge as missing.
+
+\subsection{Constructing valued networks}
+
+There are several ways to create valued networks for use with \code{ergm}.  Here, we will demonstrate two of the most straightforward approaches.
+
+\subsubsection{Sampson's Monks, pooled}
+
+The first dataset that we'll be using is the (in)famous Sampson's
+monks. Dataset \code{samplk} in package \code{ergm} contains three
+(binary) networks: \code{samplk1}, \code{samplk2}, and \code{samplk3},
+containing the Monks' top-tree friendship nominations at each of the
+three survey time points. We are going to construct a valued network
+that pools these nominations.
+
+\paragraph{Method 1: From a sociomatrix}
+In many cases, a valued sociomatrix is available (or can easily be constructed).  In this case, we'll build one from the Sampson data.
+
+<<constructing from a sociomatrix>>=
+data(samplk)
+ls()
+as.matrix(samplk1)[1:5,1:5]
+# Create a sociomatrix totaling the nominations.
+samplk.tot.m<-as.matrix(samplk1)+as.matrix(samplk2)+as.matrix(samplk3)
+samplk.tot.m[1:5,1:5]
+
+# Create a network where the number of nominations becomes an attribute of an edge.
+samplk.tot <- as.network(samplk.tot.m, directed=TRUE, matrix.type="a", 
+                           ignore.eval=FALSE, names.eval="nominations" # Important!
+                           )
+# Add vertex attributes.  (Note that names were already imported!)
+samplk.tot %v% "group" <- samplk1 %v% "group" # Groups identified by Sampson
+samplk.tot %v% "group" 
+
+# We can view the attribute as a sociomatrix.
+as.matrix(samplk.tot,attrname="nominations")[1:5,1:5]
+
+# Also, note that samplk.tot now has an edge if i nominated j *at least once*.
+as.matrix(samplk.tot)[1:5,1:5]
+@ 
+
+\paragraph{Method 2: Form an edgelist}
+
+Sociomatrices are simple to work with, but not very convenient for large, sparse networks.  In the latter case, edgelists are often preferred.  For our present case, suppose that instead of a sociomatrix we have an edgelist with values:
+<<constructing from an edgelist>>=
+samplk.tot.el <- as.matrix(samplk.tot, attrname="nominations", 
+                           matrix.type="edgelist")
+samplk.tot.el[1:5,]
+# and an initial empty network.
+samplk.tot2 <- samplk1 # Copy samplk1
+delete.edges(samplk.tot2, seq_along(samplk.tot2$mel)) # Empty it out
+samplk.tot2  #We could also have used network.initialize(18)
+
+samplk.tot2[samplk.tot.el[,1:2], names.eval="nominations", add.edges=TRUE] <- 
+  samplk.tot.el[,3]
+as.matrix(samplk.tot2,attrname="nominations")[1:5,1:5]
+@ 
+
+In general, the construction \code{net[i,j, names.eval="attrname",
+  add.edges=TRUE] <- value} can be used to modify individual edge
+values for attribute \code{"attrname"}. This way, we can also add more
+than one edge attribute to a network.  Note that network objects can support an almost unlimited number of vertex, edge, or network attributes, and that these attributes can contain any data type.  (Not all data types are compatible with all interface methods; see \code{?network} and related documentation for more information.)
+
+\subsubsection{Zachary's Karate club}
+
+The other dataset we'll be using is almost as (in)famous Zachary's
+Karate Club dataset.  We will be employing here a collapsed multiplex network that counts the number of social contexts in which each pair of individuals associated with the Karate Club in question interacted. A total of 8 contexts were considered, but as the contexts themselves were determined by the network process, this limit itself can be argued to be endogenous.
+
+Over the course of the study, the club split into two factions, one led
+by the instructor (\enquote{Mr. Hi}) and the other led by the Club
+President (\enquote{John A.}). Zachary also recorded the faction
+alignment of every regular attendee in the club. This dataset is
+included in the \pkg{ergm.count} package, as \code{zach}.
+
+\subsection{Visualizing a valued network}
+
+The \pkg{network}'s \code{plot} method for \code{network}s can be used
+to plot a sociogram of a network.  When plotting a valued network, we
+it is often useful to color the ties depending on their value. Function
+\code{gray} can be used to generate a gradient of colors, with
+\code{gray(0)} generating black and \code{gray(1)} generating
+white. This can then be passed to the \code{edge.col} argument of
+\code{plot.network}.
+
+\paragraph{Sampson's Monks} For the monks, let's pass value data using a matrix.
+<<plotting via matrix>>=
+par(mar=rep(0,4))
+samplk.ecol <- 
+  matrix(gray(1 - (as.matrix(samplk.tot, attrname="nominations")/3)),
+         nrow=network.size(samplk.tot))
+plot(samplk.tot, edge.col=samplk.ecol, usecurve=TRUE, edge.curve=0.0001, 
+     displaylabels=TRUE, vertex.col=as.factor(samplk.tot%v%"group"))
+@ 
+
+Edge color can also be passed as a vector of colors corresponding to
+edges. It's more efficient, but the ordering in the vector must
+correspond to \code{network} object's internal ordering, so it should
+be used with care.  Note that we can also vary line width and/or transparency in the same manner:
+
+<<plotting via edge values>>=
+par(mar=rep(0,4))
+valmat<-as.matrix(samplk.tot,attrname="nominations") #Pull the edge values
+samplk.ecol <- 
+  matrix(rgb(0,0,0,valmat/3),
+         nrow=network.size(samplk.tot))
+plot(samplk.tot, edge.col=samplk.ecol, usecurve=TRUE, edge.curve=0.0001, 
+     displaylabels=TRUE, vertex.col=as.factor(samplk.tot%v%"group"),
+     edge.lwd=valmat^2)
+@ 
+
+\code{plot.network} has may display options that can be used to customize one's data display; see \code{?plot.network} for more.
+
+\paragraph{Zachary's Karate Club}
+
+In the following plot, we plot those strongly
+aligned with Mr. Hi as red, those with John A. with purple, those
+neutral as green, and those weakly aligned with colors in between.
+<<zach plot>>=
+data(zach)
+zach.ecol <- gray(1 - (zach %e% "contexts")/8)
+zach.vcol <- rainbow(5)[zach %v% "faction.id"+3]
+par(mar=rep(0,4))
+plot(zach, edge.col=zach.ecol, vertex.col=zach.vcol, displaylabels=TRUE)
+@ 
+
+\section{Valued ERGMs}
+\subsection{Modeling dyad-dependent interaction counts using \pkg{ergm.count}} 
+
+Many of the functions in package \pkg{ergm}, including \code{ergm},
+\code{simulate}, and \code{summary}, have been extended to handle
+networks with valued relations. They switch into this \enquote{valued} mode when
+passed the \code{response} argument, specifying the name of the edge
+attribute to use as the response variable. For example, a new valued
+term \code{sum} evaluates the sum of the values of all of the
+relations: $\sum_{\ijdysY}\yij$. So,
+<<valued ERGM summary error, eval=FALSE>>=
+summary(samplk.tot~sum)
+@
+produces an error (because no such term has been implemented for
+binary mode), while
+<<valued ERGM summary>>=
+summary(samplk.tot~sum, response="nominations")
+@
+gives the summary statistics. We will introduce more statistics
+shortly. First, we need to introduce the notion of valued ERGMs.
+
+For a more in-depth discussion of the following, see \citep{Kr12e}.
+
+\subsubsection{Valued ERGMs}
+
+Valued ERGMs differ from standard ERGMs in two related ways.  First, the support of a valued ERGM (unlike its unvalued counterpart) is over a set of valued graphs; this is a substantial difference from the unvalued case, as valued graph support sets (even for fixed $N$) are often infinite (or even uncountable).  Secondly, in defining a valued ERGM one must specify the reference measure (or distribution) with respect to which the model is defined.  (In the unvalued case, there is a generic way to do this, which we employ tacitly -- that is no longer the case for general valued ERGMs.)  We discuss some of these issues further below.
+
+Notationally, a valued ERGM (for discrete variables) looks like this:
+\begin{equation*}
+  \Pheg(\Yy;\curvpar)=\frac{\h(\y)\myexp{\innerprod{\natpar}{\genstats(\y)}}}{\cheg(\curvpar)},\ \ynetsY,
+\end{equation*}
+ where $\netsY$ is the support.  The normalizing constant is defined by
+\[\cheg(\curvpar)=\sum_\ynetsY \h(\y)\myexp{\innerprod{\natpar}{\genstats(\y)}}.\]
+The similarity with ERGMs in the unvalued case is evident, notwithstanding the above caveats.
+
+\paragraph{New concept: a reference distribution}
+
+With binary ERGMs, we only concern ourselves with presence and absence
+of ties among actors --- who is connected with whom? If we want to
+model values as well, we need to think about who is connected with
+whom \emph{and} how strong or intense these connections are. In
+particular, we need to think about how the values for connections we
+measure are distributed.  The reference distribution (a
+\emph{reference measure}, for the mathematically inclined) specifies
+the model for the data \emph{before} we add any ERGM terms, and is the
+first step in modeling these values. The reference distribution is
+specified using a one-sided formula as a \code{reference} argument to
+an \code{ergm} or \code{simulate} call. Running
+<<help ergm-references,eval=FALSE>>=
+help("ergm-references")
+@ 
+will list the choices implemented in the various packages, and are given as a one-sided formula.
+
+Conceptually, it has two ingredients: the sample space and the
+baseline distribution ($\h(\y)$). An ERGM that ``borrows'' these from
+a distribution $X$ for which we have a name is called an
+\emph{$X$-reference ERGM}.
+
+\paragraph{The sample space}
+For binary ERGMs, the sample space (or support) $\netsY$ --- the set of possible
+networks that can occur --- is usually some subset of $2^\dysY$, the set of
+all possible ways in which relationships among the actors may occur.
+
+For the sample space of valued ERGMs, we need to define $\dyadvals$,
+the set of possible values each relationship may take. For example,
+for count data, that's $\dyadvals=\{0,1,\dotsc,\maxdyadvals\}$ if the
+maximum count is $\maxdyadvals$ and $\{0,1,\dotsc\}$ if there is no
+\emph{a priori} upper bound. Having specified that, $\netsY$ is
+defined as some subset of $\dyadvals^\dysY$: the set of possible ways
+to assign to each relationship a value.
+
+As with binary ERGMs, other constraints like degree distribution may
+be imposed on $\netsY$.
+
+\paragraph{$\h(\y)$: The baseline distribution}
+What difference does it make?
+
+Suppose that we have a sample space with $\dyadvals=\{0,1,2,3\}$
+(e.g., number of monk--monk nominations) and let's have one ERGM term:
+the sum of values of all relations: $\sum_{\ijdysY}\yij$:
+\[
+  \Pheg(\Yy;\curvpar)\propto\h(\y)\myexp{\natpar \sum_{\ijdysY}\yij}.
+\]
+There are two values for $\h(\y)$ that might be familiar:
+\begin{description}
+  \item[$h(\y)=1$ (or any constant)] $\implies$ $\Yij\iid \text{Uniform or truncated geometric}$
+  \item[$h(\y)=\binom{m}{\yij}=\frac{m!}{\yij!(m-\yij)!}$] $\implies$ $\Yij\iid \Binomial(m,\ilogit(\curvpar))$
+\end{description}
+
+What do they look like? Let's simulate!
+
+<<DiscUnif reference,fig.height=3>>=
+y <- network.initialize(2,directed=FALSE) # A network with one dyad!
+## Discrete Uniform reference
+# 0 coefficient: discrete uniform
+sim.du3<-simulate(y~sum, coef=0, reference=~DiscUnif(0,3),
+                  response="w",statsonly=TRUE,nsim=1000)
+# Negative coefficient: truncated geometric skewed to the right 
+sim.trgeo.m1<-simulate(y~sum, coef=-1, reference=~DiscUnif(0,3),
+                       response="w",statsonly=TRUE,nsim=1000)
+# Positive coefficient: truncated geometric skewed to the left 
+sim.trgeo.p1<-simulate(y~sum, coef=+1, reference=~DiscUnif(0,3),
+                      response="w",statsonly=TRUE,nsim=1000)
+# Plot them:
+par(mfrow=c(1,3))
+hist(sim.du3,breaks=diff(range(sim.du3))*4)
+hist(sim.trgeo.m1,breaks=diff(range(sim.trgeo.m1))*4)
+hist(sim.trgeo.p1,breaks=diff(range(sim.trgeo.p1))*4)
+@ 
+
+<<Binomial reference,fig.height=3>>=
+## Binomial reference
+# 0 coefficient: Binomial(3,1/2)
+sim.binom3<-simulate(y~sum, coef=0, reference=~Binomial(3),
+                     response="w",statsonly=TRUE,nsim=1000)
+# -1 coefficient: Binomial(3, exp(-1)/(1+exp(-1)))
+sim.binom3.m1<-simulate(y~sum, coef=-1, reference=~Binomial(3),
+                        response="w",statsonly=TRUE,nsim=1000)
+# +1 coefficient: Binomial(3, exp(1)/(1+exp(1)))
+sim.binom3.p1<-simulate(y~sum, coef=+1, reference=~Binomial(3),
+                        response="w",statsonly=TRUE,nsim=1000)
+# Plot them:
+par(mfrow=c(1,3))
+hist(sim.binom3,breaks=diff(range(sim.binom3))*4)
+hist(sim.binom3.m1,breaks=diff(range(sim.binom3.m1))*4)
+hist(sim.binom3.p1,breaks=diff(range(sim.binom3.p1))*4)
+@ 
+
+Now, suppose that we don't have an \emph{a priori} upper bound on the
+counts --- $\dyadvals=\{0,1,\dotsc\}$ --- then there are two familiar
+reference distributions:
+\begin{description}
+  \item[$h(\y)=1$ (or any constant)] $\implies$ $\Yij\iid \Geometric(p=1-\myexp{\curvpar})$
+  \item[$h(\y)=1/\prod_{\ijdysY}\yij!$] $\implies$ $\Yij\iid \Poisson(\mu=\myexp{\curvpar})$
+\end{description}
+
+<<unbounded references>>=
+sim.geom<-simulate(y~sum, coef=log(2/3), reference=~Geometric,
+                   response="w",statsonly=TRUE,nsim=1000)
+mean(sim.geom)
+sim.pois<-simulate(y~sum, coef=log(2), reference=~Poisson,
+                   response="w",statsonly=TRUE,nsim=1000)
+mean(sim.pois)
+@ 
+Similar means. But, what do they look like?
+<<unbounded histograms, fig.height=3>>=
+par(mfrow=c(1,2))
+hist(sim.geom,breaks=diff(range(sim.geom))*4)
+hist(sim.pois,breaks=diff(range(sim.pois))*4)
+@ 
+
+Where did \code{log(2)} and \code{log(2/3)} come from? Later.
+
+\paragraph{Warning: Parameter space constrints}
+What happens if we simulate from a geometric-reference ERGM with all coefficients set to $0$?
+
+<<outside parameter space, fig.height=3>>=
+par(mfrow=c(1,1))
+sim.geo0<-simulate(y~sum, coef=0, reference=~Geometric,
+                    response="w",statsonly=TRUE,nsim=100,
+                    control=control.simulate(MCMC.burnin=0,MCMC.interval=1))
+mean(sim.geo0)
+plot(c(sim.geo0),xlab="MCMC iteration",ylab="Value of the tie")
+@ 
+
+Why does it do that? Because
+\[
+  \Pheg(\Yy;\curvpar)=\frac{\myexp{\natpar \sum_{\ijdysY}\yij}}{\cheg(\curvpar)}
+\]
+for $\natpar\ge 0$, is not a valid distribution, because
+$\cheg(\curvpar)=\infty$. Using \code{reference=~Geometric} can be
+dangerous for this reason. This issue only arises with ERGMs that have
+an infinite sample space.
+
+\subsubsection{Valued ERGM terms}
+\paragraph{GLM-style terms}
+Many of the familiar ERGM effects can be modeled using the very same
+terms in the valued case, but applied a little differently.
+
+Any dyad-independent binary ERGM statistic can be expressed as
+$\genstat{k}=\sum_{\ijdysY}\covariate_{k,i,j}\yij$ for some covariate
+matrix $\covariate_k$. If $\yij$ is allowed to have values other than
+$0$ and $1$, then simply using such a term in a Poisson-reference ERGM
+creates the familiar log-linear effect. Similarly, in a
+Binomial-reference ERGM, such terms produce an effect on log-odds of a
+success. 
+
+The good news is that almost every dyad-independent \code{ergm} term
+has been reimplemented to allow this. It is invoked by specifying
+\enquote{\code{form="sum"}} argument for one of the terms inherited
+from binary ERGMs, though this not required, as it's the
+default. Also, note that for valued ERGMs, the \enquote{intercept}
+term is \code{sum}, not \code{edges}.
+
+<<help ergm-terms, eval=FALSE>>=
+help("ergm-terms")
+@ 
+has the complete list across all the loaded packages. In particular, the one in package \code{ergm} has each term be tagged with whether it's binary or valued.
+
+\paragraph{Example: Sampson's Monks}
+
+For example, we can fit the equivalent of logistic regression on the
+probability of nomination, with every ordered pair of monks observed
+3 times. We will look at differential homophily on group. That is, $\Yij\ind \Binomial(3,\boldsymbol{\pi}\sij)$ where
+\begin{multline*}
+  \logit(\boldsymbol{\pi}\sij)=\linpar_1 + \linpar_2 \I{\text{$i$ and $j$ are both in the Loyal Opposition}} \\
+  + \linpar_3 \I{\text{$i$ and $j$ are both Outcasts}} +  \linpar_4 \I{\text{$i$ and $j$ are both Young Turks}} \\
+  + \linpar_5 \I{\text{$i$ and $j$ are both Waverers}}
+\end{multline*}
+
+<<monks total fit, results='hide', fig.keep='none', warning=FALSE>>=
+samplk.tot.nm <- 
+  ergm(samplk.tot~sum + nodematch("group",diff=TRUE,form="sum"), 
+       response="nominations", reference=~Binomial(3)) 
+mcmc.diagnostics(samplk.tot.nm)
+@ 
+Note that it looks like it's fitting the model twice. This is because
+the first run is using an approximation technique called \emph{constrastive
+  divergence} to find a good starting value for the MLE fit.
+<<monks total fit summ>>=
+summary(samplk.tot.nm)
+@ 
+
+Based on this, we can say that the odds of a monk nominating another
+monk not in the same group during a given time step are
+$\myexp{\linpar_1}=\myexp{\Sexpr{round(coef(samplk.tot.nm)[1],4)}}=\Sexpr{round(exp(coef(samplk.tot.nm)[1]),4)}$,
+that the odds of a Loyal Opposition monk nominating another Loyal
+Opposition monk are
+$\myexp{\linpar_2}=\myexp{\Sexpr{round(coef(samplk.tot.nm)[2],4)}}=\Sexpr{round(exp(coef(samplk.tot.nm)[2]),4)}$
+times higher, etc..
+
+\paragraph{Example: Zachary's Karate Club}
+We will use a Poisson log-linear model for the number of contexts in
+which each pair of individuals interacted, as a function of whether
+this individual is a faction leader (Mr. Hi or John A.)  That is,
+$\Yij\ind \Poisson(\meanpar\sij)$ where
+\[
+  \log(\meanpar\sij)=\linpar_1 + \linpar_2 (\I{\text{$i$ is a faction leader}} + \I{\text{$j$ is a faction leader}})
+\]
+
+We will do this by constructing a dummy variable, a vertex attribute \code{"leader"}:
+<<create leader attribute>>=
+unique(zach %v% "role")
+# Vertex attr. "leader" is TRUE for Hi and John, FALSE for others.
+zach %v% "leader" <- zach %v% "role" != "Member" 
+@ 
+
+<<zach sum leader fit, results='hide', fig.keep='none', warning=FALSE>>=
+zach.lead <- 
+  ergm(zach~sum + nodefactor("leader"), 
+       response="contexts", reference=~Poisson) 
+mcmc.diagnostics(zach.lead)
+@ 
+<<zach sum leader fit summ>>=
+summary(zach.lead)
+@ 
+
+Based on this, we can say that the expected number of contexts of
+interaction between two non-leaders is
+$\myexp{\linpar_1}=\myexp{\Sexpr{round(coef(zach.lead)[1],4)}}=\Sexpr{round(exp(coef(zach.lead)[1]),4)}$,
+that the expected number of contexts of interaction between a leader
+and a non-leader is
+$\myexp{\linpar_2}=\myexp{\Sexpr{round(coef(zach.lead)[2],4)}}=\Sexpr{round(exp(coef(zach.lead)[2]),4)}$
+times higher, and that the expected number of contexts of interaction
+between the two leaders is
+$\myexp{2\linpar_2}=\myexp{2\cdot\Sexpr{round(coef(zach.lead)[2],4)}}=\Sexpr{round(exp(2*coef(zach.lead)[2]),4)}$
+times higher than that between two non-leaders. (Because the leaders
+were hostile to each other, this may not be a very good prediction.)
+
+\paragraph{Sparsity and zero-modification}
+It is often the case that in networks of counts, the network is
+sparse, yet if two actors do interact, their interaction count is
+relatively high. This amounts to zero-inflation.
+
+We can model this using the binary-ERGM-based terms with the term \code{nonzero} ($\genstat{k}=\sum_{\ijdysY}\I{\yij\ne 0}$) and GLM-style terms with argument
+\code{form="nonzero"}:
+$\genstat{k}=\sum_{\ijdysY}\covariate_{k,i,j}\I{\yij\ne 0}$. For
+example,
+<<zach sum nonzero group fit, results='hide', fig.keep='none', warning=FALSE>>=
+samplk.tot.nm.nz <- 
+  ergm(samplk.tot~sum + nonzero + nodematch("group",diff=TRUE,form="sum"), 
+       response="nominations", reference=~Binomial(3))
+mcmc.diagnostics(samplk.tot.nm.nz)
+@ 
+<<zach sum nonzero group fit summ>>=
+summary(samplk.tot.nm.nz)
+@
+fits a zero-modified Binomial model, with a coefficient on the number
+of non-zero relations $\Sexpr{round(coef(samplk.tot.nm.nz)[2],4)}$ is negative
+and highly significant, indicating that there is an excess of zeros in
+the data relative to the binomial distribution, and given the rest of
+the model.
+
+\paragraph{Other thresholds}
+The following terms compute the number of dyads $\pij$ whose values $\yij$ fulfil their respective conditions: \code{atleast(threshold=0)}, \code{atmost(threshold=0)}, \code{equalto(value=0, tolerance=0)}, \code{greaterthan(threshold=0)}, \code{ininterval(lower=-Inf, upper=+Inf, open=c(TRUE,TRUE))}, and \code{smallerthan(threshold=0)}.
+
+\paragraph{Dispersion}
+Similarly, even if we may use Poisson as a starting distribution, the
+counts might be overdispersed or underdispersed relative to it. For
+now, \code{ergm} offers two ways to do so:
+
+\begin{description}
+  \item[Conway--Maxwell--Poisson]\ \\
+    \begin{itemize}
+    \item Implemented by adding a \code{CMP} term to a Poisson- or geometric-reference ERGM.
+    \item Effectively replaces the \enquote{$1/y!$} part of a Poisson density with \enquote{$1/(y!)^{\curvpar_\text{CMP}}$}.
+    \item[$+$] Produces a continuum between a geometric distribution and a Bernoulli distribution.
+    \item[$+$] Can represent both over- and under-dispersion.
+    \item[$-$] Has the parameter space problem; also, has some theoretical issues.
+    \end{itemize}
+  \item[Fractional moments]\ \\
+    \begin{itemize}
+      \item Implemented by adding a \code{sum(pow=1/2)} term to a Poisson-reference ERGM.
+      \item Adds a statistic of the form $\sum_{\ijdysY} \yij^{1/2}$ to the model.
+      \item[$+$] More stable.
+      \item[$+$] For Poisson-like data, $\sqrt{\yij}$ is a
+        variance-stabilizing transformation, so it could be
+        interpreted as modeling (along with \code{sum} the first two
+        moments of $\sqrt{\yij}$.
+      \item[$-$] Not well-understood.
+      \item[$-$] In extreme cases, creates a bimodal shape in the
+        counts.
+    \end{itemize}
+\end{description}
+
+\paragraph{Mutuality}
+
+\code{ergm} binary \code{mutuality} statistic has the form
+$\genstat{$\leftrightarrow$}=\sum_{\ijdysY}\yij\yji$. It turns out that
+directly plugging counts into that statistic is a bad idea. \code{mutuality(form)} is a valued ERGM term, permitting the following generalizations:
+\begin{description}
+  \item[\code{"geometric"}:] $\sum_{\ijdysY}\sqrt{\yij\yji}$ --- can be viewed as uncentered covariance of variance-stabilized counts 
+  \item[\code{"min"}:] $\sum_{\ijdysY}\min{\yij,\yji}$ --- easiest to interpret
+  \item[\code{"nabsdiff"}:] $\sum_{\ijdysY}-\lvert\yij-\yji\rvert$
+\end{description}
+Figure \ref{fig:mutualities} visualizes their effects.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{mutualities}
+\caption{\label{fig:mutualities} Effect of several mutuality forms on
+  the probability of $\Yij$ having a certain value given a particular
+  $\yji$.}
+\end{figure}
+
+\paragraph{Individual heterogeneity}
+Different actors may have different overall propensities to
+interact. This has been modeled using random effects (as in the $p_2$
+model and using degeneracy-prone terms like $k$-star counts.
+
+\code{ergm} implements a number of statistics to model it, but the one that seems to work best so far seems to be
+\[\genstat{actor cov.}(\y)=\sum_{i\in N}\frac{1}{n-2}\sum_{j,k\in \dysY_{i}\land j<k}(\sqrt{\yij}-\overline{\sqrt{\y}})(\sqrt{\y_{i,k}}-\overline{\sqrt{\y}}),\]
+essentially a measure of covariance between the $\sqrt{\yij}$s incident
+on the same actor. The term \code{nodesqrtcovar} implements it.
+
+\paragraph{Triadic closure}
+
+Finally, to generalize the notion of triadic closure, \code{ergm} implements very flexible \code{transitiveweights(twopath, combine, affect)} and similar \code{cyclicalweights} statistics. The transitive weight statistic has the following general form:
+\[\genstat{$\boldsymbol{v}$}(\y)=\sum_{\ijdysY}v_{\text{affect}}\left(\yij,v_{\text{combine}}\left(v_{\text{2-path}}(\y_{i,k},\y_{k,j})_{k\in N\setsub \{i,j\}}\right)\right),\]
+and can be \enquote{customized} by varying the three functions
+\begin{description}
+\item[$v_{\text{2-path}}$] Given $\y_{i,k}$ and $\y_{k,j}$, what is the strength of the two-path they form?
+  \begin{description}
+  \item[\code{"min"}] the minimum of their values --- conservative
+  \item[\code{"geomean"}] their geometric mean --- more able to
+    detect effects, but more likely to cause \enquote{degeneracy}
+  \end{description}
+\item[$v_{\text{combine}}$] Given the strengths of the two-paths
+  $\y_{i\to k\to j}$ for all $k\ne i,j$, what is the combined
+  strength of these two-paths between $i$ and $j$?
+  \begin{description}
+  \item[\code{"max"}] the strength of the strongest path  --- conservative; analogous to \code{transitiveties}
+  \item[\code{"sum"}] the sum of path strength --- more able to
+    detect effects, but more likely to cause \enquote{degeneracy}; analogous to \code{triangles}
+  \end{description}
+\item[$v_{\text{affect}}$] Given the combined strength of the two-paths between $i$ and $j$, how should they affect $\Yij$?
+  \begin{description}
+  \item[\code{"min"}] conservative
+  \item[\code{"geomean"}] more able to
+    detect effects, but more likely to cause \enquote{degeneracy}
+  \end{description}
+  These effects are analogous to mutuality.
+\end{description}
+
+\subsubsection{Examples}
+\paragraph{Sampson's Monks}
+
+Suppose that we want to fit a model with a zero-modified Binomial baseline, mutuality, transitive (hierarchical) triads, and cyclical (antihierarchical) triads, to this dataset:
+<<monks big fit, results='hide', fig.keep='none', warning=FALSE>>=
+samplk.tot.ergm <- 
+  ergm(samplk.tot ~ sum + nonzero + mutual("min") +
+       transitiveweights("min","max","min") +
+       cyclicalweights("min","max","min"),
+       reference=~Binomial(3), response="nominations")
+mcmc.diagnostics(samplk.tot.ergm)
+@ 
+<<monks big fit summ>>=
+summary(samplk.tot.ergm)
+@
+
+What does it tell us? The negative coefficient on \code{nonzero}
+suggests zero-inflation, there is strong evidence of mutuality, and
+the positive coefficient on transitive weights and negative on the
+cyclical weights suggests hierarchy, but they are not significant.
+
+\paragraph{Zachary's Karate Club}
+
+Now, let's try using Poisson to model the Zachary Karate Club data: a
+zero-modified Poisson, with potentially different levels of activity
+for the faction leaders, heterogeneity in actor activity level
+overall, and an effect of difference in faction membership, a model
+that looks like this:
+<<zach big model>>=
+summary(zach~sum+nonzero+nodefactor("leader")+absdiffcat("faction.id")+
+        nodesqrtcovar(TRUE), response="contexts")
+@ 
+
+A few other notes:
+\begin{itemize}
+\item By default, Poisson-reference ERGMs use a variant of the TNT proposal to make sampling from sparse (or 0-inflated) networks more efficient. There is a tuning parameter
+  \code{MCMC.prop.args=list(p0=...)} that can be used to control how much ``zero-inflation'' there is. It has a sensible default. 
+\item Informally, a Poisson random variable contains more
+  \enquote{information} than a Bernoulli random variable, which means
+  that large changes in likelihood are not necessarily symptomatic of
+  a problem. Thus, it often helps to set \code{MCMLE.trustregion},
+  which is normally 20 to something higher.
+\end{itemize}
+
+Now, for the fit and the diagnostics:
+<<zach big fit, results='hide', fig.keep='none', warning=FALSE>>=
+zach.pois <- 
+  ergm(zach~sum+nonzero+nodefactor("leader")+absdiffcat("faction.id")+
+       nodesqrtcovar(TRUE),
+       response="contexts", reference=~Poisson,
+       control=control.ergm(MCMLE.trustregion=100, MCMLE.maxit=50), verbose=TRUE)
+mcmc.diagnostics(zach.pois)
+@ 
+<<zach big fit summ>>=
+summary(zach.pois)
+@ 
+
+What does it tell us? The negative coefficient on \code{nonzero}
+suggests zero-inflation, the faction leaders clearly have more
+activity than others, and the more ideologically separated two
+individuals are, the less they interact. Over and above that, there is
+some additional heterogeneity in how active individuals are: if $i$
+has a lot of interaction with $j$, it is likely that $i$ has more with
+$j'$. Could this mean a form of preferential attachment?
+
+We can try seeing whether there is some friend of a friend effect
+above and beyond that. This can be done by fitting a model with
+transitivity and seeing whether the coefficient is significant, or we
+can perform a simulation test. In the following
+\begin{itemize}
+\item \code{simulate} unpacks the \code{zach.pois} ERGM fit, extracting the formula, the coefficient, and the rest of the information.
+\item \code{nsim} says how many networks to generate.
+\item \code{statsonly=TRUE} says that we only want to see the
+  simulated statistics, not the networks.
+\item \code{monitor=~transitiveweights("geomean","sum","geomean")}
+  says that in addition to the statistics used in the fit, we want
+  \code{simulate} to keep track of the transitive weights statistic.
+  
+  We do not need to worry about degeneracy in this case, because we
+  are not actually using that statistic in the model, only
+  \enquote{monitoring} it.
+\end{itemize}
+<<zach big fit sim, results='hide'>>=
+# Simulate from model fit:
+zach.sim <- 
+  simulate(zach.pois, monitor=~transitiveweights("geomean","sum","geomean"),
+           nsim = 1000, statsonly=TRUE)
+@ 
+<<zach big fit sim summ>>=
+# What have we simulated?
+colnames(zach.sim)
+
+# How high is the transitiveweights statistic in the observed network?
+zach.obs <- summary(zach ~ transitiveweights("geomean","sum","geomean"), 
+                    response="contexts")
+zach.obs
+@ 
+Let's plot the density of the simulated values of transitive weights statistic:
+<<zach big fit sim plot,fig.height=3>>=
+par(mar=c(5, 4, 4, 2) + 0.1)
+# 9th col. = transitiveweights
+plot(density(zach.sim[,9]))
+abline(v=zach.obs)
+@ 
+
+<<zach big fit sim test>>=
+# Where does the observed value lie in the simulated?
+# This is a p-value for the Monte-Carlo test:
+min(mean(zach.sim[,9]>zach.obs), mean(zach.sim[,9]<zach.obs))*2
+@ 
+
+Looks like individual heterogeneity and faction alignment account for
+appearance of triadic effects. (Notably, the factions themselves may
+be endogenous, if social influence is a factor. Untangling selection
+from influence is hard enough when dynamic network data are
+available. We cannot do it here.)
+
+\subsection{Modeling ordinal relational data using \pkg{ergm.rank}}
+<<setup ergm.rank, cache=FALSE>>=
+library(ergm.rank)
+@ 
+Note that the implementations so far are \emph{very} slow, so we will only do a short example.
+\subsubsection{References}
+Suppose that we reprsent ranking (or ordinal rating) of $j$ by $i$ by the value of $\yij$. What reference can we use for ranks?
+
+<<references ergm.rank, eval=FALSE>>=
+help("ergm-references", "ergm.rank")
+@ 
+
+
+\subsubsection{Terms}
+For details, see \citet{KrBu12e}. It's not meaningful to
+\begin{itemize}
+\item compare ranks across different egos.
+\item take rank difference within an ego.
+\end{itemize}
+The only thing we are allowed to do is to ask if $i$ has ranked $j$ over $k$.
+
+Therefore, ordinal relational data call for their own sufficient statistics. These will depend on \begin{equation*}
+\ypref{i}{j}{k}\equiv\begin{cases}
+  1 & \text{if $j\pref[i]k$ i.e.,  $i$ ranks $j$ above $k$;} \\
+  0 & \text{otherwise.}
+\end{cases}
+\end{equation*}
+We may interpret them using the \emph{promotion statistic} \[\ipromotejv \genstats(\y)\equiv \genstats(\egoswapr{\y}{i}{j}{\jplus})-\genstats(\y).\]
+
+Let $\distuples{k}$ be the set of possible $k$-tuples of actor indices where no actors are repeated. Then,
+\begin{description}
+\item[\code{rank.deference}: \emph{Deference (aversion)}:] Measures the
+  amount of ``deference'' in the network: configurations where an ego
+  $i$ ranks an alter $j$ over another alter $k$, but
+  $j$, in turn, ranks $k$ over $i$:
+  \[
+  \genstat{D}(\y) = \sum_{(i,j,\l)\in \distuples{3}} \ypref{\l}{j}{i}\ypref{i}{\l}{j} 
+  \]
+  \[
+  \ipromotej \genstat{D}(\y) = 2\en(){\ypref{\jplus}{i}{j}+\ypref{j}{\jplus}{i} - 1}.
+  \]
+  A lower-than-chance
+  value of this statistic and/or a negative coefficient implies a form
+  of mutuality in the network.  
+\item[\code{rank.edgecov(x, attrname)}: \emph{Dyadic covariates}:]
+  Models the effect of a dyadic covariate on the propensity of an ego
+  $i$ to rank alter $j$ highly:
+  \[\genstat{A}(\y;\covariate) = \sum_{(i,j,k)\in \distuples{3}} \ypref{i}{j}{k}(\covariate_j-\covariate_k).\]
+  \[
+  \ipromotej \genstat{A}(\y;\covariate)= 2(\covariate_{j}-\covariate_{\jplus}),
+  \]
+  See the
+  \code{?rank.edgecov} ERGM term documentation for arguments.
+\item[\code{rank.inconsistency(x, attrname, weights, wtname, wtcenter)}: \emph{(Weighted) Inconsistency}:]
+  Measures the amount of disagreement between rankings of the focus
+  network and a fixed covariate network \code{x}, by couting the number of pairwise
+  comparisons for which the two networks disagree. \code{x} can be a \code{\link{network}} with an edge
+  attribute \code{attrname} containing the ranks or a matrix of
+  appropriate dimension containing the ranks. If \code{x} is not
+  given, it defaults to the LHS network, and if \code{attrname} is
+  not given, it defaults to the \code{response} edge attribute.
+  \[
+\genstat{I}(\y;\y') = \sum_{(i,j,k)\in\distuples{3}_s} \left[ \ypref{i}{j}{k}\en(){1-\egopref{\y'}{i}{j}{k}} + \left(1-\ypref{i}{j}{k}\right) \egopref{\y'}{i}{j}{k} \right], \label{eq:inconsistency}
+\]
+with promotion statistic being simply 
+\[
+\ipromotej \genstat{I}(\y;\y') = 2(\egopref{\y'}{i}{\jplus}{j}-\egopref{\y'}{i}{j}{\jplus}).
+\]
+
+  
+  Optionally, the count can be weighted by the \code{weights}
+  argument, which can be either a 3D $n\times n\times n$-array
+  whose $(i,j,k)$th element gives the weight for the
+  comparison by $i$ of $j$ and $k$ or a function taking
+  three arguments,  $i$, $j$, and $k$, and returning
+  the weight of this comparison. If \code{wtcenter=TRUE}, the
+  calculated weights will be centered around their
+  mean. \code{wtname} can be used to label this term.
+\item[\code{rank.nodeicov(attrname, transform, transformname)}: \emph{Attractiveness/Popularity covariates}:]  Models the effect of a nodal covariate on the propensity of an
+  actor to be ranked highly by the others.
+  \[\genstat{A}(\y;\covariate) = \sum_{(i,j,k)\in \distuples{3}} \ypref{i}{j}{k}(\covariate_j-\covariate_k).\]
+  \[
+  \ipromotej \genstat{A}(\y;\covariate)= 2(\covariate_{j}-\covariate_{\jplus}),
+  \]
+  See the
+  \code{?nodeicov} ERGM term documentation for arguments.
+\item[\code{rank.nonconformity(to, par)}: \emph{Nonconformity}:]
+  Measures the amount of ``nonconformity'' in the network: configurations where an ego
+  $i$ ranks an alter $j$ over another alter $k$, but
+  ego $l$ ranks $k$ over $j$.
+  
+  This statistic has an argument \code{to}, which controls
+  to whom an ego may conform:
+  \begin{description}
+  \item[\code{"all"} (the default)] Nonconformity to all
+    egos is counted:
+    \[
+\genstat{GNC}(\y) = \sum_{(i,j,k,\l)\in \distuples{4}}\ypref{\l}{j}{k}\left(1-\ypref{i}{j}{k}\right) \]
+\[
+  \ipromotej \genstat{GNC}(\y) = 2\sum_{\l \in \actorsnot{i,j,\jplus}}\en(){\ypref{\l}{\jplus}{j}-\ypref{\l}{j}{\jplus}}.
+\]
+    A lower-than-chance
+    value of this statistic and/or a negative coefficient implies a
+    degree of consensus in the network.
+  \item[\code{"localAND"} (\emph{Local nonconformity})]
+    Nonconformity of $i$ to ego $l$ regarding the relative ranking
+    of $j$ and $k$ is only counted if $i$ ranks $l$
+    over both $j$ and $k$:
+    \[\genstat{LNC}(\y) = \sum_{(i,j,k,\l)\in \distuples{4}} \ypref{i}{\l}{j} \ypref{i}{\l}{k} \ypref{\l}{j}{k} (1-\ypref{i}{j}{k})
+\]
+\begin{align*}
+  \ipromotej \genstat{LNC}(\y)=\sum_{k\in \actorsnot{i,j,\jplus}}(&  \ypref{i}{k}{\jplus}\ypref{k}{\jplus}{j}-\ypref{i}{k}{\jplus}\ypref{k}{j}{\jplus}\\
+  \vphantom{\sum_{k\in \actorsnot{i,j,\jplus}}}&+\ypref{k}{i}{\jplus}\ypref{k}{\jplus}{j}-\ypref{k}{i}{j}\ypref{k}{j}{\jplus}\\
+  \vphantom{\sum_{k\in \actorsnot{i,j,\jplus}}}&+\ypref{j}{k}{\jplus}\ypref{i}{\jplus}{k}-\ypref{\jplus}{k}{j}\ypref{i}{j}{k}). 
+\end{align*}
+    A lower-than-chance
+    value of this statistic and/or a negative coefficient implies a
+    form of hierarchical transitivity in the network.
+  \end{description}
+\end{description}
+
+Consider the Newcomb's fraternity data:
+<<newcomb data>>=
+data(newcomb)
+as.matrix(newcomb[[1]], attrname="rank")
+as.matrix(newcomb[[1]], attrname="descrank")
+@ 
+
+Let's fit a model for the two types of nonconformity and deference at the first time point:
+
+<<newcomb fit1, results='hide'>>=
+newc.fit1<- ergm(newcomb[[1]]~rank.nonconformity+rank.nonconformity("localAND")+rank.deference,response="descrank",reference=~CompleteOrder,control=control.ergm(MCMLE.trustregion=1000, MCMC.burnin=4096, MCMC.interval=32, CD.conv.min.pval=0.05),eval.loglik=FALSE)
+@ 
+<<newcomb fit1 summ>>=
+summary(newc.fit1)
+@ 
+Check diagnostics:
+<<newcomb fit1 mcmc, results='hide', fig.keep='none', warning=FALSE>>=
+mcmc.diagnostics(newc.fit1)
+@ 
+
+<<newcomb fit15, results='hide'>>=
+newc.fit15 <- ergm(newcomb[[15]]~rank.nonconformity+rank.nonconformity("localAND")+rank.deference,response="descrank",reference=~CompleteOrder,control=control.ergm(MCMLE.trustregion=1000, MCMC.burnin=4096, MCMC.interval=32, CD.conv.min.pval=0.05),eval.loglik=FALSE)
+@
+<<newcomb fit15 summ>>=
+summary(newc.fit15)
+@ 
+Check diagnostics:
+<<newcomb fit15 mcmc, results='hide', fig.keep='none', warning=FALSE>>=
+mcmc.diagnostics(newc.fit15)
+@ 
+
+\subsection{Other notes}
+\begin{itemize}
+\item Missing (\code{NA}) edges are handled automatically for valued
+  ERGMs (as they are for regular ERGMs).
+\item \code{ergm} has an argument \code{eval.loglik}, which is
+  \code{TRUE} by default. For valued ERGMs, it's quite a bit less
+  efficient than for binary, at least for now. So, unless you need the
+  AICs or BICs to compare models, and especially if your networks are
+  not small, pass \code{eval.loglik=FALSE}.
+\item Writing user terms is possible, but the API is a little
+  different from that of binary change statistics API.
+\end{itemize}
+
+\subsection{Medium-term Roadmap}
+\begin{itemize}
+\item More efficient sampling for valued ERGMs.
+\item Goodness of fit diagnostics.
+\item Other reference distributions, including tied ranks and continuous
+  data. (Continuous uniform and normal is already implemented, but not well-understood.)
+\end{itemize}
+
+\section{Latent space models with non-binary response with \pkg{latentnet}}
+
+\pkg{latentnet}, as the name suggests, is designed to fit latent
+space models, but it can fit other dyad-independent network models as
+well. Let
+\begin{description}
+\item[$\Y$] be the random network being modeled;
+\item[$\y$] be the observed network;
+\item[$\covariate$] is a $\nnatpar\times\nactors\times\nactors$ array of dyadic covariates, with
+\item[$\covariate_{\cdot,i,j}$] being a $\nnatpar$-vector of covariates for dyad $\pij$;
+\item[$\linpar$] be the $\nnatpar$-vector of covariate coefficients;
+\item[$\Z$] be the $\nactors\times\latdim$ array of latent positions, with
+\item[$\Z_i$] being the $\latdim$-vector position of actor $i$;
+\item[$\sendeff$] be the $\nactors$-vector of sender effects, with
+\item[$\sendeff_i$] being the sender effect of $\sendeff$; and
+\item[$\recveff$] being a $\nactors$-vector of receiver effects, with
+\item[$\recveff_i$] being the receiver effect of $\recveff$.
+\end{description}
+For brevity, let $\curvpar=(\linpar,\Z,\sendeff,\recveff)$ and let $\curvpar\sij=(\linpar,\Z_i,\Z_j,\sendeff_i,\recveff_j)$. Generally, a latent space model that can be fit by \pkg{latentnet} has the following form:
+\begin{align}
+  \Pr(\Yy|\curvpar,\covariate) & = \prod_{\ijdysY}\Pr(\Yyij|\curvpar\sij,\covariate_{\cdot,i,j})\label{eq:cond-ind}, \\
+  \Pr(\Yyij|\curvpar\sij,\covariate_{\cdot,i,j}) & = f(\yij|\meanpar\sij)\label{eq:cond-on-dist}, \\
+  \meanpar\sij & = g^{-1}(\linpred\sij)\label{eq:glm-link}, \\
+  \linpred\sij & = \covariate_{\cdot,i,j}^\top \linpar + \lateff(\Z_i,\Z_j)+\sendeff_i+\recveff_j\label{eq:linear-predictor},
+\end{align}
+for some latent position effect $\lateff(\cdot,\cdot)$. Effects
+supported by \pkg{latentnet} are Euclidean, having
+$\lateff(\Z_i,\Z_j)=-\lvert \Z_i -\Z_j\rvert$ and bilinear, having
+$\lateff(\Z_i,\Z_j)= \Z_i^\top\Z_j$. Latent space positions $\Z$ can
+further be modeled as a Gaussian mixture, and $\sendeff$ and
+$\recveff$ are likewise modeled as random effects.
+
+In words, the values of individual relations are assumed to be
+independent \eqref{eq:cond-ind}, and each potential relation has a
+value modeled by a GLM, having some distribution with density $f$,
+parametrized by its expected value \eqref{eq:cond-on-dist}, which is,
+in turn, a function, via a GLM link function $g$, of the linear
+predictor $\linpred\sij$ \eqref{eq:glm-link}, which is a linear
+function combining all the parameters \eqref{eq:linear-predictor}.
+
+A latent space model for a binary network has
+\begin{align*}
+  f(\yij|\meanpar\sij)&=(\meanpar\sij)^{\yij}(1-\meanpar\sij)^{1-\yij}\\
+  g(\meanpar\sij)&=\logit(\meanpar\sij),
+\end{align*}
+a Bernoulli model with a logit link: a logistic regression model.
+
+This is easily extended to any GLM. In particular,
+\begin{description}
+  \item[Poisson log-linear model:]\ 
+    \begin{align*}
+      f(\yij|\meanpar\sij)&=\myexp{-\meanpar\sij} \meanpar\sij^{\yij}/\yij!\\
+      g(\meanpar\sij)&=\log(\meanpar\sij)
+    \end{align*}
+  \item[Binomial logit with $m$ trials:]\
+    \begin{align*}
+      f(\yij|\meanpar\sij)&=\binom{m}{\yij}(\meanpar\sij/m)^{\yij}(1-\meanpar\sij/m)^{m-\yij}\\
+      g(\meanpar\sij)&=\logit(\meanpar\sij)
+    \end{align*}
+  \item[Normal linear with variance $\sigma^2$:]\
+    \begin{align*} f(\yij|\meanpar\sij)&=\frac{1}{\sqrt{2\pi\sigma^2}}\myexp{-\frac{(\yij-\meanpar\sij)^2}{2\sigma^2}}\\
+      g(\meanpar\sij)&=\meanpar\sij\\
+      \sigma^2&\sim \sigma^2_0 \InvChiSq(\nu)  
+    \end{align*}
+    for prior dispersion parameters $\sigma^2_0$ (magnitude of the variance) and $\nu$ (certainty of the prior (higher = more certain)).
+\end{description}
+These are currently supported by \pkg{latentnet}.
+
+\subsection{A very quick overview of \pkg{latentnet}}
+
+The workhorse function \code{ergmm} (for Exponential Random Graph
+\emph{Mixed} Model) has a syntax very similar to \code{ergm}: the
+model is specified as \code{network ~ term1 + term2 + ...} and \pkg{latentnet} automatically imports all of
+the \emph{dyad-independent} terms implemented in \code{ergm} (and those in any loaded addon packages). (\pkg{latentnet} does have some special-purpose terms, mainly because it can fit networks with self-loops, while \code{ergm} cannot.) For a full
+list of \pkg{latentnet}-specific terms implemented, see \code{? terms.ergmm}. Note that
+\code{ergmm}, like \code{glm} and unlike \code{ergm}, sets the first
+covariate $\covariate_{1,i,j}\equiv 1$ for an intercept term, the
+(binary) ERGM equivalent of an edge count term.
+
+For example,
+<<monks nodematch mle fit, results='hide'>>=
+samplk.nm.l <- ergmm(samplk.tot~nodematch("group",diff=TRUE),tofit="mle", verbose=TRUE)
+@ 
+sets $\covariate_{1,i,j}\equiv 1$, $\covariate_{2,i,j}\equiv \I{i\in\text{Loyal} \land j\in\text{Loyal}}$, $\covariate_{3,i,j}\equiv \I{i\in\text{Outcasts} \land j\in\text{Outcasts}}$, etc., to produce a model of the form
+\[\logit(\Pr(\Yij=1))=\linpar_1 + \linpar_2 \I{\text{$i$ and $j$ are both Loyal Opposition}} + \linpar_3 \I{\text{$i$ and $j$ are both Outcasts}}+\dotsb,\]
+equivalent to a \code{ergm} specification of
+<<monks nodematch ergm fit, results='hide'>>=
+samplk.nm.e <- ergm(samplk.tot~edges+nodematch("group",diff=TRUE))
+@
+
+In fact, the produce the same coefficients and standard errors:
+<<monks nodematch compare>>=
+summary(samplk.nm.l, point.est="mle", se=TRUE)
+summary(samplk.nm.e)
+@ 
+
+\pkg{latentnet} fits latent space models using terms \code{euclidean}
+and \code{bilinear}, which take two main arguments: \code{d} for
+dimension and \code{G} for number of clusters to use. So, for a classic example of the Sampson's monks fit, i.e.,
+\[\logit(\Pr(\Yij=1))=\linpar_1 + \lvert \Z_i -\Z_j \rvert,\]
+with $\Z_i$ modeled as 3 spherical Gaussian clusters with 2 dimensions,
+<<monks latent fit, results='hide'>>=
+samplk.d2G3<-ergmm(samplk.tot~euclidean(d=2,G=3), verbose=TRUE)
+@ 
+
+Random actor-specific effects can also be used, with terms
+\code{rsender}, \code{receiver}, and \code{rsociality}, respectively:
+a receiver effects model of the form
+\[\logit(\Pr(\Yij=1))=\linpar_1 + \lvert \Z_i -\Z_j \rvert + \recveff_j,\]
+can be fit with
+<<monks latent re fit, results='hide', fig.keep='none', warning=FALSE>>=
+samplk.d2G3r<-ergmm(samplk.tot~euclidean(d=2,G=3)+rreceiver, verbose=TRUE)
+mcmc.diagnostics(samplk.d2G3r)
+@ 
+
+The results can be visualized using
+<<monks latent re fit plot, fig.height=3>>=
+par(mfrow=c(1,2))
+# Extract a clustering
+Z.K.ref <- summary(samplk.d2G3,point.est="pmean")$pmean$Z.K 
+# Plot one model, saving positions, using Z.K.ref to set reference clustering.
+Z.ref <- plot(samplk.d2G3, pie=TRUE, Z.K.ref=Z.K.ref)
+# Plot the other model, using Z.ref and Z.K.ref to ensure similar
+# orientation and coloring.
+plot(samplk.d2G3r, rand.eff="receiver", pie=TRUE, Z.ref=Z.ref, Z.K.ref=Z.K.ref)
+@
+
+All \code{ergmm} terms also take additional arguments, specifying
+prior distributions. Their defaults are generally sensible, so we
+will not discuss them here.
+
+\subsection{Specifying non-binary models in \pkg{ergmm}}
+
+Fitting non-binary models using \code{ergmm} requires three additional arguments:
+\begin{description}
+\item[\code{response}] An edge attribute in the network whose values
+  are to be used as the response.
+\item[\code{family}] A string specifying the family and the link to be
+  used.
+\item[\code{fam.par}] A named list of parameters required by some
+  families.
+\end{description}
+
+The families listed above are specified using parameter values listed in Table \ref{tab:ergmm-families}.
+Also, see 
+<<eval=FALSE>>=
+? families.ergmm
+@ 
+for more information.
+
+\begin{table}
+  \caption{\label{tab:ergmm-families}GLM families implemented by \pkg{latentnet}}
+  \begin{center}
+    \begin{tabular}{|ll|cc|}
+      \hline
+      Family & Link & \code{family=}             & \code{fam.par=list(...)} \\
+      \hline
+      Bernoulli & logit & \code{"Bernoulli"} &                   \\
+      binomial & logit & \code{"binomial"}  & \code{trials}$=m$ \\
+      Poisson & log & \code{"Poisson"}   &                   \\
+      Normal & linear & \code{"normal"}  & \code{prior.var}$=\sigma^2_0$, \code{prior.var.df}$=\nu$\\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+We have our network of nomination counts, with a maximum of three
+\enquote{successes}, so we might model it using a Binomial distribution, i.e.,
+\[\Pr(\Yyij|\linpred\sij)=\binom{3}{\yij}(\ilogit(\linpred\sij))^{\yij}(\ilogit(\linpred\sij))^{3-\yij},\]
+with $\linpred\sij$ being the same as in the binary case.
+
+<<monks count latent fit,results='hide'>>=
+# Bernoulli logit fit (recall)
+# samplk.d2G3 <- ergmm(samplk.tot~euclidean(d=2,G=3))
+# Binomial(trials=3) logit fit
+samplk.ct.d2G3 <- 
+  ergmm(samplk.tot~euclidean(d=2,G=3),response="nominations",
+        family="binomial",fam.par=list(trials=3), verbose=TRUE)
+@
+
+We can plot the fit
+<<monks count latent fit plot, fig.height=3>>=
+# Plot them side-by-side, using edge.col argument:
+par(mfrow=c(1,2))
+plot(samplk.d2G3,pie=TRUE, Z.ref=Z.ref, Z.K.ref=Z.K.ref)
+plot(samplk.ct.d2G3,pie=TRUE, Z.ref=Z.ref, Z.K.ref=Z.K.ref, edge.col=samplk.ecol)
+@ 
+
+Now, consider a latent cluster random effects model for the number of contexts of interactions, which takes into account that faction leaders are likely to have greater propensity to interact than non-leaders:
+$\Yij\ind \Poisson(\meanpar\sij)$
+with
+\[\log\meanpar\sij=\linpred\sij=\linpar_1 + \linpar_2 (\I{\text{$i$ is a faction leader}} + \I{\text{$j$ is a faction leader}} ) + \lvert \Z_i-\Z_j \rvert + \sendeff_i + \sendeff_j.\]
+
+Now, let's fit the model:
+<<zach count latent fit, results='hide', fig.keep='none', warning=FALSE>>=
+zach.d2G2S <- ergmm(zach~nodefactor("leader")+euclidean(d=2,G=2)+rsociality,
+                    response="contexts",family="Poisson",
+                    verbose=TRUE)
+mcmc.diagnostics(zach.d2G2S)
+@ 
+<<zach count latent fit summ plot>>=
+summary(zach.d2G2S)
+par(mar=c(5, 4, 4, 2) + 0.1)
+plot(zach.d2G2S, rand.eff="sociality", edge.col=zach.ecol, labels=TRUE)
+@
+
+It is worth noting here that even though we are fitting a valued
+network model, the term names and parameters that we need to use are
+still those for the binary ERGM variants of these terms.
+
+Another useful application of \code{nodecov} and others is when
+an undirected network of counts is a product of collapsing an
+affiliation network of actors to events to produce a network of actors
+only, counting the number of shared events for each pair of actors. If
+there is no particular pattern to the interaction, then the expected
+number of shared events between $i$ and $j$ would be proportional to
+the total number of events of $i$ and to the number of events of
+$j$. If $a_i$ is the total number of events associated with actor $i$,
+then using a vertex attribute equaling to $\log(a_i)$ in a
+\code{socialitycov} can be a good baseline model:
+\[\log \meanpar\sij=\linpar_1 + \linpar_2 (\log(a_i)+\log(a_j)) \Leftrightarrow \meanpar\sij=\myexp{\linpar_1}a_i^{\linpar_2}a_j^{\linpar_2},\]
+which produces proportionality when $\linpar_2\approx 1$. For an application of this, see \citet{KrHa09r}.
+
+
+\subsection{Medium-term Roadmap}
+\begin{itemize}
+\item Enable \pkg{latentnet} to fit heterogeneous trial counts.
+\end{itemize}
+
+\bibliographystyle{plainnat}
+\bibliography{Valued}
+
+\end{document}
