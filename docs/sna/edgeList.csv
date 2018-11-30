@@ -1,0 +1,10 @@
+Sender,Receiver,Weight
+a,b,1
+a,c,2
+a,d,1
+a,e,2
+b,d,1
+b,e,3
+b,f,2
+c,a,1
+c,b,1
