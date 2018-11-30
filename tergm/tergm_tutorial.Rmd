@@ -8,8 +8,7 @@ output:
     theme: cosmo
     toc: yes
     toc_float: true
-  pdf_document:
-    toc: yes
+    code_folding: show
 ---
 
 ```{r setup, include = FALSE}
@@ -24,28 +23,25 @@ _Last updated: `r Sys.Date()`_
 </div>
 
 
-_This tutorial is a joint product of the Statnet Development Team:_ 
-  
-Martina Morris (University of Washington)
-Pavel N. Krivitsky (University of Wollongong)
-Mark S. Handcock (University of California, Los Angeles)  
-Carter T. Butts (University of California, Irvine)  
-David R. Hunter (Penn State University)  
-Steven M. Goodreau (University of Washington)  
-Skye Bender de-Moll (Oakland)  
+```{r dev, child = '../statnetDevTeam.Rmd'}
+```
    
-The temporal modeling software we will be using is authored by Pavel Krivitsky (`tergm`) and Skye Bender de-Moll (`networkdynamic`, `tsna` and `ndtv`).
+The temporal modeling software demonstrated in this tutorial is authored by Pavel Krivitsky (`tergm`) and Skye Bender de-Moll (`networkdynamic`, `tsna` and `ndtv`).
 
-For general questions and comments, please refer to statnet users group and mailing list   
-http://statnet.csde.washington.edu/statnet_users_group.shtml
+---
+
+```{r project, child = '../statnetProject.Rmd'}
+```
+
+---
 
 ##Introduction to this workshop/tutorial.
 
 This workshop and tutorial provide an overview of 
-statistical modeling of temporal
-network data 
-using `statnet` software.  This online tutorial is also designed
+statistical modeling of temporal network data 
+using `statnet` software.  The tutorial is also designed
 for self-study, with example code and self-contained data.
+
 The `statnet` packages we will be demonstrating are:
 
 * `networkDynamic` -- storage and manipulation of temporal network data
@@ -53,15 +49,15 @@ The `statnet` packages we will be demonstrating are:
 * `ndtv` -- utilities for plotting temporal networks (including network movies)
 * `tergm` -- statistical tools for estimating TERGMs, model assessment, and dynamic network simulation.
 
-All `statnet` packages are open-source, written for the **R** computing
-environment, and published on CRAN.  The source repositories are hosted
-on [GitHub](statnet.github.io).  
 
 ### Prerequisites
 
 This workshop assumes basic familiarity with **R**, experience with
 network concepts, terminology and data, and experience with 
-Exponential family Random Graph Models (ERGMs).  The `statnet` ERGM workshop is ideal preparation.
+Exponential family Random Graph Models (ERGMs).  
+The `statnet` 
+[ERGM workshop](https://statnet.github.io/Workshops/ergm_tutorial.html) 
+is ideal preparation.
 
 ### Software installation
 
@@ -77,26 +73,22 @@ open an R session and type:
 
 ```{r,eval = FALSE}
 install.packages('statnet')
-install.packages('tsna')
 install.packages('ndtv')
 install.packages('htmlwidgets')
-```
-
-
-For this tutorial, we will need one additional package (latticeExtra), which is recommended (but not required) by ergm:
-
-```{r,eval = FALSE}
 install.packages('latticeExtra')
 ```
+
+The two non-statnet packages here (`htmlwidgets` and `latticeExtra`), provide some nice graphing utilities, and demonstrate one of the many benefits of working in the R software ecosystem---you're not restricted to the features in any one package.  Throughout this tutorial we will be
+exploiting this benefit, using functions from base R and other packages seamlessly with our statnet software.
+
 
 Make sure the packages are attached:
 
 ```{r,results = 'hide', message = FALSE, warning = FALSE}
 library(statnet)
-library(tsna)
-library(latticeExtra)
 library(ndtv)
 library(htmlwidgets)
+library(latticeExtra)
 ```
 
 Check package versions
@@ -113,8 +105,8 @@ set.seed(0)
 
 ##1. Temporal network data: Some considerations
 
-Moving from static to dynamic networks opens up the possibility of 
-many different types of dynamics:
+Moving from static to dynamic networks leads to 
+many different types of potential dynamics:
 
 * Tie dynamics--formation and dissolution (this is the minimum for our purposes)
 * Node dynamics--entry and exit (we won't address this here, but can handle them)
@@ -138,11 +130,10 @@ to several different types of data:
 
 * Discrete time network census panel data (with 2 or more panels)
 * Cross-sectional network census data with information on tie duration
-* Cross-sectional sampled network data with tie duration information
+* Cross-sectional *sampled* network data with tie duration information
 * Continuous time network event data
 
-Each type typically requires different methods for analysis.  We will cover the first two types of data in this tutorial (though TERGMs can handle the
-first three).
+Each type typically requires different methods for analysis.  We will cover the first two types of data in this tutorial (though TERGMs can handle the first three).
 
 
 ### Overview of modeling frameworks for temporal network data
@@ -150,27 +141,30 @@ first three).
 There are three general modeling frameworks for temporal network
 data analysis in the social networks field.
 
-* Stochastic Actor Oriented Models (SAOM)--implemented in the `RSiena` package written by Tom A.B. Snijders and colleagues.  SAOMs model the coevolution of nodal attributes and tie dynamics.  They are formulated as continuous time models.
+* Stochastic Actor Oriented Models (SAOM)--implemented in the `RSiena` package written by Tom A.B. Snijders and colleagues.  SAOMs model the coevolution of nodal attributes and tie dynamics.  They are formulated as continuous time models, but typically are estimated on discrete time data.
 
 * Relational Event Models--implemented in the `statnet` package `relevent`
 written by Carter Butts and colleagues.  These are continuous time models
 for node and tie dynamics, so they can assume dyad independence, 
 and exploit the methodology of logistic regression.
 
-* Temporal Exponential family Random Graph Models (TERGMS)--This is a large family of models that extend ERGMs for dynamic networks, and include the specific subclass of _Separable_ TERGMs that  are implemented in the `statnet` software in the `tergm` package.  TERGMs represent tie dynamics only, and are typically formulated in discrete time.
-
-All temporal network models can be thought of as a form of "agent-based" model, in that they can be used for simulation as well as estimation.
-Howver, network models are distinguished by a focus on principled
-reproduction of the joint distribution of network configurations 
-that are represented by the terms in the model. 
+* Temporal Exponential family Random Graph Models (TERGMS)--This is a large family of models that extend ERGMs for dynamic networks, and include the specific subclass of _Separable_ TERGMs that are implemented in the `statnet` software in the `tergm` package.  TERGMs represent tie dynamics only, and are typically formulated in discrete time.
 
 This workshop will focus on TERGMs.  And we'll start with a quick overview of the utilities for data storage, descriptive stats and visualization of temporal network data before moving on to the statistical modeling.
 
+---
+
+All temporal network models can be thought of as a form of "agent-based" model, in that they can be used for stochastic simulation of a population
+of "agents" interacting over time.
+However, the statistical network modeling frameworks are distinguished by (1) a foundation based
+on principled statistical estimation of the model parameters that allows for hypothesis testing and inference at the model building stage. 
+(2) reproduction of the full joint distribution of observed network configurations that are represented by the terms in the model. 
+
+---
 
 ##2. Exploring temporal network data
 
 ### networkDynamic:  storing and working with temporal network data
-
 
 Temporal network data in `statnet` 
 are stored as `networkDynamic` class objects--but these also have the class `network`.
@@ -190,58 +184,105 @@ To create a dynamic network object from the panels, we need to combine them into
 samplist <- list(samplk1,samplk2,samplk3)
 sampdyn <- networkDynamic(network.list = samplist)
 ```
+Note that, by default, the starting time is set to 0, so the first network will have this time stamp.  You can change that behavior by specifying
+a different value, for example:
+`sampdyn <- networkDynamic(network.list = samplist, start=1)`.
 
-The `networkDynamic` function is able to convert a wide array of temporal network data types into the `networkDynamic` objects.
+The `networkDynamic` function is able to convert a wide array of temporal network data types into the `networkDynamic` objects.  For more information, see `?networkDynamic`.
 
-As with `network` objects you can get a quick summary by typing the object name:
+As with `network` objects you can get a quick summary of a `networkDynamic` object by typing the object name:
 
 ```{r}
-sampdyn # note it says 4 time points
-network.collapse(sampdyn, at = 4) # this is an artifact of discrete time
+sampdyn
+```
+Note that the description indicates 4 timepoints (0 through 3).  This is an artifact of representing discrete time.  If you look at the final network, you'll see it is empty:
+```
+network.extract(sampdyn, at = 3) # empty
+network.extract(sampdyn, at = 0) # the first network, as expected
+```
+The discrete time representation means that specifying `at=0` is equivalent
+to specifying the semi-open interval `[0-1)` 
+with `onset = 0, terminus = 1`.
+
+```
+# Equivalent statements
+#network.extract(sampdyn, at = 0) # first network
+#network.extract(sampdyn, onset = 0, terminus=1) # same thing
 ```
 
-The `networkDynamic` package contains many utilities for modifying, extracting and querying `networkDynamic` objects.  The `network.collapse` function above extracts one or more networks and collapses them into a single network object.  You can get a good overview of the package functionality by reading the package vignette:
+The `networkDynamic` package contains many utilities for modifying, extracting and querying `networkDynamic` objects.  For example, the `network.extract`
+function above extracts one or more networks from the series, while the `network.collapse` function extracts one or more networks and collapses them into a single network object.  
+
+You can get a good overview of the wide range of functionality in this package by reading the package vignette:
 
 ```{r, eval = F}
 vignette("networkDynamic")
 ```
 
-As one small example, we'll just make a quick plot of the three network panels, using the `network.extract` function (this also extracts one or more networks, but preserves the time info if present).
+As one small example, we'll just make a quick plot of the three network panels, using the `network.extract` function (this also extracts one or more networks, but preserves the time info if present) and the network.
 ```{r}
-par(mfrow = c(1,3))
-plot(network.extract(sampdyn, at = 0), main = "Time 1", displaylabels = T)
-plot(network.extract(sampdyn, at = 1), main = "Time2", displaylabels = T)
-plot(network.extract(sampdyn, at = 2), main = "Time3", displaylabels = T)
+par(mfrow = c(2,2), oma=c(1,1,1,1), mar=c(4,1,1,1))
+plot(network.extract(sampdyn, at = 0), main = "Time 1", 
+     displaylabels = T, label.cex = 0.6, vertex.cex = 2, pad = 0.5)
+plot(network.extract(sampdyn, at = 1), main = "Time2", 
+     displaylabels = T, label.cex = 0.6, vertex.cex = 2, pad = 0.5)
+plot(network.extract(sampdyn, at = 2), main = "Time3", 
+     displaylabels = T, label.cex = 0.6, vertex.cex = 2, pad = 0.5)
+plot(sampdyn, main = "Collapsed", 
+     displaylabels = T, label.cex = 0.6, vertex.cex = 2, pad = 0.5)
 ```
 
-Not the most helpful display.  But we'll come back to this.
+Not the most helpful display if you're seeking some insight into the temporal changes in the friendships among the monks at the Sampson Monastery.  The next packages we'll review
+are designed to facilitate that task.
 
 ### `tsna`: a package for descriptive temporal network analysis
 
 As the name suggests, this package generalizes the `sna` package functionality for temporal network data.  It provides utilities for calculating:
 
-* static social network analysis metrics at multiple time points via the `tSnaStats` function
+* Static social network analysis metrics at multiple time points via the `tSnaStats` function
 
 ```{r}
 tSnaStats(sampdyn,"degree") # Changes in degree centrality
 ```
 
-* static ergm term statistics at multiple time points via the `tErgmStats`function
+* Static ergm term statistics at multiple time points via the `tErgmStats`function
 
 ```{r}
 tErgmStats(sampdyn, "~ edges+triangle") # Notice the increase in triangles
 ```
 
-* temporal paths through networks via the `tPath`, `tReach` and `plotPaths` functions
+* Temporal paths through networks via the `tPath`, `tReach` and `plotPaths` functions
+
+Temporal paths are unique to dynamic networks.  Similar to a path in a static network, they trace out the sequence and distances of nodes in a `networkDynamic` object reachable from an initial node, following paths constrained by edge timing (and direction, if the network is directed).  A temporal path can only traverse active nodes and edges, so the onset times of successive elements must be greater than or equal than those of the previous.
+
+Below, we compute and plot the forward reachable set (FRS) from node 1 (v1) in the Sampson networks (the vertices that node 1 can reach).
 ```{r}
-tp <- tPath(sampdyn, 1, direction = 'fwd')
+# who is v1?
+get.vertex.attribute(sampdyn, "vertex.names")[1]
+
+# who is in v1's FRS?
+tp <- tPath(sampdyn, v=1, direction = 'fwd')
 print(tp)
-plotPaths(sampdyn, tp)
+par(mfrow=c(1,2))
+coords <- plot(tp, main="Forward Reachable Set from v1", cex.main=.8)
+plotPaths(sampdyn, tp, 
+          coord = coords,
+          main = "Overlaid on collapsed Network",
+          label.cex=.8, cex.main=.8)
 
 ```
+Because all of the vertices are in one component in the first graph, node 1 (Bosco) is able to reach every other vertex in the first spell; the first network alone determines the temporal path.  
+A forward `tpath` traces the earliest arriving path, so
+in this case, `tp$tdist = 0` for all vertices, because they can all be reached in the first spell, `tp$gsteps` is simply the geodesic from Bonaventure to each other vertex in the first network, and plotting `tp` shows those geodesics. 
 
+And note that one can also construct a "backwards reachable set" for Bosco -- the set of all vertices that can reach *him*.
 
-* duration summaries for node and tie dynamics
+Forward and backward reachable sets are key metrics for understanding diffusion processes over networks.  The `tsna` package vignette demonstrates many more interesting features of temporal paths in dynamic networks with multiple components that change over time.  
+
+* Duration summaries for node and tie dynamics
+
+Durations are another feature unique to temporal networks, representing
+the lenth of time that vertices and edges are active.  The tsna package currently contains several functions for reporting on active durations. Most of these functions have options for varying the units of aggregation or analysis. For example, the edge measures can be adjusted from focusing on an ‘edge’ (aggregating across all of the activity spells associated with that edge) or a ‘spell’ (a single interval of contiguous time during which an edge is activated). 
 
 ```{r}
 table(edgeDuration(sampdyn, mode = 'duration', subject = 'spells')) # Note bimodality
@@ -257,7 +298,7 @@ for visualizing changes in network structure and attributes over time.
 `ndtv` has its own workshop and tutorial, with materials online at
 [the ndtv GitHub repo](statnet.github.io/ndtv/workshop/ndtv_workshop.html)
 
-The package includes an example network data set named `short.stergm.sim` which is the output of a toy model based on Padgett's Florentine Family Business Ties dataset simulated using the `tergm` package. (We'll use `tergm` package to simulate this network in a later section.)  
+The package includes an example network data set named `short.stergm.sim` which is the output of a toy model based on Padgett's Florentine Family Business Ties dataset simulated using the `tergm` package. (We'll use `tergm` package to construct this simulated dynamic network in a later section.)  
 
 ```{r}
 library(ndtv)
@@ -273,12 +314,13 @@ render.d3movie(short.stergm.sim,
 
 This should bring up a browser window displaying the animation.  In addition to playing and pausing the movie, it is possible to click on vertices and edges to show their ids, double-click to highlight neighbors, and zoom into the network at any point in time.
 
-Finally, we can render the movie into an interactive movie in this document.
+Finally, we can render the interactive movie from an Rmarkdown document
+to an html document like this one.
 
 ```{r, message = FALSE,cache = FALSE}
 render.d3movie(short.stergm.sim,
                plot.par=list(displaylabels=T),
-               output.mode = 'htmlWidget')
+               output.mode = 'htmlWidget') # using htmlwidgets package here
 ```
   
 
@@ -310,9 +352,8 @@ STERGMs posit two models for the _tie dynamics_ in a network over time:
 
 * one for tie dissolution.  
 
-Both models are ERGMs, and they are "separable" in the sense that they assume formation is independent of dissolution _within time step_, but Markov dependent between steps.  This allows the factors that influence formation to be different than those that influence dissolution, so
+Both models are ERGMs, and they are "separable" in the sense that they assume formation is independent of dissolution _within time step_, and Markov dependent between steps.  This allows the factors that influence formation to be different than those that influence dissolution, so
 specifying a STERGM requires two formulas instead of one.
-
 
 Allowing the formation model to be different than the dissolution model is useful in many contexts.
 Take friendships.  It seems intuitive that the 
@@ -322,13 +363,17 @@ need to include a variety of homophily parameters (mixing on age, for example). 
 friends, 
 does a difference in age affect the probability that your friendship ends?  Perhaps, but probably not as fundametally or as strongly as for formation).
 
-In thinking about how STERGMs work, and how they relate to different data forms, it can be helpful to think of the approximation commonly used in epidemiology to consider basic disease dynamics:
+In thinking about how STERGMs work, and the difference between the *prevalence* of ties in the cross section, and the *incidence* of ties in a temporal data set, it can be helpful to think of the approximation commonly used in epidemiology to consider basic disease dynamics:
 
 $$ prevalence = incidence \times duration $$
 
-To translate this to dynamic networks: consider a Bernoulli model where all ties are equally likely. The expression above indicates that the number of ties present in the cross-section (prevalence) is a function of the rate at which they form (incidence) and the rate at which they dissolve (1/duration). The faster ties form, the more ties that are present in the cross-section.  And the slower ties dissolve, the more ties that are present in the cross-section.
+To translate this to dynamic networks:  the expression above says that the number of ties present in the cross-section (prevalence) is a function of the rate at which they form (incidence) and the rate at which they dissolve (1/duration). The faster ties form, the more ties will be present in the cross-section, and the more slowly they form, the fewer will be present.  The slower ties dissolve, the longer the duration, the more ties will be present in the cross-section, and the reverse (faster/shorter/fewer) again holds.  The cross-sectional prevalence of ties is determined by both processes.
 
-This same concept extends to more elaborate models beyond just Bernoulli.  Imagine a model with triangles in it---the faster that triangles are formed and the slower that they're dissolved, the more that will be present in the cross-section.
+This same concept extends to other network configurations, for example triangles---the faster that triangles are formed and the slower that they're dissolved, the more that will be present in the cross-section.
+
+ERGMs are models for the prevalence of ties; they do not represent the implicit rates of incidence and duration, they simply model the net result.
+
+STERGMs are models that explicitly represent the incidence and duration processes.
 
 The two equations governing a STERGM are commonly called the formation equation and the dissolution (or persistence) equation, respectively:
 
@@ -352,23 +397,12 @@ These parallel the traditional cross-sectional ERGM.  We have simply:
 
 ------
 
-> Note that for the dissolution model, the $P(Y_{ij,t+1} = 1)$ is in the numerator and the $P(Y_{ij,t+1} = 0)$ is in the denominator.  This makes the mathematics parallel to that of the formation model; however, it also means the "dissolution" model is actually a "persistence" model.  The probability of dissolution is simply 1 - persistence, so the model can be interpreted in both ways.
+Note that for the dissolution model, the $P(Y_{ij,t+1} = 1)$ is in the numerator and the $P(Y_{ij,t+1} = 0)$ is in the denominator.  This makes the mathematics parallel to that of the formation model; however, it also means the "dissolution" model is actually a "persistence" model.  The probability of dissolution is simply 1 - persistence, so the model can be interpreted in both ways.
 
 ------
 
-  
-  
-To understand the implications of the two $\theta$ and $g$ vectors, imagine a model for romantic relationships that captures propensities for:
 
-* people who are currently in a relationship do not form new relationships as often as single people do; and 
- 
-* those few people who are in two ongoing relationships tend to have higher rates of relational dissolution than others.
-
-The formation equation can represent this with the ergm term "degree(1)", which counts the number of nodes in the network of degree exactly 1.  The coefficient on this term would be positive, because new ties are more likely to form for singles (thus increasing the count of degree 1 nodes) and less likely for those already partnered (which would decrease the count of degree 1 nodes). 
-
-The dissolution equation can represent this with the ergm term "concurrent", which counts the number of nodes of degree 2 or more. The coefficient for this term would be negative because the ties are relatively less likely to persist if they maintain the current number of nodes of degree 2 or more, when they could bring it down by dissolving.
-
-Finally, remember that the _s_ in _stergm_ stands for separable; this refers to the fact that the two models assume that relational formation and dissolution occur independently of one another within a time step.  We explore how this works and its implications in the examples.  But effectively, at each timestep, we are sending off all empty dyads to be considered for formation, and sending off all the paired dyads to be considered for dissolution, and the two processes proceed independently.  
+Finally, remember that the _s_ in _stergm_ stands for separable; this refers to assumption that relational formation and dissolution occur independently of one another within a time step.  We explore how this works and its implications in the examples below.  But effectively, at each timestep, we are sending off all empty dyads to be considered for formation (conditioning on the ties that exist), and sending off all the paired dyads to be considered for dissolution (conditioning on the empty dyads), and these two processes proceed independently.  
 
 ### An Introduction to STERGMs (more formal)
 
@@ -426,7 +460,10 @@ Visually, we can sum this up as:
 
 In `statnet`, an ERGM is specified using R's formula notation:
 
-$$ my.network \sim my.vector.of.model.terms $$
+```{r,eval = FALSE}
+        ergm(my.network ~ edges + gwesp(0, fixed=T))     #do not run this
+           
+```
 
 For a call to `stergm`, there is one dynamic network, with two formulas. These are now passed as three separate arguments: 
 the network(s) (argument `nw`), 
@@ -435,21 +472,22 @@ and the dissolution formula (argument `dissolution`).
 The latter two take the form of a one-sided formula.  E.g.:
 
 ```{r,eval = FALSE}
-        stergm(my.network,                 #do not run this
-            formation =  ~edges+kstar(2),
-            dissolution =  ~edges+triangle,
+        stergm(my.network,                               #do not run this
+            formation =  ~ edges + nodefactor('age'),
+            dissolution =  ~ edges + gwesp(0, fixed=T),
             estimate =  `insert method`
         )
 ```
 
 
-One additional specification is _required_ for a `stergm` as shown above:
+In addition to the two equations, on more specification is _required_ 
+for a `stergm` as shown above:
 the argument `estimate`, which controls the estimation method. 
 This is because there are different types of temporal network data, and each requires a different type of estimation.
 
-The two options are `EGMME` (equilibrium generalized method of moments estimation) and `CMLE` (conditional maximum likelihood estimation). 
-When fitting to two (or more) networks (i.e. with panel data), one should use `estimate = "CMLE"`; and when fitting to a single cross-section with some duration information, 
-use `estimate = "EGMME"`.
+The two options are `CMLE` (conditional maximum likelihood estimation) and `EGMME` (equilibrium generalized method of moments estimation). 
+When fitting a model to network panel data, use `estimate = "CMLE"`; 
+and when fitting a model to a single cross-sectional network with duration information, use `estimate = "EGMME"`.
 
 There are many other features of a call `stergm` that will be important; we illustrate them in one or more examples during the workshop.
 
@@ -497,7 +535,15 @@ And the results:
 summary(samp.fit)
 ```
 
-So, all else equal, a relationship is much more likely to form if it will close a mutual pair; the conditional log-odds are increased by 2.0, which translates to an increase in the conditional odds of 7.4 (note that the change statistic can equal only $0$ or $1$ in this case).  The effect on persistence is also positive, but less strong and not statistically signifiant; the point estimate is an increase of 0.8 in the conditional log-odds of persistence, a bit more than double the conditional odds.
+So, all else equal, a relationship is much more likely to form if it will close a mutual pair; the conditional log-odds are increased by 
+`round(samp.fit$formation.fit$coef[[2]],1)` 
+which translates to an increase in the conditional odds of 
+`exp(round(samp.fit$formation.fit$coef[[2]],1))`
+(note that the change statistic can equal only $0$ or $1$ in this case).  
+
+The reciprocity effect on persistence is also positive, but less strong and not statistically signifiant; the point estimate is an increase of 
+`round(samp.fit$dissolution.fit$coef[[2]],1)`
+in the conditional log-odds of persistence, a bit more than double the conditional odds.
 
 Transitive triads are positive and borderline significant, but cyclical triads, while negative, are not significant.  Keep in mind that
 this is a small sparse network, so the amount of information available for testing these effects is minimal (especially for the dissolution model). Overall, the results suggest that hierarchy plays a role in tie formation and persistence in this monastery, and there is a weak though consistent anti-egalitarianism dynamic.
@@ -527,20 +573,22 @@ How do these coefficients compare? How about the standard errors?
 ### EGMME:  Cross sectional network data with tie duration information
 
 
-Now, imagine a different scenario in which we have observed a single cross-sectional network, and the duration of ties. 
-This kind of data can be collected in a cross-sectional survey, so it
-is easier to obtain.  
+Now, imagine a different scenario in which we have observed a single cross-sectional network, with retrospective information collected on
+the duration of ties. 
+This kind of data can be collected in a simple one-time survey, so it
+is much easier to obtain, and in many contexts it will the only feasible type of network data that can be collected.  
 
 Can we estimate the formation and dissolution models with a single cross-sectional network?  Yes, by making an equilibrium assumption.
 If we assume that the process is in equilibrim, then we can rely on the
 fact that, at equilibrium, $prevalence = incidence \times duration$.  
 Our cross-sectional network gives us $prevalence$ of ties, and we have
-an estimate of the $duration$, so we can solve for $incidence$, which is
-the formation model.
+an estimate of the $duration$, so we can use `stergm` to solve for the $incidence$ in the formation model that would be consistent with
+this prevalence and duration.
 
-The duration information required here can be obtained by
-retrospective reporting on the duration of relationships.  
-This can come from the same cross-sectional study, 
+The duration information required here is obtained by asking respondents
+to report the duration of relationships.  In the simple case of a time-constant dissolution hazard, the mean duration is the
+estimate we need to calculate the dissolution edge coefficient.
+This estimate can come from the same cross-sectional study, 
 or, if necessary, from a completely different data source.
 
 We will demonstrate the latter by creating a toy dataset, based on 
@@ -553,26 +601,30 @@ but this simple case will suffice to demonstrate the basic modeling
 tasks.
 
 
-__First__, we specify the formation and dissolution models.
+* __First__, we specify the formation and dissolution models.
 
 We begin by assuming a formation model identical to the model we fit in the cross-sectional case:
 
-`formation = ~edges+gwesp(0,fixed = T)`
+`formation = ~ edges + gwesp(0,fixed = T)`
 
-For our dissolution model, we are assuming a simple homogenous process,
-which corresponds to a model with only an edgecount term in it.  The coefficient on this term represents the conditional log-odds of tie persistence at each step, and the inverse is the mean log duration.
+For our dissolution model, we will assume a simple homogenous process,
+which corresponds to a model with only an `edges` term in it.  The coefficient on this term represents the conditional log-odds of tie persistence at each step, and the inverse is the mean log duration.
 
 
 In this case, however, we already _know_ the mean duration, which means
 we know the rate of persistence/dissolution, 
 so we don't need to estimate it.
-A known coefficient in the statistical modeling context is called an "offset".
+
+---
+> A known coefficient in the statistical modeling context is called an "offset".
+---
+
 In STERGM notation we specify this as:
 
 `dissolution = ~offset(edges)`
 
 
-__Second__, we calculate the offset: `theta.diss`.
+* __Second__, we calculate the offset: `theta.diss`.
 
 Our dissolution model is applied to the set of ties that exist at any given time point, as reflected in the conditional present in both the
 numerator and denominator:
@@ -584,8 +636,8 @@ The numerator represents the case where a tie persists to the next step, and the
 
 The one term in our $\delta(g(y))_{ij}$ vector is the change statistic on network edge count, which equals one for all $i,j$.
 
-We define the probability of persistance from one time step to the next for actor pair $i,j$ as $p_{ij}$, 
-and the probability of dissolution as $q_{ij} = 1-p_{ij}$.
+Let the probability of persistance from one time step to the next for actor pair $i,j$ be $p_{ij}$, 
+and the probability of dissolution be $q_{ij} = 1-p_{ij}$.
 Our dissolution model is homogenous, so we further define $p_{ij} = p$ for all $i,j$. Then:
 
 <center>
@@ -608,7 +660,7 @@ $\theta = \ln{(d-1)}$
 
 
 So, for our dissolution model, theta.diss = $\ln{(10-1)}$ = $\ln{9}$ 
-( =  $2.197$):
+($ \approx 2.2$):
 ```{r}
 theta.diss <- log(9)
 ```
@@ -616,22 +668,22 @@ theta.diss <- log(9)
 In short, because our dissolution model is dyadic independent, we can calculate it using a (rather simple) closed form solution.
 
 
-__Third__, we choose our equilibrium target statistic prevalence.  
+* __Third__, we choose our equilibrium target statistic prevalence.  
 
 This is a one-sided formula listing the statistics that will be used
 as equilbrium targets.  
 
-* If the formula is identical to either the formation or 
-dissolution model, the user can simply pass the string `"formation"` or `"dissolution"`, respectively. If one is specifying `targets = "formation"`, dissolution should be an offset, and vice versa. 
+This can be one of three things:  the statistics in the formation model, the statistics in the dissolution model, or a different set of statistics altogether.  If the formula is identical to either the formation or dissolution model, the user can simply pass the string `"formation"` or `"dissolution"`, respectively. If one is specifying `targets = "formation"`, dissolution should be an offset, and vice versa. 
 
-* If the _values_ to be targeted are different than the values of
-the sufficient statistics in the cross-sectional network, then those values can be passed with the argument `target.stats`. 
+If the _values_ of the target statistics are different 
+than the values of
+the sufficient statistics in the observed cross-sectional network, then those values can be passed with the argument `target.stats`. 
 
-In this case, we will use the formation model to define the statistics, and take the values from the cross-sectional network.
+Here, we will use the formation model to define the statistics, and take the values from our observed cross-sectional network.
 
 `targets = "formation"`
 
-__Finally__, we estimate the formation model, conditional on the dissolution model.
+* __Finally__, we estimate the formation model, conditional on the dissolution model.
 
 We put this all together in the call to `stergm`, adding in one additional control argument to monitor model convergence: 
 plotting the progress of the coefficient estimates and the simulated sufficient statistics in real time. When one is using a GUI tool like RStudio, it helps to output this plotting to a separate window, which we do below with the function `X11` (and then turn off that window again with `dev.off()`):
@@ -657,6 +709,9 @@ Iteration 1 of at most 20:
 
  = = Phase 3: Simulate from the fit and estimate standard errors. =  = 
 ```
+In the X11 window, you should see the MCMC traceplots showing the progress of the coefficient estimates (the f. plots) and the corresponding values of the target statistics.
+
+![](images/STERGM-X11.png)
 
 The real-time feedback suggests that the fitting went well, but let's double-check:
 ```{r,eval = FALSE}
@@ -671,7 +726,8 @@ EGMME diagnostics
 ```
 ![](images/STERGM-fit1diag.png)
 
-These look ok, though not great.  Chances are we would do better by modifying some of `stergm`'s control parameters, increasing the `mcmc.interval` to reduce the serial correlation evident in the traceplots.  But let's explore the fit object to see what we have:
+These look ok, though not great.  Chances are we would do better by modifying some of `stergm`'s control parameters, increasing the `mcmc.interval` to reduce the serial correlation evident in the traceplots.  You should try that.  Here, we'll move on to explore 
+the fit object to see what we have:
 
 ```{r}
 stergm.fit.1
@@ -680,16 +736,17 @@ summary(stergm.fit.1)
 ```
 
 We have now obtained estimates for the coefficients of a formation model 
-that, conditional on the given dissolution model, yields simulated targets that match (in expectation) those observed in the flobusiness network.
+that, conditional on the given dissolution model (and it's offsets), yields simulated targets that match (in expectation) those observed in the flobusiness network.
 
-This now allows us to simulate new dynamic networks (that is, entire
-network panels over time) that have the 
+From this fitted model we can now simulate new dynamic networks 
+(that is, entire network panels over time) that have the 
 desired cross-sectional structure and mean relational duration.  This
-is a very useful tool -- essentially an agent-based simulation tool that
-is guaranteed to reproduce, on average, the cross-sectional network statistics we have specified.  
+is a very useful tool -- essentially an agent-based simulation that
+is guaranteed to reproduce, on average, the full joint distribution of the cross-sectional network statistics and partnership durations we 
+observed in our data.  
 
 ```{r}
-stergm.sim.1 <- simulate.stergm(stergm.fit.1, nsim = 1, 
+stergm.sim.1 <- simulate(stergm.fit.1, nsim = 1, 
     time.slices = 1000)
 ```
 
@@ -739,14 +796,14 @@ Or a scatter plot of the two network statistics for each simulated network cross
 plot(as.matrix(attributes(stergm.sim.1)$stats))
 ```
 
-We should also check to make sure that our mean duration is what we expect 
-(10 time steps). 
+We should also check to make sure that our mean duration is what we 
+specified (10 time steps). 
 
 
 This time we'll use a different approach, using `as.data.frame`, 
 which, when applied to an object of class `networkDynamic`, 
 generates a timed edgelist. 
-Although right-censoring is present for some edges in our simulation, with a mean duration of 10 time steps and a simulation 1000 time steps long, its effect on our observed mean duration should be small.  We'll show that this produces the same result as the edgeDuration function.
+Although right-censoring is present for some edges in our simulation, with a mean duration of 10 time steps and a simulation 1000 time steps long, the effect of censoring on our observed mean duration should be small.  We'll show that this produces the same result as the edgeDuration function.
 
 ```{r}
 stergm.sim.1.df <- as.data.frame(stergm.sim.1)
@@ -761,26 +818,26 @@ mean(edgeDuration(stergm.sim.1,
 ### EGMME Approximation with long durations
 
 For the type of model we saw in the example above 
-(with a known dissolution model that contains a subset of terms 
+(with dissolution model offsets that contain a subset of terms 
 from the formation model), it can be shown that a good set of 
 starting values for the estimation of the formation model are as follows: 
 
-(1) fit the terms in the formation model as a static ERGM on the cross-sectional network; and 
+(1) Fit the terms in the formation model as a static ERGM on the cross-sectional network; then 
 
-(2) subtract the values of the dissolution parameters from the corresponding values in the cross-sectional model. The result is a vector of parameter values that form a reasonable place to start the MCMC chain for the estimation of the formation model.  
+(2) Subtract the values of the dissolution offsets from the estimated coefficients for the corresponding terms in the cross-sectional ERGM. The result is a vector of parameter values that form a reasonable place to start the MCMC chain for the estimation of the formation model.  
 
 This is in fact exactly what the `stergm` estimation code does by default for this type of model.
 
-When mean relational duration is very long, this approximation is so good that it may not be necessary to run a STERGM estimation at all. Especially if your purpose is mainly for simulation, the approximation may be all you need.  This is a very useful finding, since models with long mean duration are precisely the ones that 
-are the slowest and most difficult to fit using EGMME.  That's because, with long durations, very few ties will change between one time step and another, giving the fitting algorithm very little information on which to perform the estimation.  
+When mean relational duration is very long, this approximation is so good that it may not be necessary to run a STERGM estimation at all. This can be quite useful, since models with long mean duration are precisely the ones that 
+are the slowest and most difficult to fit using EGMME.  That's because, with long durations, very few ties dissolve at each MCMC step (toggle), so the fitting algorithm gets very little information to update the estimates, and needs many (*many*) more steps to accumulate that information.  
 
 Again, the equation from epidemiology sheds light on why this works :
 
 $$ incidence \approx  prevalence \div duration $$
 
-The dissolution/persistence model gives us log-odds that map onto duration. Fitting the cross-sectional ergm gives us log-odds for prevalence.  We want to estimate incidence, so we subtract the two, rather than divide, since we are working on a log scale.
+The edge offset for the dissolution/persistence model gives us log-odds that map onto duration. Fitting the cross-sectional ergm gives us log-odds for prevalence.  To estimate incidence, we subtract the duration from prevalence, rather than divide, since we are working on a log scale.
 
-Of course, in order to be able to take advantage of this method, it is necessary for the terms in your dissolution model to be a subset of the terms in your formation model. 
+To be able to take advantage of this approximation, it is necessary for the terms in your dissolution model to be a subset of the terms in your formation model. 
 
 To illustrate, let us reconsider Example 2, with a mean relational duration of 100 time steps.
 
@@ -896,16 +953,14 @@ Shortening the time step to a day means I can break up a day later,
 rather than a month later, which is probably more reasonable. The tradeoff is that a shorter time interval means longer computation time for both model estimation and simulation.  
 
 
-
 ##6. Additional functionality
------------------
 
 One of the most important extensions to `stergm` functionality is the ability
 to estimate models based on egocentrically sampled network data.  This
 makes it possible to start with data on a single, cross-sectional,
 egocentrically sampled network, plus tie duration, estimate a
 `stergm`, and use the fitted model to simulate complete dynamic networks
-over time.  For more information on this, see the workshop on `ergm.ego`, 
+over time.  For more information on this, see the workshop on `ergm.ego`,
 and the utilities in the package `EpiModel`.
 
 
@@ -915,9 +970,10 @@ which you can learn about and explore through the use of R's many help features.
 If you begin to use them in depth, you will likely have further questions.  If so, we encourage you to join the statnet users' group 
 (http://csde.washington.edu/statnet/statnet_users_group.shtml), where you can then post your questions (and possibly answer others).  You may also encounter bugs; please use the same place to report them. 
 
-
-## References
 ------------------
+
+##References
+
 
 Krivitsky, P.N., Handcock, M.S,(2014).
 A separable model for dynamic networks

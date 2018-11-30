@@ -1,0 +1,10 @@
+
+*This tutorial is a joint product of the Statnet Development Team:* 
+  
+Martina Morris (University of Washington)  
+Pavel N. Krivitsky (University of Wollongong)  
+Mark S. Handcock (University of California, Los Angeles)    
+Carter T. Butts (University of California, Irvine)    
+David R. Hunter (Penn State University)   
+Steven M. Goodreau (University of Washington)   
+Skye Bender de-Moll (Oakland, CA)  
