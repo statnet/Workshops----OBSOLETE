@@ -136,11 +136,11 @@ If you're not familiar with the compact notation here, note that the numerator r
 $$
 log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
 $$
-where $p$ is the number of terms in the model.
+where $p$ is the number of terms in the model.  From this one can more easily observe the analogy to a traditional statistical model:  the coefficients $\theta$ represent the size and direction of the effects of the covariates $g(y)$.
 
 ### The model statistics $g(y)$:  ERGM terms
 
-The statistics $g(y)$ can be thought of as the "covariates" in the model.  The represent network features like density, homophily, triads, etc.  In one sense, they are like covariates you might use in other statistical models.  But they are different in one important respect:  they are functions of the network itself -- defined by sums and products of the dyads in the network -- so they are not measured by a question you include in a survey (e.g., the income of a node), but instead need to be computed on the specific network you have, after you have collected the data.
+The statistics $g(y)$ can be thought of as the "covariates" in the model.  In the network modeling context, these represent network features like density, homophily, triads, etc.  In one sense, they are like covariates you might use in other statistical models.  But they are different in one important respect:  these $g(y)$ statistics are functions of the network itself -- defined by sums and products of the dyads in the network -- so they are not measured by a question you include in a survey (e.g., the income of a node), but instead need to be computed on the specific network you have, after you have collected the data.
 
 As a result, every term in an ERGM must have an associated algorithm for computing its value.  The `ergm` package in `statnet` includes about 150 term-computing algorithms.  We will explore some of these terms in this 
 tutorial, and links to more information are provided in 
@@ -163,11 +163,11 @@ For more information, see the vignette on `ergm-terms`:
 vignette('ergm-term-crossRef')
 ```
 
-One key distinction in model terms is worth keeping in mind:  terms are either _dyad independent_ or _dyad dependent_.  Dyad independent terms (like nodal homophily terms) imply no dependence between dyads---the presence or absence of a tie may depend on nodal attributes, but not on the state of other ties.  Dyad dependent terms (like degree terms, or triad terms), by contrast, imply dependence between dyads.  Such terms have very different effects, and much of what is different about network models comes from the complex cascading effects that these terms introduce.  A model with dyad dependent terms also requires a different estimation algorithm, so when we use them below you will see some different components in the output.
+One key distinction in model terms is worth keeping in mind:  terms are either _dyad independent_ or _dyad dependent_.  Dyad _independent_ terms (like nodal homophily terms) imply no dependence between dyads---the presence or absence of a tie may depend on nodal attributes, but not on the state of other ties.  Dyad _dependent_ terms (like degree terms, or triad terms), by contrast, imply dependence between dyads.  Such terms have very different effects, and much of what is different about network models comes from these terms.  They introduce complex cascading effects that can often lead to counter-intuitive and highly non-linear outcomes.  In addition, a model with dyad dependent terms requires a different estimation algorithm, so when we use them below you will see some different components in the output.
 
 ### ERGM probabilities: at the tie-level
 
-The ERGM expression for the probability of the entire graph can be re-expressed in terms of the conditional log-odds of a single tie between two actors:
+The ERGM expression for the probability of the entire graph shown above can be re-expressed in terms of the conditional log-odds of a single tie between two actors:
 
 $$
 \operatorname{logit}{(Y_{ij}=1|y^{c}_{ij})=\theta'\delta(y_{ij})}
@@ -192,7 +192,7 @@ where
 
 So $\delta(y_{ij})$ equals the value of $g(y)$ when $y_{ij}=1$ minus the value of $g(y)$ when $y_{ij}=0$, but all other dyads are as in $g(y)$.  
 
-This expression shows that the coefficient $\theta$ can be interpreted as the log-odds of an individual tie conditional on all others.  For each term you have in the model, the coefficient is multiplied by the number of configurations that tie will create (or remove) for that specific term.  We will see exactly how this works in the sections that follow. 
+This expression shows that the coefficient $\theta$ can be interpreted as that term's contribution to the log-odds of an individual tie conditional on all others.  The coefficient for each term in the model is multiplied by the number of configurations that tie will create (or remove) for that specific term.  We will see exactly how this works in the sections that follow. 
 
 
 ### Loading network data
