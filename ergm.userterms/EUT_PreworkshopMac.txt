@@ -1,0 +1,45 @@
+
+1. Make sure you have R version 3.5.2 or later. To check, open R or RStudio and look at what version is listed in the command window.  If it's not 3.5.2 or later, close R/RStudio then visit https://cran.r-project.org/, click on "Download R for (Mac) OS X" then "R-3.6.0.pkg". Double-click on pkg file once downloaded to open the installer--this might happen automatically depending on how your browser is configured--and choose "continue" several times to install R.
+
+2. Make sure you have a recent version (ideally the latest) of open-source RStudio Desktop (https://www.rstudio.com/products/rstudio/download/). If you have RStudio installed already, check for updates by choosing Help -> Check for Updates.
+
+3. If necessary, install developer tools necessary to build and compile R packages from source.  If you're unsure whether this is necessary, you can try steps 4 through 7 and then return to step 3 if they don't work.
+
+a. To install the tools, called "xcode-select", open a Terminal window and type "xcode-select --install".  This will ask whether you want to install the command-line developer tools; click "Install" when prompted to do so.
+
+b.  If you installed the tools in part a, try steps 4 through 7 once again.  If you obtain an error because the "math.h" file is not found, this may mean that the R configuration files need to be explicitly pointed to the location of the development tools, also known as the SDK or software developer kit.  If you find yourself in this unfortunate situation, try the following:  Open, in a text editor, the file /Library/Frameworks/R.framework/Resources/etc/MakeConf .  Then, edit the line beginning "CPPFLAGS = " by replacing the path ending with "MacOSX.sdk" by the following:  
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+4. Obtain the source code for the ergm.userterms package:
+
+a. Go to https://cran.r-project.org/package=ergm.userterms
+
+b. Select the source code file (with extension tar.gz) next to "Package Source".
+
+c. Save this file in a directory you've created where you have writing privileges and where you will want to do the development work. 
+
+d. Set the directory where you just saved this file as your working directory in Rstudio, by selecting "Session" from the main RStudio menu, then Set Working Directory, then Choose Directory, and navigating to the relevant directory.
+
+e. Untar the file by first opening a Terminal window, either inside or outside Rstudio (to do the latter, you can select the Tools menu in Rstudio, then select Shell). Navigate to the folder where you just saved the source code file, using the cd command (if you need help with this, see http://bit.ly/shell_commands_guide). Now type: "tar xfz name.of.sourcecode.file" (e.g. ergm.userterms_3.10.0.tar.gz). A directory named ergm.userterms will be extracted in your current directory. Type "ls" to confirm this.  When this step is done, you can close the shell window.
+
+5. Obtain the latest version of all the statnet packages. Use install.packages("statnet", dependencies=TRUE) to obtain them for the first time for a given version of R, or else statnet:::update_statnet() if you already have statnet and wish to check for updates.
+
+6. Create an RStudio project: In RStudio, select File>New Project and then when prompted (possibly after saving the current workspace when prompted, though this is not required), choose Existing Directory.  Then navigate to the ergm.userterms directory that was just created in the previous step.
+
+7. Enable the tools to build the ergm.userterms package:
+
+a. Select Build on the *main* RStudio menu, then "Configure Build Tools". (Alternatively, you can select "Build" at the top of the Build pane, then the gear icon for more options, then "Configure Build Tools.") Then under "Project Build Tools" select "Package", then select "OK".
+
+b. To confirm that all has gone right, select the "Build" tab in RStudio, then press "Install and Restart".  If all goes well you will see lots of text scroll past, and no error messages.  If this is your first time doing this in a session, you will likely see lots of info about the package and other related packages appear in your console in red. There is a chance you may receive a message saying that another required package is unavailable; if so, install it using standard R procedures, then return to this step.
+
+Now try typing or copying the lines:
+
+aaa <- network.initialize(100, directed=FALSE)
+summary(aaa~mindegree(0))
+
+You should receive the output:
+
+mindegree0
+       100
+
+If so, you are now ready for the workshop! If not, keep trying, and if you are stuck, please feel free to email the workshop organizers for assistance: goodreau@uw.edu (Steve Goodreau) or dhunter@stat.psu.edu (Dave Hunter).
