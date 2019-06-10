@@ -58,8 +58,8 @@ background in linear and generalized linear models in statistics.
 
 Minimally, you will need to install the latest version of **R**
 [(available here)](https://cran.r-project.org)
-and the `statnet` packages above to
-run the code presented here.  
+and the `statnet` packages `ergm` and `sna` to
+run the code presented here (`ergm` will automatically install `network`).  
 The workshops are conducted using the free version of `Rstudio`
 [(available here)](https://rstudio.org).
 
@@ -136,7 +136,7 @@ If you're not familiar with the compact notation here, note that the numerator r
 $$
 log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
 $$
-where $p$ is the number of terms in the model.  From this one can more easily observe the analogy to a traditional statistical model:  the coefficients $\theta$ represent the size and direction of the effects of the covariates $g(y)$.
+where $p$ is the number of terms in the model.  From this one can more easily observe the analogy to a traditional statistical model:  the coefficients $\theta$ represent the size and direction of the effects of the covariates $g(y)$ on the overall probability of the network.
 
 ### The model statistics $g(y)$:  ERGM terms
 
