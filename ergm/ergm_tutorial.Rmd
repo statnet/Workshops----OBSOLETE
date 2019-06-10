@@ -63,18 +63,15 @@ run the code presented here (`ergm` will automatically install `network`).
 The workshops are conducted using the free version of `Rstudio`
 [(available here)](https://rstudio.org).
 
-To install the packages for this tutorial, 
-open an R session and type: 
+The full set of installation intructions with details can be found on the [`statnet` workshop wiki](https://github.com/statnet/Workshops/wiki/Software-Installation-Instructions).
+
+If you have not already downloaded the `statnet` packages for this workshop, the quickest way to install these (and the other most commonly used packages from the `statnet` suite),  is to open an R session and type: 
 
 ```{r,eval=FALSE}
 install.packages('statnet')
 library(statnet)
 ```
 
-Note that the 'statnet' package is actually a wrapper that automatically
-installs the most commonly used packages in the statnet suite, so this
-will include more packages than we will be using in this tutorial.  You
-can install just the individual packages if you prefer.
 
 For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm:
 
