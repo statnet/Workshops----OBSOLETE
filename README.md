@@ -11,7 +11,7 @@ If you would like to suggest edits/modifications/improvements/additions to any o
 
 1. source materials for the workshops (.Rmd files) should be stored in a folder with the workshop name at the top level.
 
-* to get the standard `statnet` project headers, please follow the format shown at the top of `ergm.Rmd`.
+* to get the standard `statnet` project headers, please follow the format shown at the top of [`ergm.Rmd`](https://github.com/statnet/Workshops/blob/a4ddaca30a9f4c8f16d004d8112e7acd264e6291/ergm/ergm_tutorial.Rmd#L13-L31).
 
 2. to display the workshop materials on the [wiki](https://github.com/statnet/Workshops/wiki):
 
