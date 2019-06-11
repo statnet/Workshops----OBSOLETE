@@ -1,0 +1,52 @@
+unnamed-chunk-1	install.packages	update.packages
+unnamed-chunk-2	library
+unnamed-chunk-3	%v%	%v%<-	as.matrix	as.network	data	ls	samplk1	samplk2	samplk3
+unnamed-chunk-4	$	[<-	as.matrix	delete.edges	samplk.tot	samplk1	seq_along
+unnamed-chunk-5	%v%	as.factor	as.matrix	gray	matrix	network.size	par	plot	rep	samplk.tot
+unnamed-chunk-6	%v%	^	as.factor	as.matrix	matrix	network.size	par	plot	rep	rgb	samplk.tot
+unnamed-chunk-7	%e%	%v%	data	gray	par	plot	rainbow	rep	zach
+unnamed-chunk-8	~	summary
+unnamed-chunk-9	~	summary
+unnamed-chunk-10	help
+unnamed-chunk-11	~	c	diff	hist	network.initialize	par	range	simulate
+unnamed-chunk-12	~	c	diff	hist	par	range	simulate
+unnamed-chunk-13	~	log	mean	simulate
+unnamed-chunk-14	c	diff	hist	par	range	sim.geom	sim.pois
+unnamed-chunk-15	~	c	control.simulate	mean	par	plot	simulate
+unnamed-chunk-16	help
+unnamed-chunk-17	~	ergm	mcmc.diagnostics
+unnamed-chunk-18	samplk.tot.nm	summary
+unnamed-chunk-19	!=	%v%	%v%<-	unique
+unnamed-chunk-20	~	ergm	mcmc.diagnostics
+unnamed-chunk-21	summary	zach.lead
+unnamed-chunk-22	~	ergm	mcmc.diagnostics
+unnamed-chunk-23	samplk.tot.nm.nz	summary
+unnamed-chunk-24	~	ergm	mcmc.diagnostics
+unnamed-chunk-25	samplk.tot.ergm	summary
+unnamed-chunk-26	~	summary
+unnamed-chunk-27	~	control.ergm	ergm	mcmc.diagnostics
+unnamed-chunk-28	summary	zach.pois
+unnamed-chunk-29	~	simulate	zach.pois
+unnamed-chunk-30	~	colnames	summary	zach.sim
+unnamed-chunk-31	abline	c	density	par	plot	zach.obs	zach.sim
+unnamed-chunk-32	<	>	mean	min	zach.obs	zach.sim
+unnamed-chunk-33	library
+unnamed-chunk-34	help
+unnamed-chunk-35	[[	as.matrix	data	newcomb
+unnamed-chunk-36	~	control.ergm	ergm
+unnamed-chunk-37	newc.fit1	summary
+unnamed-chunk-38	mcmc.diagnostics	newc.fit1
+unnamed-chunk-39	~	control.ergm	ergm
+unnamed-chunk-40	newc.fit15	summary
+unnamed-chunk-41	mcmc.diagnostics	newc.fit15
+unnamed-chunk-42	~	ergmm
+unnamed-chunk-43	~	ergm
+unnamed-chunk-44	samplk.nm.e	samplk.nm.l	summary
+unnamed-chunk-45	~	ergmm
+unnamed-chunk-46	~	ergmm	mcmc.diagnostics
+unnamed-chunk-47	$	c	par	plot	samplk.d2G3	samplk.d2G3r	summary
+unnamed-chunk-48	?	families.ergmm
+unnamed-chunk-49	~	ergmm	list
+unnamed-chunk-50	c	par	plot	samplk.ct.d2G3	samplk.d2G3	samplk.ecol	Z.K.ref	Z.ref
+unnamed-chunk-51	~	ergmm	mcmc.diagnostics
+unnamed-chunk-52	c	par	plot	summary	zach.d2G2S	zach.ecol
