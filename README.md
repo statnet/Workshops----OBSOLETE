@@ -3,11 +3,11 @@ Source materials for Statnet Workshops
 
 Please see our [wiki](https://github.com/statnet/Workshops/wiki) for our online training materials and software installation instructions.
 
-Notes for end users:
+**Notes for end users:**
 
 If you would like to suggest edits/modifications/improvements/additions to any of our workshop materials, please file an issue in this GitHub repository (or, if you're familiar with GitHub and markdown, you can also fork, modify and submit a pull request).
 
-Notes for contributors on using this repository:
+**Notes for contributors on using this repository:**
 
 1. source materials for the workshops (.Rmd files) should be stored in a folder with the workshop name at the top level.
 
