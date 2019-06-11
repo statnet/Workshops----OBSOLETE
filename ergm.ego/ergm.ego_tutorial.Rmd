@@ -117,7 +117,7 @@ represented in the model.
 
 [//]: (switch here to showing examples:  1. ergmEgo paper, 2. AJPH paper)
 
-###2a. Motivating example:  Analyzing racial disparities in HIV in the US
+### 2a. Motivating example:  Analyzing racial disparities in HIV in the US
 
 The work on `ergm.ego` was originally motivated by a specific question 
 in the field of HIV epidemiology---Does network structure help
@@ -252,7 +252,7 @@ and alter recruitment may be investigator-driven, or respondent-driven.  This gi
 Egocentric network sampling comprises a range of designs developed specifically 
 for the collection of network data in social
 science survey research. The design is (ideally) based on a probability
-sample of respondents ("egos"") who, via interview, are asked to nominate a
+sample of respondents ("egos") who, via interview, are asked to nominate a
 list of persons ("alters") with whom they have a specific type of relationship ("tie"),
 and then asked to provide information on 
 the characteristics of the alters and/or the ties.  The alters 
@@ -656,7 +656,7 @@ Function    | Purpose
 
 ### 5d. Simulation related functions
 
-There are two current functions, again mimicking the equivalent function in `ergm'
+There are two current functions, again mimicking the equivalent function in `ergm`
 
 Function    | Purpose
 ----------- | -----------------------------------------------------------------
@@ -788,14 +788,14 @@ barplot(table(mesa.ego$alters$Race, exclude=NULL)/nrow(mesa.ego$alters),
         ylim = c(0,0.5))
 ```
 
-To look at the mixing matrix, we need to use a function specific to egodata
-called `mixingmatrix.egodata`.  The function will return either the crosstabulation
+To look at the mixing matrix, we use the generic function `mixingmatrix` which will dispatch to the
+method specific to egodata called `mixingmatrix.egodata`.  The function will return either the crosstabulation
 of the counts of ties by the attribute selected, or the conditional row probabilities.
 
 ```{r}
 # to get the crosstabulated counts of ties:
 
-mixingmatrix.egodata(mesa.ego,"Grade")
+mixingmatrix(mesa.ego,"Grade")
 
 # contrast with the original network crosstab:
 
@@ -803,8 +803,8 @@ mixingmatrix(mesa, "Grade")
 
 # to get the row conditional probabilities:
 
-mixingmatrix.egodata(mesa.ego, "Grade", rowprob=T)
-mixingmatrix.egodata(mesa.ego, "Race", rowprob=T)
+mixingmatrix(mesa.ego, "Grade", rowprob=T)
+mixingmatrix(mesa.ego, "Race", rowprob=T)
 ```
 
 We can also examine the observed number of ties, 
@@ -850,28 +850,28 @@ statistics that expect integer values.  The second scaling does result in intege
 counts because it is a multiple of the sample size.
 
 We can plot the degree distribution
-using another `egodata` specific function:
+using another generic function `degreedist` which will dispatch to the `egodata` specific method
 `degreedist.egodata`.  As with the `mixingmatrix` function, this can return either
 the counts or the proportions at each degree.
 
 ```{r}
 # to get the frequency counts
 
-degreedist.egodata(mesa.ego)
-degreedist.egodata(mesa.ego, by="Sex")
+degreedist(mesa.ego)
+degreedist(mesa.ego, by="Sex")
 
 # to get the proportion at each degree level
 
-degreedist.egodata(mesa.ego, by="Sex", prob=T)
+degreedist(mesa.ego, by="Sex", prob=T)
 ```
 
 The `degreedist` function also has an argument that lets you overplot the expected
 degree distribution for a Bernoulli random graph with the same expected density.
 
 ```{r}
-degreedist.egodata(mesa.ego, brg=T)
+degreedist(mesa.ego, brg=T)
 
-degreedist.egodata(mesa.ego, by="Sex", prob=T, brg=T)
+degreedist(mesa.ego, by="Sex", prob=T, brg=T)
 ```
 
 The `brg` overplot is based on 50 simulations of a Bernoulli random graph with the same
@@ -992,7 +992,7 @@ size, or number of egos), and `popsize`$= 1$,
 so the scaling returns the per capita estimates from
 the model parameters.
 
-The summary shows the `netsize.adj`$= `r -log(205)`, which is $-\log(205)$.
+The summary shows the `netsize.adj` = `r -log(205)`, which is $-\log(205)$.
 
 The summary function also reports that:
 ```
@@ -1087,10 +1087,13 @@ would be expected, given the mean degree, and the number of isolates.
 
 And just to round things off, let's fit a relatively large model
 
+```{r cache=FALSE}
+set.seed(1)
+```
 ```{r}
 fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1) 
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels=-2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 summary(fit.full)
@@ -1124,13 +1127,13 @@ results -- but it is also possible to simulate complete networks from this fit:
 sim.full <- simulate(fit.full)
 summary(mesa.ego ~ edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels=-2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
 summary(sim.full ~ edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels=-2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 plot(sim.full, vertex.col="Grade")
@@ -1143,13 +1146,13 @@ We can use network size invariance to simulate networks of a different size, alb
 sim.full2 <- simulate(fit.full, popsize=network.size(mesa)*2)
 summary(mesa~edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels=-2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))*2
 
 summary(sim.full2~edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels=-2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
@@ -1270,6 +1273,9 @@ round(se.compare, 3)
 What if we have a smaller sample? If we have a sample of $N/4=`r round(N/4)`$ students,
 How will our standard errors be affected?
 
+```{r cache=FALSE}
+set.seed(1)
+```
 ```{r}
 fmh.egosampN4 <- sample(fmh.ego, round(N/4), replace=TRUE)
 

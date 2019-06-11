@@ -343,10 +343,10 @@ $$
 $`r round(flomodel.02$coef[[1]],2)`$.
 
 * if one triangle: 
-$`r round(flomodel.02$coef[[1]],2)` + `r round(flomodel.02$coef[[1]],2)` = `r round(flomodel.02$coef[[1]] + flomodel.02$coef[[1]],2)`$
+$`r round(flomodel.02$coef[[1]],2)` + `r round(flomodel.02$coef[[2]],2)` = `r round(flomodel.02$coef[[1]] + flomodel.02$coef[[2]],2)`$
 
 * if two triangles: 
-$`r round(flomodel.02$coef[[1]],2)` + 2 \times`r round(flomodel.02$coef[[1]],2)` = `r round(flomodel.02$coef[[1]] + 2*flomodel.02$coef[[1]],2)`$
+$`r round(flomodel.02$coef[[1]],2)` + 2 \times`r round(flomodel.02$coef[[2]],2)` = `r round(flomodel.02$coef[[1]] + 2*flomodel.02$coef[[2]],2)`$
 
 * the corresponding probabilities are 
 0.16, 
@@ -585,17 +585,17 @@ the parameters.  This approach basically works as follows:
 * start with an initial vector of parameter values; the default is
 to use the maximum psuedo-likelihood estimates (MPLEs, using the logistic regression estimation algorithm)
 
-** choose a dyad at random, and flip a coin, weighted by the model, to decide whether there will be a tie.
+* choose a dyad at random, and flip a coin, weighted by the model, to decide whether there will be a tie.
 
-** repeat this for 1024 steps (the default ``MCMC interval")
+* repeat this for 1024 steps (the default ``MCMC interval")
 
-** take the network at the last step and calculate the network statistics (the ones in the model)
+* take the network at the last step and calculate the network statistics (the ones in the model)
 
-** repeat this 1024 times (the default ``MCMC sample size")
+* repeat this 1024 times (the default ``MCMC sample size")
 
-** calculate the average for each statistic in the sample, and compare this to the observed statistic
+* calculate the average for each statistic in the sample, and compare this to the observed statistic
 
-** update the parameter estimates as needed
+* update the parameter estimates as needed
 
 * repeat until the process converges:  the difference between the MCMC sample average and the observed statistic is sufficiently small
 
@@ -985,7 +985,7 @@ Birds of a Feather, or Friend of a Friend? Using Statistical Network Analysis to
 *Demography* 46(1): 103-125. [link](http://link.springer.com/article/10.1353/dem.0.0045)
 
 
-** Dealing with Model Degeneracy **
+**Dealing with Model Degeneracy**
 
 Handcock MS (2003a). 
 "Assessing Degeneracy in Statistical Models of Social Networks."
@@ -1002,7 +1002,7 @@ Curved Exponential Family Models for Social Networks.
 *Social Networks*, 29(2), 216-230.
 
 
-** Temporal ERGMs **
+**Temporal ERGMs**
 
 Krivitsky, P.N., Handcock, M.S,(2014).
 A separable model for dynamic networks
@@ -1012,7 +1012,7 @@ Krivitsky, P. N., M. S. Handcock and M. Morris (2011).
 Adjusting for Network Size and Composition Effects in Exponential-family Random Graph Models,
 *Statistical Methodology* 8(4): 319-339, ISSN 1572-3127  [link](http://www.sciencedirect.com/science/article/pii/S1572312711000086)
 
-** Egocentric ERGMS **
+**Egocentric ERGMS**
 
 Krivitsky, P. N., & Morris, M. (2017). 
 Inference for social network models from egocentrically sampled data, with application to understanding persistent racial disparities in HIV prevalence in the US. 

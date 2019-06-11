@@ -1,4 +1,4 @@
-##The `statnet` Project
+## The `statnet` Project
   
 All `statnet` packages are open-source, written for the **R** computing
 environment, and published on CRAN.  The source repositories are hosted on [GitHub](https://github.com/statnet).   
