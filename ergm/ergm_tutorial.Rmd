@@ -73,12 +73,12 @@ library(statnet)
 ```
 
 
-For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm:
+<!-- For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm: -->
 
-```{r,eval=FALSE}
-install.packages('latticeExtra')
-require(latticeExtra)
-```
+<!-- ```{r,eval=FALSE} -->
+<!-- install.packages('latticeExtra') -->
+<!-- require(latticeExtra) -->
+<!-- ``` -->
 
 Check your package versions against this:
 
@@ -137,13 +137,13 @@ where $p$ is the number of terms in the model.  From this one can more easily ob
 
 ### The model statistics $g(y)$:  ERGM terms
 
-The statistics $g(y)$ can be thought of as the "covariates" in the model.  In the network modeling context, these represent network features like density, homophily, triads, etc.  In one sense, they are like covariates you might use in other statistical models.  But they are different in one important respect:  these $g(y)$ statistics are functions of the network itself -- defined by sums and products of the dyads in the network -- so they are not measured by a question you include in a survey (e.g., the income of a node), but instead need to be computed on the specific network you have, after you have collected the data.
+The statistics $g(y)$ can be thought of as the "covariates" in the model.  In the network modeling context, these represent network features like density, homophily, triads, etc.  In one sense, they are like covariates you might use in other statistical models.  But they are different in one important respect:  these $g(y)$ statistics are functions of the network itself -- each is defined by the frequency of a specific configuration of dyads observed in the network -- so they are not measured by a question you include in a survey (e.g., the income of a node), but instead need to be computed on the specific network you have, after you have collected the data.
 
-As a result, every term in an ERGM must have an associated algorithm for computing its value.  The `ergm` package in `statnet` includes about 150 term-computing algorithms.  We will explore some of these terms in this 
+As a result, every term in an ERGM must have an associated algorithm for computing its value for your network.  The `ergm` package in `statnet` includes about 150 term-computing algorithms.  We will explore some of these terms in this 
 tutorial, and links to more information are provided in 
 [section 3.](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation).
 
-You can get the list of all terms, and the syntax for using them, by typing:
+You can get the list of all available terms, and the syntax for using them, by typing:
 
 ```{r, eval=FALSE}
 ?'ergm-terms'
@@ -176,7 +176,7 @@ where
 
 * $y^{c}_{ij}$ signifies the complement of $y_{ij}$, i.e. all dyads in the network other than $y_{ij}$. 
 
-* $\delta(y_{ij})$ is a vector of the "change statistics" for each model term.  The change statistic records how $g(y)$ term changes if the $y_{ij}$ tie is toggled on or off.  So:
+* $\delta(y_{ij})$ is a vector of the "change statistics" for each model term.  The change statistic records how the $g(y)$ term changes if the $y_{ij}$ tie is toggled on or off.  So:
 
 $$
 \delta(y_{ij}) = g(y^{+}_{ij})-g(y^{-}_{ij})
@@ -189,7 +189,7 @@ where
 
 So $\delta(y_{ij})$ equals the value of $g(y)$ when $y_{ij}=1$ minus the value of $g(y)$ when $y_{ij}=0$, but all other dyads are as in $g(y)$.  
 
-This expression shows that the coefficient $\theta$ can be interpreted as that term's contribution to the log-odds of an individual tie conditional on all others.  The coefficient for each term in the model is multiplied by the number of configurations that tie will create (or remove) for that specific term.  We will see exactly how this works in the sections that follow. 
+This expression shows that the coefficient $\theta$ can be interpreted as that term's contribution to the log-odds of an individual tie, conditional on all other dyads remaining the same.  The coefficient for each term in the model is multiplied by the number of configurations that tie will create (or remove) for that specific term.  We will see exactly how this works in the sections that follow. 
 
 
 ### Loading network data
