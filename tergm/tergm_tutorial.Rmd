@@ -35,7 +35,7 @@ The temporal modeling software demonstrated in this tutorial is authored by Pave
 
 ---
 
-##Introduction to this workshop/tutorial.
+## Introduction to this workshop/tutorial.
 
 This workshop and tutorial provide an overview of 
 statistical modeling of temporal network data 
@@ -103,7 +103,7 @@ Set seed for simulations -- this is not necessary, but it ensures that we all ge
 set.seed(0)
 ```
 
-##1. Temporal network data: Some considerations
+## 1. Temporal network data: Some considerations
 
 Moving from static to dynamic networks leads to 
 many different types of potential dynamics:
@@ -162,7 +162,7 @@ on principled statistical estimation of the model parameters that allows for hyp
 
 ---
 
-##2. Exploring temporal network data
+## 2. Exploring temporal network data
 
 ### networkDynamic:  storing and working with temporal network data
 
@@ -339,7 +339,7 @@ Ok, so that's a whirlwind tour through the descriptive tools available in `statn
 
 
 
-##3. Modeling temporal network data with STERGMs
+## 3. Modeling temporal network data with STERGMs
 
 Separable Temporal ERGMs (STERGMs) are an extension of ERGMs for modeling dynamic networks in discrete time, introduced in Krivitsky and Handcock (2010).  They are a subset of the TERGM family, and the "Separable" part refers to the way in which formation and dissolution dynamics are represented.
 
@@ -492,7 +492,7 @@ and when fitting a model to a single cross-sectional network with duration infor
 There are many other features of a call `stergm` that will be important; we illustrate them in one or more examples during the workshop.
 
 
-##4. Example data analyses
+## 4. Example data analyses
 
 We'll work through three examples here, first with network panel data, next with cross-sectional data plus duration information, and finally (briefly)
 with an approximation used in the cross sectional case when durations are 
@@ -660,7 +660,7 @@ $\theta = \ln{(d-1)}$
 
 
 So, for our dissolution model, theta.diss = $\ln{(10-1)}$ = $\ln{9}$ 
-($ \approx 2.2$):
+($\approx 2.2$):
 ```{r}
 theta.diss <- log(9)
 ```
@@ -889,7 +889,7 @@ plot(attributes(stergm.sim.2)$stats)
 ```
 
 
-##5. Notes on independence within, not between time steps
+## 5. Notes on independence within, not between time steps
 
 
 STERGMs assume that the formation and dissolution processes are independent of each other _within the same time step_.
@@ -953,7 +953,7 @@ Shortening the time step to a day means I can break up a day later,
 rather than a month later, which is probably more reasonable. The tradeoff is that a shorter time interval means longer computation time for both model estimation and simulation.  
 
 
-##6. Additional functionality
+## 6. Additional functionality
 
 One of the most important extensions to `stergm` functionality is the ability
 to estimate models based on egocentrically sampled network data.  This
@@ -972,7 +972,7 @@ If you begin to use them in depth, you will likely have further questions.  If s
 
 ------------------
 
-##References
+## References
 
 
 Krivitsky, P.N., Handcock, M.S,(2014).
