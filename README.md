@@ -1,7 +1,8 @@
 # Workshops
 Source materials for Statnet Workshops
 
-Please see our [wiki](https://github.com/statnet/Workshops/wiki) for our online training materials and software installation instructions.
+Please see [statnet.github.io] for etc.
+our [wiki](https://github.com/statnet/Workshops/wiki) for our online training materials and software installation instructions.
 
 **Notes for end users:**
 
