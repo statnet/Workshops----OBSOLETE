@@ -672,7 +672,7 @@ Voila. Of course, yours will look somewhat different.
 Simulation from a model is a very powerful tool for
 examining the range of variation that can be expected from this model, both in the sufficient statistics that define the model, and in other statistics not explicitly specified by the model.  Simulation plays a large role in analyizing egocentrically sampled data, and if you take the `tergm` workshop, you will see how we can use simulation to examine the temporal implications of a model based on a single cross-sectional egocentrically sampled dataset.
 
-Next, we will examine the primary use of simulation in the ergm package:  using simulated data from the model to evaluate  goodness of fit to the observed data.   
+Next, we will examine the primary use of simulation in the ergm package:  we simulate networks from the fitted model to evaluate  goodness of fit to the observed network.   
 
 ## 6. Examining the quality of model fit -- GOF
 ERGMs can be seen as generative models when they represent
@@ -876,12 +876,12 @@ quantifies some of the uncertainty introduced by the assumptions.
 
 The egocentric estimation/simulation framework extends to temporal ERGMs ("TERGMs") as well, with the minimal addition of an estimate of partnership duration. This makes it possible to simulate complete dynamic networks from a single cross-sectional egocentrically sampled network.  For an example of what you can do with this, check out the network movie we developed to explore the impact of dynamic network structure on HIV transmission, see http://statnet.org/movies
 
-While the `ergm` package has had this capability for many years (and old ERGM worshops had a section on this), there is now a specific package that makes this much easier: `ergm.ego`.  The new package includes accurate statistical inference (so you can get standard errors for model coefficients), and many utilities that simplify the task of reading in the data, conducting exploratory analyses, and specifying model options.
+While the `ergm` package has had this capability for many years (and old ERGM worshops had a section on this), there is now a specific package that makes this much easier: `ergm.ego`.  The new package includes accurate statistical inference (so you can get standard errors for model coefficients), and many utilities that simplify the task of reading in the data, conducting exploratory analyses, calculating the sample "target statistics", and specifying model options.
 
-We now have a separate workshop/tutorial for `ergm.ego`, so we no longer cover this material in the current ERGM workshop.  As always, this workshop material can be found online at the statnet wiki.
+We now have a separate workshop/tutorial for `ergm.ego`, so we no longer cover this material in the current ERGM workshop.  As always, this workshop material can be found online at the [statnet Workshops wiki](https://github.com/statnet/Workshops/wiki).
 
 
-## 9. Additional functionality in statnet and other packages
+## 9. Additional functionality in statnet and other package
 
 `statnet` is actually a suite of packages that are designed to work together, and provide tools for a wide range of different types of network data analysis.  Examples include temporal network models and dynamic network vizualizations, analysis of egocentrically sampled network data, multilevel network modeling, latent cluster models and network diffusion and epidemic models.  Development is ongoing, and there are new packages, and new functionality added to existing packages on a regular basis. 
 
@@ -908,13 +908,11 @@ Packages developed by statnet team that are not covered in this tutorial:
 * `EpiModel` -- network modeling of infectious disease and social diffusion processes  
 
 Many of these have associated training workshops.  Our tutorials 
-can be found online, either on the 
-[new GitHub statnet wiki](https://statnet.github.io/Workshops) or the
-[old statnet wiki](https://statnet.csde.washington.edu/trac).  Everything
-will eventually be moved over to the GitHub wiki
+can be found online, on the 
+[GitHub statnet Workshops wiki](https://statnet.github.io/Workshops).
 
 
-### Additional functionality in base ergm
+### Additional functionality in base `ergm`
 
 * ERGMs for valued ties
 
@@ -989,7 +987,7 @@ Birds of a Feather, or Friend of a Friend? Using Statistical Network Analysis to
 
 Handcock MS (2003a). 
 "Assessing Degeneracy in Statistical Models of Social Networks."
-Working Paper 39, Center for Statistics and the Social Sciences, University of Washington. [link](http://www.csss.washington.edu/Papers/)
+Working Paper 39, Center for Statistics and the Social Sciences, University of Washington. [link](http://www.csss.washington.edu/research/working-papers/39)
 
 Schweinberger, Michael (2011)  Instability, Sensitivity, and Degeneracy of Discrete Exponential Families  *JASA* 106(496): 1361-1370.  [link](http://www.tandfonline.com/doi/abs/10.1198/jasa.2011.tm10747#.U7M4A_ldWSo)
 
@@ -999,22 +997,22 @@ New Specifications For Exponential Random Graph Models
 
 Hunter, D. R. (2007). 
 Curved Exponential Family Models for Social Networks. 
-*Social Networks*, 29(2), 216-230.
+*Social Networks*, 29(2), 216-230.[link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2031865/)
 
 
 **Temporal ERGMs**
 
 Krivitsky, P.N., Handcock, M.S,(2014).
 A separable model for dynamic networks
-*JRSS Series B-Statistical Methodology*, 76(1):29-46; 10.1111/rssb.12014 JAN 2014 [link](http://onlinelibrary.wiley.com/doi/10.1111/rssb.12014/abstract)
+*JRSS Series B-Statistical Methodology*, 76(1):29-46; 10.1111/rssb.12014 JAN 2014 [link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3891677/)
 
 Krivitsky, P. N., M. S. Handcock and M. Morris (2011). 
 Adjusting for Network Size and Composition Effects in Exponential-family Random Graph Models,
-*Statistical Methodology* 8(4): 319-339, ISSN 1572-3127  [link](http://www.sciencedirect.com/science/article/pii/S1572312711000086)
+*Statistical Methodology* 8(4): 319-339, ISSN 1572-3127  [link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3117581/)
 
 **Egocentric ERGMS**
 
 Krivitsky, P. N., & Morris, M. (2017). 
 Inference for social network models from egocentrically sampled data, with application to understanding persistent racial disparities in HIV prevalence in the US. 
-*Annals of Applied Statistics*, 11(1), 427-455.
+*Annals of Applied Statistics*, 11(1), 427-455.[link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5737754/)
 
