@@ -463,7 +463,7 @@ first step in modeling these values. The reference distribution is
 specified using a one-sided formula as a `reference` argument to
 an `ergm` or `simulate` call. Running
 
-```{r}
+```{r eval=FALSE}
 help("ergm-references")
 ```
 will list the choices implemented in the various packages, and are given as a one-sided formula.
@@ -601,7 +601,7 @@ from binary ERGMs, though this not required, as it's the
 default. Also, note that for valued ERGMs, the "intercept"
 term is `sum`, not `edges`.
 
-```{r}
+```{r eval=FALSE}
 help("ergm-terms")
 ```
 
