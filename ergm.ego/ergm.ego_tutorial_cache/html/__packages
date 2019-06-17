@@ -4,3 +4,5 @@ statnet.common
 network
 ergm
 ergm.ego
+dplyr
+tibble
