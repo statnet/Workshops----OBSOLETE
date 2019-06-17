@@ -12,12 +12,14 @@ output:
     toc: yes
 ---
 
-```{r setup, include=FALSE}
+```{r setup, cache=FALSE, include=FALSE}
 library(knitr)
 knitr::opts_chunk$set(cache=T, comment=NA, fig.align='center')
+options(width=100)
+```
+```{r include=FALSE}
 SHOW_MSG = FALSE
 ```
-
 
 _Last updated: `r Sys.Date()`_
 
@@ -632,9 +634,9 @@ The standard errors for coefficients in an `ergm.ego` fit are designed to repres
 uncertainty in our estimate.  For ERGMs, this uncertainty can be thought of as
 coming from three possible sources:
 
-* 1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
-* 2. The sampling process of egos: What other samples _could_ have been drawn? 
-* 3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
+1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
+2. The sampling process of egos: What other samples _could_ have been drawn? 
+3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
 
 Most treatments of ERGM estimation treat the coefficient
 $\theta$ as a parameter of a superpopulation process 
@@ -1405,7 +1407,7 @@ round_df(se3, 3)
 
 As with ordinary statistics, standard error is inverse-proportional to
 the square root of the sample size.  We've divided the sample size by 4, so the standard errors for the smaller sample 
-are about $\frac{1}{\sqrt(4)} = 2$ times larger.
+are about $\sqrt{4} = 2$ times larger.
 
 Suppose that stick with our smaller sample, but stratify our sampling design, oversampling the smaller
 minority groups by a factor of 4. The inclusion probability for a non-white student 
