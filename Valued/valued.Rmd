@@ -659,7 +659,7 @@ zach.lead <-
        response="contexts", reference=~Poisson) 
 mcmc.diagnostics(zach.lead)
 ```
-
+**NB:** We could also write "`nodefactor(~role!="Member")`" to get the same result. This is new in `ergm` 3.10.
 ```{r collapse=TRUE}
 summary(zach.lead)
 ```
