@@ -84,7 +84,7 @@ install.packages("tibble")
 ```
 
 Load these packages
-```{r message=FALSE}
+```{r cache=FALSE, message=FALSE}
 library(ergm.ego)
 library(dplyr)
 library(tibble)
@@ -1050,7 +1050,7 @@ term, and we will demonstrate this below.
 Let's start with simple edges-only model to see what's the same and what
 is different from a call to `ergm`:
 
-```{r}
+```{r message=SHOW_MSG}
 fit.edges <- ergm.ego(mesa.ego ~ edges)
 summary(fit.edges)
 ```
