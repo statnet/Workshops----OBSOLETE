@@ -84,7 +84,7 @@ install.packages("tibble")
 ```
 
 Load these packages
-```{r}
+```{r message=FALSE}
 library(ergm.ego)
 library(dplyr)
 library(tibble)
@@ -609,23 +609,21 @@ you may want to address this before fitting the data in `ergm.ego`.
 
 ##### Constructing the egocentric **target statistics**
 
-[//]: # ( Pavel this section needs work)
-
 Now that we have a simple way to construct a consistent set of egocentric statistics
 and implement a size-invariant parameterization, we can set up the *target statistics*
-for the ERGM estimation.  But we can also rely on the principle of *per capita* scaling to
+for the ERGM estimation.  However, in many applications, our population size is in the millions.  Therefore, we use *per capita* scaling to
 limit the size of the network we use for estimation, and increase the speed and
 efficiency of the process.
 
-We first scale the sample statistics to a *pseudo-population* size $N'$.
+We first scale the sample statistics to a *pseudo-population* size $|N'|$.
 The resulting values are the target statistics that we pass to `ergm`.
-We can then fit whe model with an offset of $-\log(N')$, which will return
+We can then fit whe model with an offset of $-\log(|N'|)$, which will return
 the per capita estimates that can
 be easily rescaled to any value for simulation purposes.
 
 Note that if we want to obtain population estimates from `ergm.ego` for a population
-with a known size $N$, we can fit the model with an
-offset of $\log(N/{N'})=\log(N) - \log(N')$.
+with a known size $|N|$, we can fit the model with an
+offset of $\log(|N|/{|N'|})=\log(|N|) - \log(|N'|)$.  This is what the parameters *would have been* had we fit the ERGM to the population of size $|N|$.
 
 
 #### 4b4. Inference:  Estimating the standard errors of the ERGM coefficients
@@ -662,7 +660,7 @@ for egocentrically sampled data.
 
 To get a list of documented functions, type:
 
-```{r,eval=FALSE}
+```{r eval=FALSE}
 help(package="ergm.ego")
 ```
 
@@ -727,20 +725,20 @@ but they have the same names and arguments as their `ergm` counterparts.
 
 For a list of terms currently included in the ergm.ego, type:
 
-```{r,eval=FALSE}
+```{r eval=FALSE}
 help('ergm.ego-terms')
 ```
 
 Dyad independent terms include density and vertex attribute based measures:
 
-* Density:  edges
-* Vertex attribute effects:  nodefactor (for discrete/nominal vars) and nodecov (for continuous)
-* Homophily:  nodematch (for homophily), nodemix (for general mixing patterns) and absdiff
+* Density:  `edges`
+* Vertex attribute effects:  `nodefactor` (for discrete/nominal vars) and `nodecov` (for continuous)
+* Homophily:  `nodematch` (for homophily), `nodemix` (for general mixing patterns) and `absdiff`
 
 Dyad dependent terms include degree-based measures:
 
-* Degree: degree, degrange and degreepopularity
-* Concurrency: concurrent and concurrentties
+* Degree: `degree`, `degrange` and `degreepopularity`
+* Concurrency: `concurrent` and `concurrentties`
 
 
 
@@ -826,8 +824,8 @@ So that you get a chance to read in egodata from a .csv file, let's write out th
 ego and alter tables, and then read them back in to create an egodata object:
 
 ```{r}
-write(t(mesa.ego$egos), file="mesa.ego.table.csv", ncol=dim(mesa.ego$egos)[2], sep=",")
-write(t(mesa.ego$alters), file="mesa.alter.table.csv", ncol=dim(mesa.ego$alters)[2], sep=",")
+write.csv(mesa.ego$egos, file="mesa.ego.table.csv", row.names=FALSE)
+write.csv(mesa.ego$alters, file="mesa.alter.table.csv", row.names=FALSE)
 ```
 
 Now read them back in:
@@ -1039,7 +1037,7 @@ You can also force one of these two regimes by setting `ppopsize` to `"samp"` or
 
 For more information, see
 
-```{r message=SHOW_MSG}
+```{r eval=FALSE}
 ?control.ergm.ego
 ```
 
@@ -1156,7 +1154,7 @@ degree distribution assessment.
 ```{r cache=FALSE}
 set.seed(1)
 ```
-```{r, messagge=SHOW_MSG}
+```{r message=SHOW_MSG}
 fit.deg0 <- ergm.ego(mesa.ego ~ edges + degree(0), control=control.ergm.ego(ppopsize=1000))
 summary(fit.deg0)
 ```
@@ -1177,7 +1175,7 @@ And just to round things off, let's fit a relatively large model
 ```{r cache=FALSE}
 set.seed(1)
 ```
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1) 
                       + nodefactor("Sex")
                       + nodefactor("Race", levels=-2)
@@ -1286,7 +1284,7 @@ Let's start by fitting an ERGM to the complete network, and looking at the coeff
 triadic terms, because we want to be able to compare these results to results from egocentrically sampled versions of these data.
 And we'll 
 
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 fit <- ergm(fmh ~ edges+degree(0) 
                        + nodefactor("Race") + nodefactor("Sex") 
                        + nodematch("Race") + nodematch("Sex") + absdiff("Grade"))
@@ -1303,7 +1301,7 @@ egocentric census compare to the complete-network ergm estimates?
 fmh.ego <- as.egodata(fmh)
 head(fmh.ego)
 ```
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 fit.ego <- ergm.ego(fmh.ego ~ edges + degree(0) 
                    + nodefactor("Race") + nodefactor("Sex") 
                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
@@ -1342,7 +1340,7 @@ Here, we take a simple random sample of N students with replacement.
 ```{r cache=FALSE}
 set.seed(1)
 ```
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
 fit.ego.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
                     + nodefactor("Race") + nodefactor("Sex") 
@@ -1380,7 +1378,7 @@ How will our standard errors be affected?
 ```{r cache=FALSE}
 set.seed(1)
 ```
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 fit.egosamp.25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
 
 fit.ego.samp.25 <- ergm.ego(fit.egosamp.25 ~ edges + degree(0) + nodefactor("Race")
@@ -1418,7 +1416,7 @@ can do this automatically for you, as long as the sampling weight is stored
 in a component of the `egodata` object called `egoWt`.  If we use the `sample` function
 on our `egodata` object, the probabilities are automaticall stored in `egoWt`.
 
-```{r, messagge=SHOW_MSG}
+```{r, message=SHOW_MSG}
 w <- 1 + 3*((fmh %v% "Race")!="White") # set up the stratification design
 
 fit.egosamp.25strat <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
