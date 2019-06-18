@@ -573,8 +573,8 @@ There is a `statnet` package --- `ergm.userterms` ---
 that provides the utilities needed to write new
 ergm-terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
 also be found in the 
-[*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides from the workshop we teach on coding ergm-terms can be found
-[here](https://statnet.csde.washington.edu/trac/attachment/wiki/Sunbelt2013/EUT%20tutorial%20slides.pptx).
+[*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides and installation instructions from the workshop we teach on coding ergm-terms can be found
+[here](https://github.com/statnet/Workshops/tree/master/ergm.userterms).
 
 Note that writing up new `ergm` terms requires some knowledge of 
 C and the ability
@@ -635,8 +635,7 @@ fit <- ergm(flobusiness~edges+degree(1),
 
 This runs a version with every network returned, and might be useful if you are trying to debug a bad model fit.
 
-In the last section we'll
-to look at some models that don't converge properly, and how to use
+In the last section we'll look at some models that don't converge properly, and how to use
 MCMC diagnostics to identify and address this.
 
 ## 5. Network simulation: the *simulate* command and *network.list* objects
