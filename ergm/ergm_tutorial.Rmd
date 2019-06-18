@@ -69,9 +69,11 @@ If you have not already downloaded the `statnet` packages for this workshop, the
 
 ```{r,eval=FALSE}
 install.packages('statnet')
-library(statnet)
 ```
 
+```{r}
+library(statnet)
+```
 
 <!-- For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm: -->
 
