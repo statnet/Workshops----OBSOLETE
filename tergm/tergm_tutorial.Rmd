@@ -1006,7 +1006,7 @@ over time.  For more information, see:
 
 * The `ergm.ego` [package](https://cran.r-project.org/web/packages/ergm.ego/index.html) and [workshop materials](https://github.com/statnet/Workshops/wiki) on the `statnet` Workshops wiki.  We teach this workshop at most of the INSNA annual meetings (Sunbelt, EUSN, NASN).
 
-* The `EpiModel` [package](https://cran.r-project.org/web/packages/EpiModel/index.html), which uses this functionality to model diffusion on dynamic networks.  See the [EpiModel website](https://www.epimodel.org) and the [weeklong intensive workshop](statnet.github.io/nme)).
+* The `EpiModel` [package](https://cran.r-project.org/web/packages/EpiModel/index.html), which uses this functionality to model diffusion on dynamic networks.  See the [EpiModel website](https://www.epimodel.org) and the [weeklong intensive workshop](https://statnet.github.io/nme)).
 
 
 All of the packages reviewed in this tutorial have additional functionality, 
