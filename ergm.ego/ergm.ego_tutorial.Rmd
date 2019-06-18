@@ -106,7 +106,7 @@ round_df <- function(df, digits) {
 }
 
 # extract se's for estimates from fit object
-modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) 
+se.coef <- function(fit,src) sqrt(diag(vcov(fit, source=src)))
 
 ```
 
@@ -1331,14 +1331,25 @@ fit.ego <- ergm.ego(fmh.ego ~ edges + degree(0)
                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
                    popsize=N, ppopsize=N)
 
+# se for the diff in coef, from MCMC only
+# note use of mcmcse function we defined
+sediff = sqrt(se.coef(fit, "estimation")^2 + se.coef(fit.ego, "estimation")[-1]^2)
+
 # Parameters recovered (we're using utilities from the tidyverse here)
 # Compare fit to egocentric census:
 coefs1 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
   left_join(tibble::rownames_to_column(data.frame(coef(fit.ego)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.)/sqrt(modse(fit)^2 + modse(fit.ego)[-1]^2)) # note use of modse function we defined
+  mutate(Zdiff = (coef.fit. - coef.fit.ego.)/sediff)
 
 round_df(coefs1, 3) # note use of round_df function we defined
 ```
+
+Here, to compare the coefficient estimates, we are constructing a z-score
+for the difference, based on the MCMC error in each run.  Since this is
+an egocentric *census*, there is technically no error in the sufficient
+statistics for the egocentric model terms, so the only error in estimation
+comes from the MCMC algorithm.  To reduce the difference, we could
+increase the size of our MCMC sample (but we'll move on for now).
 
 Again, we can diagnose the fitted egocentric model for proper convergence.
 
@@ -1471,7 +1482,7 @@ zdiffse <- sqrt(se4$modse.fit.ego.samp.25.^2 + se4$modse.fit.ego.samp.25strat.^2
 coefs4 <- tibble::rownames_to_column(data.frame(coef(fit)))%>%
   left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25))))  %>%
   left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25strat)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.samp.25strat.)/zdiffse) %>%
+  mutate(Zdiff = (coef.fit.ego.samp.25. - coef.fit.ego.samp.25strat.)/zdiffse) %>%
   select(-coef.fit.)
 
 round_df(coefs4, 3)
