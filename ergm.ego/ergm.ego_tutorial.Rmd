@@ -47,9 +47,9 @@ key features of the packages that the
 network data with *Exponential family Random Graph Models* (ERGMs).
 The packages we will be using are:
 
-* `network` -- storage and manipulation of network data
-* `sna` -- descriptive statistics and graphics for exploratory network analysis`
-* `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
+* [`network`](https://cran.r-project.org/web/packages/network/index.html) -- storage and manipulation of network data
+* [`sna`](https://cran.r-project.org/web/packages/sna/index.html) -- descriptive statistics and graphics for exploratory network analysis`
+* [`ergm`](https://cran.r-project.org/web/packages/ergm/index.html) -- statistical tools for estimating ERGMs, model assessment, and network simulation.
 
 All `statnet` packages are open-source, written for the **R** computing
 environment, and published on CRAN.  The source repositories are hosted
@@ -79,7 +79,9 @@ install.packages('ergm.ego')
 
 This will install all of the "dependencies" -- the other R packages that `ergm.ego` needs.
 
-We will also need two other packages (from the "tidyverse") for this workshop:
+We will also need two other packages (from the 
+["tidyverse"](https://cran.r-project.org/web/packages/tidyverse/index.html))
+for this workshop:
 ```{r, eval=FALSE}
 install.packages("dplyr")
 install.packages("tibble")
@@ -245,14 +247,14 @@ The movie below is another simpler example of what you can do with egocentricall
 
 The full technical details on ERGM estimation and inference from egocentrically
 sampled data have been published in
-[Krivitsky and Morris (2017)](http://projecteuclid.org/euclid.aoas/1491616887)
+[Krivitsky and Morris (2017)](http://projecteuclid.org/euclid.aoas/1491616887).
 This section of the tutorial provides a brief introduction to the key concepts.
 
 ### 3a. Exponential-family random graph models
 
 ERGMs represent a general class of models based in exponential-family theory for 
 specifying the probability distribution 
-for a set of random graphs or networks. Within this framework, one can---among other tasks---obtain maximum-likehood estimates for the parameters of a specified model 
+for a set of random graphs or networks. Within this framework, one can---among other tasks---obtain maximum-likehood estimates (MLEs) for the parameters of a specified model 
 for a given data set; test individual models for goodness-of-fit, perform various types of model comparison; and simulate additional networks with the underlying probability 
 distribution implied by that model.
 
@@ -432,13 +434,13 @@ $e^a_{i,k}\equiv( x_{j,k})_{j\in y_i}$ | and its alters.
 
 ### 4a. Specifying Egocentric ERGMs
 
-Egocentric ERGMs are specified the same way as plain `ergm`: via terms (e.g. `nodematch`)
+Egocentric ERGMs are specified the same way they would be in `ergm`: via terms (e.g. `nodematch`)
 used to represent predictors on the right-hand size of equations used
-in:
+in calls to:
 
-* calls to `summary` (to obtain measurements of network statistics on a dataset)
-* calls to `ergm.ego` (to estimate an ERGM)
-* calls to `simulate` (to simulate networks from an ERGM fit)
+* `summary` (to obtain measurements of network statistics on a dataset)
+* `ergm.ego` (to estimate an ERGM)
+* `simulate` (to simulate networks from an ERGM fit)
 
 The terms that can be used in an ERGM depend on the type of network being
 analyzed (directed or undirected, one-mode or two-mode ("bipartite"), binary or
@@ -458,12 +460,14 @@ $$
 g_{k}(y,x)\equiv \textstyle\sum_{i\in N} h_{k}(e_i)   
 $$
 for some function $h_{k}(\cdot)$ of egocentric information
-associated with a single actor.  In plain language, the statistic is egocentric if you can take the individual
+associated with a single actor.  
+---------------
+In plain language, a statistic is egocentric if you can take the individual
 level measure of that statistic (say, the number of ties), sum this (or a simple function of this) across all individuals 
 in the population (i.e., an egocentric census) and recover the network level statistic (here, the total number of ties in the network).  
+------------------
 
-
-The space of egocentric statistics includes **dyadic-independent** 
+The set of egocentric statistics includes **dyadic-independent** 
 statistics that can be expressed in the general form of
 $$
 g_{k}(y,x)=\sum_{ij\in y} f_k(x_i,x_j)          
@@ -476,7 +480,7 @@ $$
 for some function $f_k(\cdot,\dotsb)$ of the attributes of an actor and 
 their network neighbors.  
 
-*The statistics that are identifiable in an egocentric sample depend on the specific egocentric study design.*
+*The statistics that are identifiable in an egocentric sample depend on the specific egocentric study design:*
 
 Basic (minimal) egocentric design (alter attributes only)
 : * Nodal Covariate/Factor effects
@@ -511,34 +515,36 @@ The framework for inference relies on two basic properties of  exponential famil
 
 * The MLE is a smooth function of the sufficient statistic, and is defined for "in between" values of the statistics as well (e.g., fractional edges).
 
-MLE's uniquely maximize the probability of the observed statistics under the model, and any network with the same observed statistics will have the same probability.
+MLE's for exponential family models *uniquely* maximize the probability of the observed statistics under the model (the "likelihood").  Any network with the same observed statistics will have the same probability.
+
+Egocentric inference involves two steps: estimating the sufficient statistics $g(y)$, and then using these to estimate the ERGM coefficients $\theta$.
 
 #### 4.b1.  Preliminaries:  The scaling assumption for design based inference of the sufficient statistics
 
-With an egocentric sample, we don't observe these sufficient statistics, we observe a sampled version of these statistics.
+With an egocentric sample, we don't observe these sufficient statistics, we observe a *sampled* version of them.
 So the first question is how the sample statistics scale up to the population level.  If we know this, then we can
 estimate the population level sufficient statistics.
+
 A natural scaling assumption for dyadic independent statistics is
-that they scale on a *per capita* basis, i.e., that the mean degree stays constant.
+that they scale on a *per capita* basis, i.e., that the mean degree (degree *per capita*) stays constant as the network size changes.
 $$
 \text{Mean Degree} = \frac{2\times\text{ties}}{\text{nodes}} = \frac{2T}{n}
 $$
-For example, if 5 people have 10 ties, the mean degree (degree *per capita*) is $\frac{2*ties}{nodes} = \frac{20}{5} = 4$,
-so we would expect 20 people to have 80 ties.  As with everything network, things are more complicated for
+For example, if a network of 5 people has 10 ties, the mean degree (degree *per capita*) is $\frac{2*ties}{nodes} = \frac{20}{5} = 4$,
+so we would expect a network of 20 people to have 80 ties.  As with everything network, things are more complicated for
 dyad-dependent statistics.  We will not cover the scaling for dyad-dependent statistics in this workshop, but if you are
 interested see [Krivtsky and Kolaczyk (2015)](https://projecteuclid.org/euclid.ss/1433341477).
 
-This type of estimate can easily be adapted to handle sample weights.  This statistical name for this 
-approach is "design-based" estimation.
+This type of estimate can easily be adapted to handle sample weights.
 
 #### 4.b2  Design-based estimation of ERGMs 
 
 This is done in three steps:
 
-1. Estimate the ERGM's sufficient statistics using the *per capita* scaling assumption
+1. Estimate the ERGM's sufficient statistics using a "design-based" estimater that relies on the *per capita* scaling assumption
 $$g(y,x)\approx \tilde{g}(e _ S)=\frac{|N|}{|S|} \textstyle\sum_{i\in S} h _ {k}(e _ i).$$
-    * This is an estimate for a population total, so it is consistent, asymptotically normal (by the CLT).
-	* We can estimate its variance as we would a variance of a mean.
+    * This is an estimate for a population total, so it is consistent and asymptotically normal (by the CLT).
+	* We can estimate its variance as we would the variance of a mean.
 2. Fit the ERGM by finding $\hat{\theta}$ that corresponds to (that is, produces) $\tilde{g}(e _ S)$.
     * It exists because of ERGM's properties.
 3. Use Delta Method to transfer properties of $\tilde{g}(e _ S)$ to $\hat{\theta}$.
@@ -546,7 +552,7 @@ $$g(y,x)\approx \tilde{g}(e _ S)=\frac{|N|}{|S|} \textstyle\sum_{i\in S} h _ {k}
 
 Together, these allow us to use
 any statistics that can be observed in an egocentric sample as a term in an
-ERG model, to estimate the model from a complete pseudo-network that has 
+ERG model, estimate the model from a complete *pseudo-network* that has 
 the same (or appropriately scaled) sufficient statistics,
 and the networks simulated from the fitted model will be centered on the (scaled)
 observed statistics.
@@ -571,7 +577,7 @@ we can adjust for this in the estimation, and the resulting parameter estimates
 (with the exception of the edges term) will be "size invariant".
 
 Here we will follow Krivitsky, Handcock, and Morris (2011), who showed that one can
-obtain a "per capita" size invariant parameterization for dyad-independent
+obtain a *per capita* size invariant parameterization for dyad-independent
 statistics by using an offset, approximately equal to $-\log(n)$, where $n$ is
 the number of nodes in the network.  The intuition
 is that this transforms the density-based parameterization (ties per dyad) 
@@ -591,29 +597,27 @@ property, but a mathematical proof is elusive.
 ##### Observable discrepancies
 
 In the population level network, the number of ties between groups must balance:  the number
-of ties between group 1 and group 2 is the same as between group 2 and group 1, 
-because we observe the group attribute of each node for every tie.  In an egocentrically
-sampled network, this equality may no longer hold.
+of undirected ties between group 1 and group 2 is the same as between group 2 and group 1, 
+because we observe the group attribute of each node for every tie.  
 
-This can lead to discrepancies: tie subtotals that are 
+In an egocentrically
+sampled network, this equality is no longer guaranteed. Sampling variability and measurement error can both lead to discrepancies: tie subtotals that are 
 required to balance in theory,
-but are observed not to balance in the sample.  For an egocentrically sampled
-network, and even for an egocentric census, this kind of discrepancy can arise, either
-from sampling variability, or from measurement error.
+but are observed not to balance in the sample.  
 
 This is another unique feature of egocentrically sampled network data.    
 
 In `ergm.ego`, *we assume that any discrepancy is due to sampling variation*, 
 and effectively take the average of the discrepant reports to estimate
 the number of ties for that ego-alter tie configuration.  If you know the 
-source of the discrepancy, or want to make a different assumption
+source of the discrepancy in your specific dataset, or want to make a different assumption
 you may want to address this before fitting the data in `ergm.ego`.
 
 ##### Constructing the egocentric **target statistics**
 
 Now that we have a simple way to construct a consistent set of egocentric statistics
-and implement a size-invariant parameterization, we can set up the *target statistics*
-for the ERGM estimation.  However, in many applications, our population size is in the millions.  Therefore, we use *per capita* scaling to
+and implement a size-invariant parameterization, we can set up the *target statistics* needed
+for the ERGM estimation.  In many applications, the population size is in the millions.  Therefore, we use *per capita* scaling to
 limit the size of the network we use for estimation, and increase the speed and
 efficiency of the process.
 
