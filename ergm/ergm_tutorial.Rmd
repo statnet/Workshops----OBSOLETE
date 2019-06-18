@@ -215,13 +215,13 @@ However you read them in, the data will need to be transformed into a `network` 
 ```
 
 
-The ergm package also contains several network data sets, and we will use those here for demonstration purposes.  
+The `ergm` package also contains several network data sets, and we will use those here for demonstration purposes.  
 
 ```{r}
 data(package='ergm') # tells us the datasets in our packages
 ```
 
-We'll start with Padgett's data on Renaissance Florentine families for our first example.  As with all data analysis, we start by looking at our data: using graphical and numerical descriptives.
+We'll start with Padgett's data on Renaissance Florentine families for our first example.  As with all data analysis, we start by looking at our data using graphical and numerical descriptives.
 
 ```{r}
 data(florentine) # loads flomarriage and flobusiness data
@@ -264,10 +264,10 @@ lead to poor modeling results.
 
 #### A simple Bernoulli ("Erdos/Renyi") model
 
-We begin with the simplest possible model, 
-it contains only one term that represents the total number of
-edges in the network --- $\sum{y_{ij}}$.  
-The ergm-term for this is `edges`, and when included in an ERGM its
+We begin with a simple model, 
+containing only one term that represents the total number of
+edges in the network, $\sum{y_{ij}}$. The name of this ergm-term is `edges`, 
+and when included in an ERGM its 
 coefficient controls the overall density of the network.
 
 ```{r}
@@ -278,11 +278,9 @@ summary(flomodel.01) # Look at the fitted model object
 
 This simple model specifies a single homogeneous 
 probability for all ties,
-which is captured by the coefficient on the `edges` term.  
-How should we interpret this coefficient? The easiest way is
-to return to the logit form of the ERGM.
-The log-odds that a tie is present is:
-
+which is captured by the coefficient of the `edges` term.  How 
+should we interpret this coefficient? The easiest way is
+to return to the logit form of the ERGM. The log-odds that a tie is present is
 $$
 \small{
 \begin{eqnarray*}
@@ -292,10 +290,10 @@ logit(p(y)) &=& \theta \times \delta(g(y)) \\
 \end{eqnarray*}
 }
 $$
-
 for every tie, since the addition of any tie to the network always increases the total number of ties by 1.
 
-The corresponding probability is obtained by taking the expit of $\theta$:
+The corresponding probability is obtained by taking the expit, or inverse
+logit, of $\theta$:
 
 $$
 \small{
@@ -307,19 +305,21 @@ $$
 }
 $$
 
-Note that corresponds to the density we observe in the 
+This probability corresponds to the density we observe in the 
 flomarriage network: there are $20$ ties and 
 $\binom{16}{2} = (16 \times 15)/2 = `r 16*15/2`$ dyads, 
-so the probability of a tie is 
-$ 20/`r 16*15/2` = `r round(20/(16*15/2),2)`$.
+so the probability of a tie
+is $20/`r 16*15/2` = `r round(20/(16*15/2),2)`$.
 
 #### Triad formation
 
 Let's add a term often thought to be a measure of
-"clustering": the number of completed triangles in the network -- $\sum{y_{ij}y_{ik}y_{jk}} \div 3$.  The ergm-term for this is `triangle`.
+"clustering": the number of completed triangles in the network, or $\sum{y_{ij}y_{ik}y_{jk}} \div 3$.  The name for this ergm-term is `triangle`.
 
-This is an example of a dyad dependent term: the status of dyad
-$y_{ij}$ depends on the status of two other dyads, $y_{ik}$ and $y_{jk}$.
+This is an example of a dyad dependent term: The status of any triangle containing
+dyad $y_{ij}$ depends on the status of dyads of the form $y_{ik}$ and $y_{jk}$.
+This means that any model containing the ergm-term `triangle` has the property
+that dyads are not probabilistically independent of one another.
 As a result, the estimation algorithm automatically changes to MCMC, and because this is a form of stochastic estimation your results may differ slightly.
 
 ```{r, message = FALSE}
@@ -331,11 +331,11 @@ summary(flomodel.02)
 
 Now, how should we interpret coefficients?
 
-The conditional log-odds of two actors having a tie is:
-
+The conditional log-odds of two actors having a tie, keeping the rest of the network
+fixed, is
 $$
 \small{
-`r round(flomodel.02$coef[[1]],2)` \times\mbox{change in the number of ties} + `r round(flomodel.02$coef[[2]],2)` \times\mbox{change in number of triangles}
+`r round(flomodel.02$coef[[1]],2)` \times\mbox{change in the number of ties} + `r round(flomodel.02$coef[[2]],2)` \times\mbox{change in number of triangles.}
 }
 $$
 
@@ -414,11 +414,11 @@ $-2.59 + 0.01*(146+146) = 0.33$
 $-2.59 + 0.01*(146+3) = -1.1$
 * The corresponding probabilities are 0.07, 0.58, and 0.25.
 
-Note:  This model specification does not include a term for homophily by wealth.  It just specifies a relation between wealth and mean degree.  To specify homophily on wealth, you would use the ergm-term ***absdiff*** [see section 3 below for more information on ergm-terms](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation)
+This model specification does not include a term for homophily by wealth, i.e., a term accounting for similarity in wealth of the two end nodes of a potential tie.  It just specifies a relation between wealth and mean degree.  To specify homophily on wealth, you could use the ergm-term ***absdiff***. [See section 3 below for more information on ergm-terms.?faux](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation)
 
 #### Nodal covariates:  Homophily
 
-Let's try a larger network, a simulated mutual friendship network based on one of the schools from the Add Health study.  Here, we'll examine the homophily in friendships by grade and race.  Both are discrete attributes so we use the ergm-term ***nodematch***.
+Let's try a larger network, a simulated mutual friendship network based on one of the schools from the AddHealth study.  Here, we'll examine the homophily in friendships by grade and race.  Both are discrete attributes so we use the ergm-term ***nodematch***.
 
 ```{r}
 data(faux.mesa.high) 
@@ -474,19 +474,19 @@ samplk3
 plot(samplk3)
 summary(samplk3~edges+mutual)
 ```
-The plot now shows the direction of a tie, and the $g(y)$ statistics for this model in this network are 56 total ties, and 15 mutual dyads (so 30 of the 56 ties are mutual ties). 
+The plot now shows the direction of a tie, and the $g(y)$ statistics for this model in this network are 56 total ties and 15 mutual dyads.  This means 30 of the 56 ties are reciprocated, i.e., they are part of dyads in which both directional ties are present. 
 ```{r, message = F}
 sampmodel.01 <- ergm(samplk3~edges+mutual)
 summary(sampmodel.01)
 ```
-There is a strong and significant mutuality effect.  The coefficients for the edges and mutual terms roughly cancel for a mutual tie, so the conditional odds of a mutual tie are about even, and the probability is about 50%.  By contrast a non-mutual tie has a conditional log-odds of -2.16, or 10% probability.
+There is a strong and significant mutuality effect.  The coefficients for the edges and mutual terms roughly cancel for a mutual tie, so the conditional log-odds of a mutual tie are about zero, which means the probability is about 50%.  (Do you see why a log-odds of zero corresponds to a probability of 50%?)  By contrast, a non-mutual tie has a conditional log-odds of -2.16, or 10% probability.
 
-Triangle terms in directed networks can have many different configurations, given the directional ties.  Many of these configurations are coded up as ergm-terms (and we'll talk about these more below).
+Triangle terms in directed networks can have many different configurations, given the directional ties.  Many of these configurations are coded as ergm-terms (and we'll talk about these more below).
 
-### Missing data
-It is important to distinguish between the absence of a tie, and the absence of data on whether a tie exists.  You should not code both of these as "0".  The $ergm$ package recognizes and handles missing data appropriately, as long as you identify the data as missing.  Let's explore this with a simple example.
+## 2. Missing data
+It is important to distinguish between the absence of a tie and the absence of data on whether a tie exists.  The former is an observed zero, whereas the latter is unobserved.  You should not code both of these as "0".  The `ergm` package recognizes and handles missing data appropriately, as long as you identify the data as missing.  Let's explore this with a simple example.
 
-Let's start with estimating an ergm on a network with two missing ties, where both ties are identified as missing.
+Start by estimating an ergm on a network with two missing ties, where both ties are identified as missing.
 
 ```{r}
 missnet <- network.initialize(10,directed=F) # initialize an empty net with 10 nodes
@@ -512,7 +512,10 @@ The coefficient equals -2.56, which corresponds to a probability of
 pairs (10 choose 2 minus 3): 3/42 = 7.14%.  So our estimate represents
 the probability of a tie in the observed sample.
 
-Now let's assign those missing ties the value "0" and see what happens.
+Now let's assign those missing ties the (observed) value "0" and check how 
+the value of the coefficient will change.  Can you predict whether it will
+get bigger or smaller?  Can you calculate it
+directly before checking the output of an `ergm` fit?  Let's see what happens.
 
 ```{r}
 missnet_bad <- missnet # create network with missing dyads set to 0
