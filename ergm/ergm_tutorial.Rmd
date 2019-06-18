@@ -69,9 +69,11 @@ If you have not already downloaded the `statnet` packages for this workshop, the
 
 ```{r,eval=FALSE}
 install.packages('statnet')
-library(statnet)
 ```
 
+```{r}
+library(statnet)
+```
 
 <!-- For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm: -->
 
@@ -131,7 +133,7 @@ where
 If you're not familiar with the compact notation here, note that the numerator represents a formula that is linear in the log form:
 
 $$
-log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
+\log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
 $$
 where $p$ is the number of terms in the model.  From this one can more easily observe the analogy to a traditional statistical model:  the coefficients $\theta$ represent the size and direction of the effects of the covariates $g(y)$ on the overall probability of the network.
 
@@ -187,14 +189,14 @@ where
 * $y^{+}_{ij}$ is defined as $y^{c}_{ij}$ along with $y_{ij}$ set to 1, and 
 * $y^{-}_{ij}$ is defined as $y^{c}_{ij}$ along with $y_{ij}$ set to 0.  
 
-So $\delta(y_{ij})$ equals the value of $g(y)$ when $y_{ij}=1$ minus the value of $g(y)$ when $y_{ij}=0$, but all other dyads are as in $g(y)$.  
+So $\delta(y_{ij})$ equals the value of $g(y)$ when $y_{ij}=1$ minus the value of $g(y)$ when $y_{ij}=0$, but all other dyads are as in $y$.  
 
 This expression shows that the coefficient $\theta$ can be interpreted as that term's contribution to the log-odds of an individual tie, conditional on all other dyads remaining the same.  The coefficient for each term in the model is multiplied by the number of configurations that tie will create (or remove) for that specific term.  We will see exactly how this works in the sections that follow. 
 
 
 ### Loading network data
 
-Network data can come in many different forms -- ties can be
+Network data can come in many different forms --- ties can be
 stored as edgelists or sociomatrices in .csv files, or as exported data from other programs like Pajek; attributes for the
 nodes, ties and dyads can also come in various forms.  All can
 be read into _R_ using either standard methods (for .csv files),
@@ -206,7 +208,7 @@ or methods from the `network` package.  For more information:
 ?loading.attributes
 ```
 
-However you read it in, the data will need to be transformed into a `network` object -- the format that statnet uses to store and work with network data.  For information on how to do this:
+However you read them in, the data will need to be transformed into a `network` object --- the format that statnet uses to store and work with network data.  For information on how to do this:
 
 ```{r}
 ?network
@@ -264,9 +266,9 @@ lead to poor modeling results.
 
 We begin with the simplest possible model, 
 it contains only one term that represents the total number of
-edges in the network -- $\sum{y_{ij}}$.  
-The ergm-term for this is `edges`, and it
-controls the overall density of the network.
+edges in the network --- $\sum{y_{ij}}$.  
+The ergm-term for this is `edges`, and when included in an ERGM its
+coefficient controls the overall density of the network.
 
 ```{r}
 summary(flomarriage ~ edges) # Look at the $g(y)$ statistic for this model
