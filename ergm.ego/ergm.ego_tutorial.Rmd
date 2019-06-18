@@ -1382,11 +1382,13 @@ fit.ego.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0)
                     + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
                     popsize=N)
 
+sediff = sqrt(se.coef(fit, "estimation")^2 + se.coef(fit.ego.sampN., "all")[-1]^2)
+
 # compare the coef: fit to 100% sample
 coefs2 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
 #  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego))))  %>%
   left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.sampN)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.sampN.)/sqrt(modse(fit)^2 + modse(fit.ego.sampN)[-1]^2))
+  mutate(Zdiff = (coef.fit. - coef.fit.ego.sampN.)/sediff)
 
 round_df(coefs2, 3) # note use of round_df function we defined
 
