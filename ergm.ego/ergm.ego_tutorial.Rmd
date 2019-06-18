@@ -461,11 +461,14 @@ g_{k}(y,x)\equiv \textstyle\sum_{i\in N} h_{k}(e_i)
 $$
 for some function $h_{k}(\cdot)$ of egocentric information
 associated with a single actor.  
----------------
+
+****
+
 In plain language, a statistic is egocentric if you can take the individual
 level measure of that statistic (say, the number of ties), sum this (or a simple function of this) across all individuals 
 in the population (i.e., an egocentric census) and recover the network level statistic (here, the total number of ties in the network).  
-------------------
+
+****
 
 The set of egocentric statistics includes **dyadic-independent** 
 statistics that can be expressed in the general form of
@@ -537,25 +540,32 @@ interested see [Krivtsky and Kolaczyk (2015)](https://projecteuclid.org/euclid.s
 
 This type of estimate can easily be adapted to handle sample weights.
 
-#### 4.b2  Design-based estimation of ERGMs 
+With this assumption, we can use a simple "design-based" 
+estimator to estimate the sufficient statistics for our models from the observednsampled network statistics.  
 
-This is done in three steps:
+#### 4.b2  Estimation and Inference for ERGMs from egocentric data
+
+In a nutshell:
 
 1. Estimate the ERGM's sufficient statistics using a "design-based" estimater that relies on the *per capita* scaling assumption
 $$g(y,x)\approx \tilde{g}(e _ S)=\frac{|N|}{|S|} \textstyle\sum_{i\in S} h _ {k}(e _ i).$$
-    * This is an estimate for a population total, so it is consistent and asymptotically normal (by the CLT).
+  * This is an estimate for a population total, so it is consistent and asymptotically normal (by the CLT).
 	* We can estimate its variance as we would the variance of a mean.
+
 2. Fit the ERGM by finding $\hat{\theta}$ that corresponds to (that is, produces) $\tilde{g}(e _ S)$.
     * It exists because of ERGM's properties.
+
 3. Use Delta Method to transfer properties of $\tilde{g}(e _ S)$ to $\hat{\theta}$.
     * We can do this, because MLE is a smooth function of $g(y,x)$.
 
-Together, these allow us to use
+This approch allow us to use
 any statistics that can be observed in an egocentric sample as a term in an
 ERG model, estimate the model from a complete *pseudo-network* that has 
-the same (or appropriately scaled) sufficient statistics,
-and the networks simulated from the fitted model will be centered on the (scaled)
-observed statistics.
+the appropriately scaled sufficient statistics, and test
+the coefficients for statistical significance.  With
+the fitted model, we can also simulate networks that
+we know will be centered on the (scaled)
+joint distribution of the observed statistics.
 
 
 
@@ -571,17 +581,25 @@ obvious way that egocentric estimation differs
 from a standard ERGM estimation on a completely observed
 network.  With a network census, the network size is known;
 by contrast, with a network sample, we don't typically know the size of the network from
-which it is drawn.  However, if the
+which it is drawn.  However, if the egos are a
+random sample from the population, and the network
 statistics we observe in the sample scale in a known way with network size, then
-we can adjust for this in the estimation, and the resulting parameter estimates
-(with the exception of the edges term) will be "size invariant".
+we can adjust for this in the estimation.  The resulting parameter estimates will be "size invariant".
 
 Here we will follow Krivitsky, Handcock, and Morris (2011), who showed that one can
 obtain a *per capita* size invariant parameterization for dyad-independent
 statistics by using an offset, approximately equal to $-\log(n)$, where $n$ is
-the number of nodes in the network.  The intuition
-is that this transforms the density-based parameterization (ties per dyad) 
-that is the default scale for ERGMs into a mean degree-based parameterization
+the number of nodes in the network.  
+
+****
+
+A term with a known coefficient in statistical modeling is called an "offset".  In this case the coefficient on the $-\log(n)$ offset is 1.
+
+****
+
+The intuition
+is that this transforms the density-based parameterization 
+that is the default scale for ERGMs (ties per dyad) into a mean degree-based parameterization
 (ties per node):
 
 $$

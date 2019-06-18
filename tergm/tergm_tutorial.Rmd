@@ -619,18 +619,17 @@ In this case, however, we already _know_ the mean duration, which means
 we know the rate of persistence/dissolution, 
 so we don't need to estimate it.
 
-****
-
-A known coefficient in the statistical modeling context is called an "offset".
-
-****
-
 In STERGM notation we specify this as:
 
 `dissolution = ~offset(edges)`
 
+****
 
-* __Second__, we calculate the offset: `theta.diss`.
+A term with a known coefficient in statistical modeling is called an "offset".  The coefficient on the dissolution edges term will be derived below.
+
+****
+
+* __Second__, we calculate the offset coefficient: `theta.diss`.
 
 Our dissolution model is applied to the set of ties that exist at 
 each step, as reflected in the conditional present in both the
