@@ -1,0 +1,28 @@
+---
+title: "Extending ERGM Functionality within statnet: Building Custom User Terms"
+author: statnet development team
+date: Sunbelt 2019
+output: beamer_presentation
+---
+
+## Outline
+
+- Quick review of ERGMs
+- Overview of change statistics
+- Overview of steps for writing one’s own statistic
+- Detailed look at the R code
+- Detailed look at the C code
+- Group exercise
+
+```{r, LoadErgm, fig.cap="A network", echo=FALSE, message=FALSE}
+library(ergm)
+```
+
+
+---
+
+```{r, net, fig.cap="A network", echo=FALSE}
+data(faux.mesa.high)
+plot(faux.mesa.high)
+```
+
