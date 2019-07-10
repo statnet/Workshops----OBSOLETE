@@ -18,6 +18,49 @@ output: beamer_presentation
 library(ergm)
 ```
 
+---
+
+## ERGM basic expression
+
+Probability of observing a network (set of relationships) y on a given set of actors: 
+\[
+P(Y=y) = \frac{ \exp \{ \theta^\top g(y)\} }{k(\theta)},
+\]
+where
+
+- $g(y) =$ vector of network statistics (like the predictors in a standard
+linear regression)
+- $\theta =$ vector of model parameters (like the coefficients in a linear regression) 
+- $k(\theta) =$ normalizer, equal to the sum for all possible $y^*$ of 
+$\exp\{ \theta^\top g(y^*)\}$.
+
+<!--Bahadur (1961), Besag (1974), Frank (1986); Wasserman and Pattison (1996) -->
+
+---
+
+## ERGM logit formulation
+
+The statement 
+\[
+P(Y=y) = \frac{ \exp \{ \theta^\top g(y)\} }{k(\theta)}
+\]
+
+implies that 
+\[
+\log \frac{P(Y_{ij}=1 \, |\, y_{ij}^c)}{P(Y_{ij}=0 \, |\, y_{ij}^c)} =
+\theta^\top \left[ g(y_{ij}^+) - g(y_{ij}^-) \right] = 
+\theta^\top \delta(y)_{ij},
+\]
+where
+
+- $Y_{ij}$ is the (random) value of the tie between $i$ and $j$
+- $y_{ij}^c$ is the whole network $y$ except for the value of $y_{ij}$ itself
+- $y_{ij}^+$ is the whole network $y$ with $y_{ij}$ set to 1
+- $y_{ij}^-$ is the whole network $y$ with $y_{ij}$ set to 0
+- $\delta(y)_{ij} = g(y_{ij}^+) - g(y_{ij}^-)$ is the vector of change statistics,
+that is, the difference between the $g(y)$ vectors evaluated at two networks that
+differ only in the $i,j$ entry.
+
 
 ---
 
