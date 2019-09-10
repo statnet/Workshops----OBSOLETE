@@ -534,7 +534,9 @@ $$
 \text{Mean Degree} = \frac{2\times\text{ties}}{\text{nodes}} = \frac{2T}{n}
 $$
 For example, if a network of 5 people has 10 ties, the mean degree (degree *per capita*) is $\frac{2*ties}{nodes} = \frac{20}{5} = 4$,
-so we would expect a network of 20 people to have 80 ties.  As with everything network, things are more complicated for
+so we would expect a network of 20 people to have 
+$\frac{20*4}{2} = 40$ ties.  
+As with everything network, things are more complicated for
 dyad-dependent statistics.  We will not cover the scaling for dyad-dependent statistics in this workshop, but if you are
 interested see [Krivtsky and Kolaczyk (2015)](https://projecteuclid.org/euclid.ss/1433341477).
 
