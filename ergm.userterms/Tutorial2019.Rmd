@@ -1,0 +1,287 @@
+---
+title: "Extending ERGM Functionality within statnet: Building Custom User Terms"
+author: statnet development team
+date: Sunbelt 2019
+output: beamer_presentation
+---
+
+## Outline
+
+- Quick review of ERGMs
+- Overview of change statistics
+- Overview of steps for writing one’s own statistic
+- Detailed look at the R code
+- Detailed look at the C code
+- Group exercise
+
+```{r, LoadErgm, fig.cap="A network", echo=FALSE, message=FALSE}
+library(ergm)
+```
+
+---
+
+## ERGM basic expression
+
+Probability of observing a network (set of relationships) y on a given set of actors: 
+\[
+P(Y=y) = \frac{ \exp \{ \theta^\top g(y)\} }{k(\theta)},
+\]
+where
+
+- $g(y) =$ vector of network statistics (like the predictors in a standard
+linear regression)
+- $\theta =$ vector of model parameters (like the coefficients in a linear regression) 
+- $k(\theta) =$ normalizer, equal to the sum for all possible $y^*$ of 
+$\exp\{ \theta^\top g(y^*)\}$.
+
+<!--Bahadur (1961), Besag (1974), Frank (1986); Wasserman and Pattison (1996) -->
+
+---
+
+## ERGM logit formulation
+
+The statement 
+\[
+P(Y=y) = \frac{ \exp \{ \theta^\top g(y)\} }{k(\theta)}
+\]
+
+implies that 
+\[
+\log \frac{P(Y_{ij}=1 \, |\, y_{ij}^c)}{P(Y_{ij}=0 \, |\, y_{ij}^c)} =
+\theta^\top \left[ g(y_{ij}^+) - g(y_{ij}^-) \right] = 
+\theta^\top \delta(y)_{ij},
+\]
+where
+
+- $Y_{ij}$ is the (random) value of the tie between $i$ and $j$
+- $y_{ij}^c$ is the whole network $y$ except for the value of $y_{ij}$ itself
+- $y_{ij}^+$ is the whole network $y$ with $y_{ij}$ set to 1
+- $y_{ij}^-$ is the whole network $y$ with $y_{ij}$ set to 0
+- $\delta(y)_{ij} = g(y_{ij}^+) - g(y_{ij}^-)$ is the vector of change statistics,
+that is, the difference between the $g(y)$ vectors evaluated at two networks that
+differ only in the $i,j$ entry.
+
+---
+
+## ERGMs and MCMC change statistics
+
+Given a network and a model (i.e., a set $g(y)$ of statistics 
+proposed to be of interest), one typically wants to find 
+maximum likelihood estimates of the $\theta$ 
+coefficients for that model.
+
+- The normalizing constant $k(\theta)$ makes this impossible to do directly.
+- Main solution: Markov Chain Monte Carlo (Geyer and Thompson 1992,    	Crouch et al. 1998)
+
+The MCMC algorithm repeatedly:
+
+- selects an actor pair (or pairs)
+- calculates the MCMC change statistics: $g(y)$ after toggling
+	  the corresponding dyads minus $g(y)$ for the current network.
+- uses an algorithm to decide whether or not to actually make those 			toggles
+
+If one is only considering one actor pair, the MCMC change statistics must equal $\pm\delta(y)_{ij}$.
+
+
+---
+
+## Calculating network statistics in the ERGM package
+
+
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net01,fig.cap="A network",echo=FALSE,height=1,width=2}
+nw<-network(matrix(0,9,9), dir=FALSE)
+nw[1,2] <- nw[3,4] <- nw[3,6] <- nw[6,8] <- nw[7,8] <- nw[8,9] <- 1
+pos <- matrix(c(-8.732, -5.877, -2.439, -0.392, -5.608, -3.865,
+        -5.929, -4.259, -1.828, 3.97, 3.91, 3.205, 1.207, 1.581,
+        1.433, -0.297, -0.193, -1.439), 9, 2)
+plot(nw, coord=pos, vertex.cex=2)
+```
+\begin{tabular}{cccccccccccccc}
+  &  &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr 
+ &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net02, fig.cap="A network", echo=FALSE}
+nw[1,2] <- nw[3,4] <- nw[3,6] <- nw[6,8] <- nw[7,8] <- nw[8,9] <- 0
+plot(nw, coord=pos, vertex.cex=2)
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net03, fig.cap="A network", echo=FALSE}
+nw[7,8] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(2), 
+     edge.lwd=c(6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net04, fig.cap="A network", echo=FALSE}
+nw[6,8] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(1,2), 
+     edge.lwd=c(1,6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1  
+    &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}& +1 
+    &\rule{0.1em}{0em}& &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net05, fig.cap="A network", echo=FALSE}
+nw[8,9] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(1,1,2), 
+     edge.lwd=c(1,1,6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1  
+    &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}& +1 
+    &\rule{0.1em}{0em}& $-1$ &\rule{0.1em}{0em}&  &\rule{0.1em}{0em}& 
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net06, fig.cap="A network", echo=FALSE}
+nw[3,6] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(1,1,1,2), 
+     edge.lwd=c(1,1,1,6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1  
+    &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1 &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}& +1 
+    &\rule{0.1em}{0em}& $-1$ &\rule{0.1em}{0em}& +1 &\rule{0.1em}{0em}&  
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net07, fig.cap="A network", echo=FALSE}
+nw[1,2] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(1,1,1,1,2), 
+     edge.lwd=c(1,1,1,1,6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1  
+    &\rule{0.1em}{0em}& 0 &\rule{0.1em}{0em}& 1 &\rule{0.1em}{0em}& 1 
+    &\rule{0.1em}{0em}&  \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}& +1 
+    &\rule{0.1em}{0em}& $-1$ &\rule{0.1em}{0em}& +1 &\rule{0.1em}{0em}& +0
+    &\rule{0.1em}{0em}& 
+\end{tabular}
+
+---
+
+## Calculating network statistics in the ERGM package
+
+Example:  Number of nodes of degree 2
+
+\vspace{1ex}
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, net08, fig.cap="A network", echo=FALSE}
+nw[3,4] <- 1
+plot(nw, coord=pos, vertex.cex=2, edge.col=c(1,1,1,1,1,2), 
+     edge.lwd=c(1,1,1,1,1,6))
+```
+\begin{tabular}{c|ccccccccccccc}
+$g(y)$ & 0 && 0 && 1  
+    && 0 && 1 && 1 
+    && 2 \cr   
+$\delta(y)_{ij}$ &\rule{0.1em}{0em}& +0 &\rule{0.1em}{0em}& +1 
+    && $-1$ &\rule{0.1em}{0em}& +1 &\rule{0.1em}{0em}& +0
+    && +1
+\end{tabular}
+
+---
+
+## Commonly used change statistics included in ergm
+
+\tt\small
+absdiff absdiffcat adegcor altkstar asymmetric b1concurrent b1degree b1degree.edgecov b2degree.edgecov b1factor b1mindegree b2mindegree b1mindegree.edgecov b2mindegree.edgecov b1star b1starmix b1twostar b2concurrent b2degree b2factor b2star b2starmix b2twostar balance coincidence concurrent ctriple cycle cyclicalties degcor degcrossprod degree density dsp dyadcov edgecov edges esp gwb1degree gwb2degree gwdegree gwdsp gwesp gwidegree gwnsp gwodegree hamming hammingmix idegree indegreepopularity intransitive isolates istar kstar localtriangle m2star meandeg mutual nearsimmelian nodecov nodefactor nodeicov nodeifactor nodematch nodemix nodeocov nodeofactor nsp odegree outdegreepopularity opentriad ostar pdegcor rdegcor receiver sender simmelian simmelianties smalldiff sociality threepath transitive transitiveties triadcensus triangle tripercent ttriple twopath
+
+\rm
+Most of these terms are documented at 
+\tt help("ergm-terms")\rm.
+
+## General structure of an ergm call
+
+## Network storage in ergm
+
+\setkeys{Gin}{width=0.5\textwidth}
+```{r, twonode, echo=FALSE}
+m <- matrix(c(0,1,0,0), 2, 2)
+plot(network(m), coord=m, label=c("tail","head"))
+```
+
+
