@@ -1416,9 +1416,9 @@ How will our standard errors be affected?
 set.seed(1)
 ```
 ```{r, message=SHOW_MSG}
-fit.egosamp.25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
+fmh.egosamp.25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
 
-fit.ego.samp.25 <- ergm.ego(fit.egosamp.25 ~ edges + degree(0) + nodefactor("Race")
+fit.ego.samp.25 <- ergm.ego(fmh.egosamp.25 ~ edges + degree(0) + nodefactor("Race")
                       + nodematch("Race") + nodefactor("Sex") + nodematch("Sex")
                       + absdiff("Grade"), popsize=N)
 
