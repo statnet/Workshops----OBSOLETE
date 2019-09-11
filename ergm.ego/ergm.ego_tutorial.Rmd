@@ -1311,7 +1311,7 @@ faux.magnolia.high -> fmh
 
 Let's start by fitting an ERGM to the complete network, and looking at the coefficients.  We're going to use a model without any
 triadic terms, because we want to be able to compare these results to results from egocentrically sampled versions of these data.
-And we'll again use the largest race group as the reference level -- in this case White (level 6).
+And, we'll again use the largest race group as the reference level -- in this case White (level 6).
 
 ```{r, message=SHOW_MSG}
 fit.net <- ergm(fmh ~ edges+degree(0) 
@@ -1326,8 +1326,8 @@ Now, suppose we only observe an egocentric view of the data -- as an egocentric 
 
 With an egocentric census, it's as though we give a survey to all of the students.
 Each student nominates her friends, but does not report the name of the friend, she
-only reports their sex, race and grade. How does the fit from ergm.ego to this
-egocentric census compare to the complete-network ergm estimates?
+only reports their sex, race and grade. How does the fit from `ergm.ego to this
+egocentric census compare to the complete-network ERGM estimates?
 
 ```{r, census}
 fmh.ego <- as.egodata(fmh)
@@ -1350,7 +1350,7 @@ in the estimation of both models
 therefore comes from the MCMC algorithm used to approximate the likelihood.
 
 To extract the MCMC error component, we use our `se.coef` function written above,
-with the argument `src = src = "estimation"` (see `help(vcov.ergm)` for more information).
+with the argument `src = "estimation"` (see `help(vcov.ergm)` for more information).
 ```{r, message=SHOW_MSG}
 # note use of se.coef function we defined up top
 se.coef.net <- se.coef(fit.net, src = "estimation")
@@ -1363,7 +1363,7 @@ round_df(se.census, 3)
 
 ```
 Both the SEs and the differences in the SEs are very small, with no discernable pattern.  If desired,
-we could reduce the difference in the SEs between the two by increasing the size of our MCMC sample (we'll leave that as an exercise for you, but we'll move on for now).
+we could reduce the difference in the SEs between the two by increasing the size of our MCMC sample. (We'll leave that as an exercise for you, but we'll move on for now.)
 
 How do the coefficient estimates compare for the two fits?
 
@@ -1458,7 +1458,7 @@ No significant differences.
 
 What if we have a smaller sample? If we have a 25% sample 
 (0.25*N = `r round(0.25*N)` students),
-How will our standard errors be affected?
+how will our standard errors be affected?
 
 ```{r cache=FALSE}
 set.seed(2)
@@ -1513,7 +1513,7 @@ for Asian.  So, this particular sample produced a biased estimate.  As an exerci
 
 #### **Egocentric 25% weighted sample**
 
-Finally, suppose that stick with our smaller sample, 
+Finally, suppose that we stick with our smaller sample, 
 but modify our sampling design, oversampling the smaller
 minority groups by a factor of 4. 
 The inclusion probability for a non-white student 
@@ -1539,7 +1539,7 @@ cbind("sample25%" = table(fmh.egosamp25$egos$Race),
       "sampleWtd25%" = table(fmh.egosamp25wtd$egos$Race))
 ```
 
-Fit the model to the weighted sample.
+Fit the model to the weighted sample:
 ```{r, message=SHOW_MSG}
 fit.samp25wtd <- ergm.ego(fmh.egosamp25wtd ~ edges + degree(0) 
                           + nodefactor("Race", levels= -6) + nodefactor("Sex") 
@@ -1558,7 +1558,7 @@ se.samp25wtd <- tibble::rownames_to_column(data.frame(se.coef.samp25))  %>%
   mutate(se.ratio = se.coef.samp25wtd/se.coef.samp25)
 round_df(se.samp25wtd, 3)
 ```
-The weighting did not improve our SEs.
+The weighting did not improve our SEs for most parameters.
 
 But how do the coefficient estimates compare?
 ```{r, message=SHOW_MSG}
@@ -1590,7 +1590,7 @@ The following features are currently implemented in the GitHub development branc
 
 * Support for main effects of covariates measured only on the egos.
 
-* Support for alter--alter nominations, integrated with `egonetR`.
+* Support for alter--alter nominations, integrated with `egor`.
 
 Additional functionality is planned in the near future:
 
