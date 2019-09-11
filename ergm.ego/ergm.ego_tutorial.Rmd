@@ -8,6 +8,7 @@ output:
     theme: cosmo
     toc: yes
     toc_float: true
+    toc_depth: 4
   pdf_document:
     toc: yes
 ---
@@ -1196,7 +1197,9 @@ So, we've now fit the isolates exactly, and the fit is better,
 but this now suggests there are more nodes with just one tie than
 would be expected, given the mean degree, and the number of isolates.
 
-And just to round things off, let's fit a relatively large model
+And just to round things off, let's fit a relatively large model.  Note that
+we specify the omitted group for the Race nodefactor term with the `levels`
+argument.  In general, it's a good idea to omit the largest group, so that the comparisons have a robust base.  That's group "2" here, Hispanics.
 
 ```{r cache=FALSE}
 set.seed(1)
@@ -1308,192 +1311,271 @@ faux.magnolia.high -> fmh
 
 Let's start by fitting an ERGM to the complete network, and looking at the coefficients.  We're going to use a model without any
 triadic terms, because we want to be able to compare these results to results from egocentrically sampled versions of these data.
-And we'll 
+And we'll again use the largest race group as the reference level -- in this case White (level 6).
 
 ```{r, message=SHOW_MSG}
-fit <- ergm(fmh ~ edges+degree(0) 
-                       + nodefactor("Race") + nodefactor("Sex") 
+fit.net <- ergm(fmh ~ edges+degree(0) 
+                       + nodefactor("Race", levels= -6) + nodefactor("Sex") 
                        + nodematch("Race") + nodematch("Sex") + absdiff("Grade"))
-plot(gof(fit))
+plot(gof(fit.net))
 ```
 
+#### **Egocentric census**
+
 Now, suppose we only observe an egocentric view of the data -- as an egocentric census.
+
 With an egocentric census, it's as though we give a survey to all of the students.
 Each student nominates her friends, but does not report the name of the friend, she
 only reports their sex, race and grade. How does the fit from ergm.ego to this
 egocentric census compare to the complete-network ergm estimates?
 
-```{r}
+```{r, census}
 fmh.ego <- as.egodata(fmh)
 head(fmh.ego)
 ```
 ```{r, message=SHOW_MSG}
-fit.ego <- ergm.ego(fmh.ego ~ edges + degree(0) 
-                   + nodefactor("Race") + nodefactor("Sex") 
+fit.census <- ergm.ego(fmh.ego ~ edges + degree(0) 
+                   + nodefactor("Race", levels= -6) + nodefactor("Sex") 
                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
-                   popsize=N, ppopsize=N)
+                   popsize=N)
+summary(fit.census)
+```
 
-# se for the diff in coef, from MCMC only
-# note use of mcmcse function we defined
-sediff = sqrt(se.coef(fit, "estimation")^2 + se.coef(fit.ego, "estimation")[-1]^2)
+Let's compare the standard errors from the two fits.  Here, we will treat the 
+complete network as the true, fixed population network.  Since the data for
+the second fit is an egocentric *census*, there is no *sampling* error 
+in the sufficient statistics for the egocentric model terms.  
+The only error source of error
+in the estimation of both models
+therefore comes from the MCMC algorithm used to approximate the likelihood.
 
+To extract the MCMC error component, we use our `se.coef` function written above,
+with the argument `src = src = "estimation"` (see `help(vcov.ergm)` for more information).
+```{r, message=SHOW_MSG}
+# note use of se.coef function we defined up top
+se.coef.net <- se.coef(fit.net, src = "estimation")
+se.coef.census <- se.coef(fit.census, src = "estimation")[-1]
+
+se.census <- tibble::rownames_to_column(data.frame(se.coef.net))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.census))) %>%
+  mutate(se.ratio = se.coef.census/se.coef.net)
+round_df(se.census, 3)
+
+```
+Both the SEs and the differences in the SEs are very small, with no discernable pattern.  If desired,
+we could reduce the difference in the SEs between the two by increasing the size of our MCMC sample (we'll leave that as an exercise for you, but we'll move on for now).
+
+How do the coefficient estimates compare for the two fits?
+
+```{r, message=SHOW_MSG}
 # Parameters recovered (we're using utilities from the tidyverse here)
 # Compare fit to egocentric census:
-coefs1 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.)/sediff)
+se.diff = sqrt(se.coef.net^2 + se.coef.census^2)
+
+coefs1 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.census)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.census.)/se.diff)
 
 round_df(coefs1, 3) # note use of round_df function we defined
 ```
 
-Here, to compare the coefficient estimates, we are constructing a z-score
-for the difference, based on the MCMC error in each run.  Since this is
-an egocentric *census*, there is technically no error in the sufficient
-statistics for the egocentric model terms, so the only error in estimation
-comes from the MCMC algorithm.  To reduce the difference, we could
-increase the size of our MCMC sample (but we'll move on for now).
+To compare the coefficient estimates, we are using a z-score
+for the difference, based on the MCMC error in each run.  While there are some
+large z-scores, the magnitude of the differences in the coefficients are quite
+small (in the second decimal place). There is again
+no discernible pattern here, and we could make the z-score for the difference arbitrarily small by increasing the size of our MCMC sample.
+
 
 Again, we can diagnose the fitted egocentric model for proper convergence.
 
 ```{r eval=FALSE}
 # MCMC diagnostics. 
-mcmc.diagnostics(fit.ego)
+mcmc.diagnostics(fit.census)
 ```
 ```{r eval=FALSE}
 # Check whether the model converged to the right statistics:
-plot(gof(fit.ego, GOF="model"))
+plot(gof(fit.census, GOF="model"))
 ```
 
 Let's check whether the fitted model can be used to reconstruct the
 degree distribution.
 
 ```{r}
-plot(gof(fit.ego, GOF="degree"))
+plot(gof(fit.census, GOF="degree"))
 ```
+
+#### **Egocentric sample of the same size**
 
 What if we only had an equally large sample, instead of an egocentric census?
 Here, we take a simple random sample of N students with replacement.
 
-```{r cache=FALSE}
+```{r sampN, cache=FALSE}
 set.seed(1)
 ```
 ```{r, message=SHOW_MSG}
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
-fit.ego.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
-                    + nodefactor("Race") + nodefactor("Sex") 
-                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
-                    popsize=N)
+fit.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
+summary(fit.sampN)
+```
 
-sediff = sqrt(se.coef(fit, "estimation")^2 + se.coef(fit.ego.sampN., "all")[-1]^2)
+The standard errors in this fit represent both MCMC estimation error and sampling error.  Let's compare them to those from the original network fit.
 
-# compare the coef: fit to 100% sample
-coefs2 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-#  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.sampN)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.sampN.)/sediff)
-
-round_df(coefs2, 3) # note use of round_df function we defined
-
+```{r, message=SHOW_MSG}
+# this time, use the se from src=all for the sampled net
+se.coef.sampN <- se.coef(fit.sampN, src = "all")[-1]
 
 # compare the s.e.'s
-se2 <- tibble::rownames_to_column(data.frame(modse(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.sampN)))) %>%
-  mutate(se.ratio = modse.fit.ego.sampN./modse.fit.)
+se.sampN <- tibble::rownames_to_column(data.frame(se.coef.net)) %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.sampN))) %>%
+  mutate(se.ratio = se.coef.sampN/se.coef.net)
 
-round_df(se2, 3)
+round_df(se.sampN, 3)
+
 ```
-So -- a sample of the same size as the population will produce roughly the same standard errors on our estimates, but notice that the smaller
-racial groups (Native American and Other) have slightly higher s.e.'s here.  A quick look at the sizes of these subgroups in this sample
-shows why:
+So -- the error associated with the sampling process is quite large, relative to the MCMC estimation error, even with a sample of the same size as the original network (1461).  We can see the impact of the sampling on our race distribution -- the smaller the group, the more variable the outcome will be (e.g., the "Other" group here):
 
 ```{r}
 cbind("census" = table(fmh.ego$egos$Race),
-      "sample" = table(fmh.egosampN$egos$Race))
+      "sampleN" = table(fmh.egosampN$egos$Race))
 ```
 
-What if we have a smaller sample? If we have a 25% sample (0.25*N = $`r round(0.25*N)`$ students),
+And the coefficient estimates?
+```{r, message=SHOW_MSG}
+se.diff = sqrt(se.coef.net^2 + se.coef.sampN^2) 
+# compare the coef
+coefs2 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.sampN)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.sampN.)/se.diff)
+
+round_df(coefs2, 3) # note use of round_df function we defined
+```
+No significant differences.
+
+#### **Egocentric 25% sample**
+
+What if we have a smaller sample? If we have a 25% sample 
+(0.25*N = `r round(0.25*N)` students),
 How will our standard errors be affected?
 
 ```{r cache=FALSE}
-set.seed(1)
+set.seed(2)
 ```
+```{r samp25, message=SHOW_MSG}
+fmh.egosamp25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
+```
+Let's take a quick look at the racial breakdown of our sample, and compare it to
+the original complete net:
+```{r}
+cbind("census" = table(fmh.ego$egos$Race),
+      "sample25%" = table(fmh.egosamp25$egos$Race))
+```
+
 ```{r, message=SHOW_MSG}
-fmh.egosamp.25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
+fit.samp25 <- ergm.ego(fmh.egosamp25 ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
 
-fit.ego.samp.25 <- ergm.ego(fmh.egosamp.25 ~ edges + degree(0) + nodefactor("Race")
-                      + nodematch("Race") + nodefactor("Sex") + nodematch("Sex")
-                      + absdiff("Grade"), popsize=N)
+# this time we build the s.e. matrix first, because sampling may lead to 
+# unobserved race group(s), and check the ratios of the se's
 
-# this time we build the s.e. matrix first, because sampling may lead to unobserved race group(s)
-se3 <- tibble::rownames_to_column(data.frame(modse(fit)))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25)))) %>%
-  mutate(se.ratio = modse.fit.ego.samp.25./modse.fit.)
+se.coef.samp25 <- se.coef(fit.samp25, src = "all")[-1]
 
-# compute se for Zdiff(coef)
-zdiffse <- sqrt(se3$modse.fit.^2 + se3$modse.fit.ego.samp.25.^2)
-                
-# compare the coef: fit to 25% sample
-coefs3 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.samp.25.)/zdiffse)
-
-round_df(coefs3, 3)
-
-round_df(se3, 3)
+se.samp25 <- tibble::rownames_to_column(data.frame(se.coef.sampN))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25))) %>%
+  mutate(se.ratio = se.coef.samp25/se.coef.sampN)
+round_df(se.samp25, 3)
 ```
 
 As with ordinary statistics, standard error is inverse-proportional to
 the square root of the sample size.  We've divided the sample size by 4, so the standard errors for the smaller sample 
-are about $\sqrt{4} = 2$ times larger.
+are about $\sqrt{4} = 2$ times larger.  There's some variability because the
+sampling size reduction varied a bit by group.
 
-Suppose that stick with our smaller sample, but stratify our sampling design, oversampling the smaller
-minority groups by a factor of 4. The inclusion probability for a non-white student 
+And the coefficients?
+```{r, message=SHOW_MSG}
+# compute se for Zdiff(coef)
+se.diff <- sqrt(se.coef.net^2 + se.coef.samp25^2)
+                
+# compare the coef: fit vs. 25% sample
+coefs3 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.samp25.)/se.diff)
+
+round_df(coefs3, 3)
+
+```
+Most differences are not significant.  But one (out of 11) is: the coefficient
+for Asian.  So, this particular sample produced a biased estimate.  As an exercise, change the seed, and rerun this section, to see what happens with another sample.
+
+#### **Egocentric 25% weighted sample**
+
+Finally, suppose that stick with our smaller sample, 
+but modify our sampling design, oversampling the smaller
+minority groups by a factor of 4. 
+The inclusion probability for a non-white student 
 will now be 4 times greater than in a simple random sample.
 
-Now, we have to take account of the sampling weights in the analysis.  `ergm.ego`
+Once we weight our sample, we have to take account of the sampling 
+weights in the analysis.  `ergm.ego`
 can do this automatically for you, as long as the sampling weight is stored
 in a component of the `egodata` object called `egoWt`.  If we use the `sample` function
-on our `egodata` object, the probabilities are automaticall stored in `egoWt`.
+on our `egodata` object, the probabilities are automatically stored in `egoWt`.
 
 ```{r, message=SHOW_MSG}
-w <- 1 + 3*((fmh %v% "Race")!="White") # set up the stratification design
+w <- 1 + 3*((fmh %v% "Race")!="White") # set up the weighting design
 
-fit.egosamp.25strat <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
+fmh.egosamp25wtd <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
 
 # look at the egodata object, see the egoWt component:
-head(fit.egosamp.25strat)
-
-fit.ego.samp.25strat <- ergm.ego(fit.egosamp.25strat ~ edges + degree(0) 
-                      + nodefactor("Race") + nodefactor("Sex") 
-                      + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
-                      popsize=N)
+head(fmh.egosamp25wtd)
+```
+Let's take a quick look at the racial breakdown of our weighted sample, and compare it to the unweighted 25% sample:
+```{r}
+cbind("sample25%" = table(fmh.egosamp25$egos$Race),
+      "sampleWtd25%" = table(fmh.egosamp25wtd$egos$Race))
 ```
 
-Which standard errors are improved by this sampling scheme?
+Fit the model to the weighted sample.
+```{r, message=SHOW_MSG}
+fit.samp25wtd <- ergm.ego(fmh.egosamp25wtd ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
+```
+
+Are the standard errors are improved by this sampling scheme?  Note here we are comparing the 25% sample to the 25% weighted sample.
 
 ```{r}
 # again we create the s.e. matrix first, using the original fit to define the rows/terms
-se4 <- tibble::rownames_to_column(data.frame(modse(fit)))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25strat)))) %>%
-  mutate(se.ratio = modse.fit.ego.samp.25strat./modse.fit.ego.samp.25.) %>%
-  select(-modse.fit.)
+se.coef.samp25wtd <- se.coef(fit.samp25wtd, src = "all")[-1]
 
+se.samp25wtd <- tibble::rownames_to_column(data.frame(se.coef.samp25))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25wtd))) %>%
+  mutate(se.ratio = se.coef.samp25wtd/se.coef.samp25)
+round_df(se.samp25wtd, 3)
+```
+The weighting did not improve our SEs.
+
+But how do the coefficient estimates compare?
+```{r, message=SHOW_MSG}
 # compute se for Zdiff(coef)
-zdiffse <- sqrt(se4$modse.fit.ego.samp.25.^2 + se4$modse.fit.ego.samp.25strat.^2)
+se.diff <- sqrt(se.coef.samp25^2 + se.coef.samp25wtd^2)
 
-# compare the coef: fit to stratified samp
-coefs4 <- tibble::rownames_to_column(data.frame(coef(fit)))%>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25strat)))) %>%
-  mutate(Zdiff = (coef.fit.ego.samp.25. - coef.fit.ego.samp.25strat.)/zdiffse) %>%
-  select(-coef.fit.)
+# compare the coef: fit to weighted samp
+coefs4 <- tibble::rownames_to_column(data.frame(coef(fit.net)))%>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25))))  %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25wtd)))) %>%
+  mutate(Zdiff.25wtd.net = (coef.fit.samp25wtd. - coef.fit.net.)/se.diff) 
 
 round_df(coefs4, 3)
 
-round_df(se4, 3)
-
 ```
+But we do see improvements in the estimates -- now there are no significant
+differences from the true values.
 
 ## 7. Ongoing Developments
 The package is under active development on GitHub. The public release (on CRAN) is in the repository statnet/ergm.ego--this is the place to go to report bugs or request features.  We also have a non-public development branch for working on new features and bugfixes.  If you are interested in contributing to the development of `ergm.ego`, please contact us through the GitHub interface.

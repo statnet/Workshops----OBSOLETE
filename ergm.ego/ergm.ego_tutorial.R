@@ -33,7 +33,7 @@ round_df <- function(df, digits) {
 }
 
 # extract se's for estimates from fit object
-modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) 
+modse <- function(fit) {sqrt(diag(vcov(fit, sources="model")))}
 
 
 
