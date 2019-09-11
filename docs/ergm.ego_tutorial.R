@@ -8,12 +8,12 @@ SHOW_MSG = FALSE
 
 
 ## ----eval=FALSE----------------------------------------------------------
-install.packages('ergm.ego')
+## install.packages('ergm.ego')
 
 
 ## ---- eval=FALSE---------------------------------------------------------
-install.packages("dplyr")
-install.packages("tibble")
+## install.packages("dplyr")
+## install.packages("tibble")
 
 
 ## ----cache=FALSE, message=FALSE------------------------------------------
@@ -33,7 +33,7 @@ round_df <- function(df, digits) {
 }
 
 # extract se's for estimates from fit object
-modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) 
+se.coef <- function(fit,src) sqrt(diag(vcov(fit, source=src)))
 
 
 
@@ -42,11 +42,11 @@ sessionInfo()
 
 
 ## ----eval=FALSE----------------------------------------------------------
-help(package="ergm.ego")
+## help(package="ergm.ego")
 
 
 ## ----eval=FALSE----------------------------------------------------------
-help('ergm.ego-terms')
+## help('ergm.ego-terms')
 
 
 ## ----cache=FALSE---------------------------------------------------------
@@ -163,7 +163,7 @@ degreedist(mesa.ego, by="Sex", prob=T, brg=T)
 
 
 ## ----eval=FALSE----------------------------------------------------------
-?control.ergm.ego
+## ?control.ergm.ego
 
 
 ## ----message=SHOW_MSG----------------------------------------------------
@@ -178,8 +178,8 @@ fit.edges$popsize
 
 
 ## ---- echo=F, eval=F-----------------------------------------------------
-summary(ergm.ego(mesa.ego ~ edges, 
-                 control = control.ergm.ego(ppopsize=1000)))
+## summary(ergm.ego(mesa.ego ~ edges,
+##                  control = control.ergm.ego(ppopsize=1000)))
 
 
 ## ------------------------------------------------------------------------
@@ -203,7 +203,7 @@ fit.deg0 <- ergm.ego(mesa.ego ~ edges + degree(0), control=control.ergm.ego(ppop
 summary(fit.deg0)
 
 ## ----eval=FALSE----------------------------------------------------------
-mcmc.diagnostics(fit.deg0)
+## mcmc.diagnostics(fit.deg0)
 
 ## ------------------------------------------------------------------------
 plot(gof(fit.deg0, GOF="model"))
@@ -222,7 +222,7 @@ fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1)
 summary(fit.full)
 
 ## ----eval=FALSE----------------------------------------------------------
-mcmc.diagnostics(fit.full)
+## mcmc.diagnostics(fit.full)
 
 ## ------------------------------------------------------------------------
 plot(gof(fit.full, GOF="model"))
@@ -276,138 +276,184 @@ faux.magnolia.high -> fmh
 
 
 ## ---- message=SHOW_MSG---------------------------------------------------
-fit <- ergm(fmh ~ edges+degree(0) 
-                       + nodefactor("Race") + nodefactor("Sex") 
+fit.net <- ergm(fmh ~ edges+degree(0) 
+                       + nodefactor("Race", levels= -6) + nodefactor("Sex") 
                        + nodematch("Race") + nodematch("Sex") + absdiff("Grade"))
-plot(gof(fit))
+plot(gof(fit.net))
 
 
-## ------------------------------------------------------------------------
+## ---- census-------------------------------------------------------------
 fmh.ego <- as.egodata(fmh)
 head(fmh.ego)
 
 ## ---- message=SHOW_MSG---------------------------------------------------
-fit.ego <- ergm.ego(fmh.ego ~ edges + degree(0) 
-                   + nodefactor("Race") + nodefactor("Sex") 
+fit.census <- ergm.ego(fmh.ego ~ edges + degree(0) 
+                   + nodefactor("Race", levels= -6) + nodefactor("Sex") 
                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
-                   popsize=N, ppopsize=N)
+                   popsize=N)
+summary(fit.census)
 
+
+## ---- message=SHOW_MSG---------------------------------------------------
+# note use of se.coef function we defined up top
+se.coef.net <- se.coef(fit.net, src = "estimation")
+se.coef.census <- se.coef(fit.census, src = "estimation")[-1]
+
+se.census <- tibble::rownames_to_column(data.frame(se.coef.net))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.census))) %>%
+  mutate(se.ratio = se.coef.census/se.coef.net)
+round_df(se.census, 3)
+
+
+
+## ---- message=SHOW_MSG---------------------------------------------------
 # Parameters recovered (we're using utilities from the tidyverse here)
 # Compare fit to egocentric census:
-coefs1 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.)/sqrt(modse(fit)^2 + modse(fit.ego)[-1]^2)) # note use of modse function we defined
+se.diff = sqrt(se.coef.net^2 + se.coef.census^2)
+
+coefs1 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.census)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.census.)/se.diff)
 
 round_df(coefs1, 3) # note use of round_df function we defined
 
 
 ## ----eval=FALSE----------------------------------------------------------
-# MCMC diagnostics. 
-mcmc.diagnostics(fit.ego)
+## # MCMC diagnostics.
+## mcmc.diagnostics(fit.census)
 
 ## ----eval=FALSE----------------------------------------------------------
-# Check whether the model converged to the right statistics:
-plot(gof(fit.ego, GOF="model"))
+## # Check whether the model converged to the right statistics:
+## plot(gof(fit.census, GOF="model"))
 
 
 ## ------------------------------------------------------------------------
-plot(gof(fit.ego, GOF="degree"))
+plot(gof(fit.census, GOF="degree"))
 
 
-## ----cache=FALSE---------------------------------------------------------
+## ----sampN, cache=FALSE--------------------------------------------------
 set.seed(1)
 
 ## ---- message=SHOW_MSG---------------------------------------------------
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
-fit.ego.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
-                    + nodefactor("Race") + nodefactor("Sex") 
-                    + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
-                    popsize=N)
+fit.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
+summary(fit.sampN)
 
-# compare the coef: fit to 100% sample
-coefs2 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-#  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.sampN)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.sampN.)/sqrt(modse(fit)^2 + modse(fit.ego.sampN)[-1]^2))
 
-round_df(coefs2, 3) # note use of round_df function we defined
-
+## ---- message=SHOW_MSG---------------------------------------------------
+# this time, use the se from src=all for the sampled net
+se.coef.sampN <- se.coef(fit.sampN, src = "all")[-1]
 
 # compare the s.e.'s
-se2 <- tibble::rownames_to_column(data.frame(modse(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.sampN)))) %>%
-  mutate(se.ratio = modse.fit.ego.sampN./modse.fit.)
+se.sampN <- tibble::rownames_to_column(data.frame(se.coef.net)) %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.sampN))) %>%
+  mutate(se.ratio = se.coef.sampN/se.coef.net)
 
-round_df(se2, 3)
+round_df(se.sampN, 3)
+
 
 
 ## ------------------------------------------------------------------------
 cbind("census" = table(fmh.ego$egos$Race),
-      "sample" = table(fmh.egosampN$egos$Race))
+      "sampleN" = table(fmh.egosampN$egos$Race))
+
+
+## ---- message=SHOW_MSG---------------------------------------------------
+se.diff = sqrt(se.coef.net^2 + se.coef.sampN^2) 
+# compare the coef
+coefs2 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.sampN)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.sampN.)/se.diff)
+
+round_df(coefs2, 3) # note use of round_df function we defined
 
 
 ## ----cache=FALSE---------------------------------------------------------
-set.seed(1)
+set.seed(2)
+
+## ----samp25, message=SHOW_MSG--------------------------------------------
+fmh.egosamp25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
+
+
+## ------------------------------------------------------------------------
+cbind("census" = table(fmh.ego$egos$Race),
+      "sample25%" = table(fmh.egosamp25$egos$Race))
+
 
 ## ---- message=SHOW_MSG---------------------------------------------------
-fit.egosamp.25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
+fit.samp25 <- ergm.ego(fmh.egosamp25 ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
 
-fit.ego.samp.25 <- ergm.ego(fit.egosamp.25 ~ edges + degree(0) + nodefactor("Race")
-                      + nodematch("Race") + nodefactor("Sex") + nodematch("Sex")
-                      + absdiff("Grade"), popsize=N)
+# this time we build the s.e. matrix first, because sampling may lead to 
+# unobserved race group(s), and check the ratios of the se's
 
-# this time we build the s.e. matrix first, because sampling may lead to unobserved race group(s)
-se3 <- tibble::rownames_to_column(data.frame(modse(fit)))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25)))) %>%
-  mutate(se.ratio = modse.fit.ego.samp.25./modse.fit.)
+se.coef.samp25 <- se.coef(fit.samp25, src = "all")[-1]
 
+se.samp25 <- tibble::rownames_to_column(data.frame(se.coef.sampN))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25))) %>%
+  mutate(se.ratio = se.coef.samp25/se.coef.sampN)
+round_df(se.samp25, 3)
+
+
+## ---- message=SHOW_MSG---------------------------------------------------
 # compute se for Zdiff(coef)
-zdiffse <- sqrt(se3$modse.fit.^2 + se3$modse.fit.ego.samp.25.^2)
+se.diff <- sqrt(se.coef.net^2 + se.coef.samp25^2)
                 
-# compare the coef: fit to 25% sample
-coefs3 <- tibble::rownames_to_column(data.frame(coef(fit))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.samp.25.)/zdiffse)
+# compare the coef: fit vs. 25% sample
+coefs3 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25)))) %>%
+  mutate(Zdiff = (coef.fit.net. - coef.fit.samp25.)/se.diff)
 
 round_df(coefs3, 3)
 
-round_df(se3, 3)
 
 
 ## ---- message=SHOW_MSG---------------------------------------------------
-w <- 1 + 3*((fmh %v% "Race")!="White") # set up the stratification design
+w <- 1 + 3*((fmh %v% "Race")!="White") # set up the weighting design
 
-fit.egosamp.25strat <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
+fmh.egosamp25wtd <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
 
 # look at the egodata object, see the egoWt component:
-head(fit.egosamp.25strat)
+head(fmh.egosamp25wtd)
 
-fit.ego.samp.25strat <- ergm.ego(fit.egosamp.25strat ~ edges + degree(0) 
-                      + nodefactor("Race") + nodefactor("Sex") 
-                      + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
-                      popsize=N)
+
+## ------------------------------------------------------------------------
+cbind("sample25%" = table(fmh.egosamp25$egos$Race),
+      "sampleWtd25%" = table(fmh.egosamp25wtd$egos$Race))
+
+
+## ---- message=SHOW_MSG---------------------------------------------------
+fit.samp25wtd <- ergm.ego(fmh.egosamp25wtd ~ edges + degree(0) 
+                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
+                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
+                          popsize=N)
 
 
 ## ------------------------------------------------------------------------
 # again we create the s.e. matrix first, using the original fit to define the rows/terms
-se4 <- tibble::rownames_to_column(data.frame(modse(fit)))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(modse(fit.ego.samp.25strat)))) %>%
-  mutate(se.ratio = modse.fit.ego.samp.25strat./modse.fit.ego.samp.25.) %>%
-  select(-modse.fit.)
+se.coef.samp25wtd <- se.coef(fit.samp25wtd, src = "all")[-1]
 
+se.samp25wtd <- tibble::rownames_to_column(data.frame(se.coef.samp25))  %>%
+  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25wtd))) %>%
+  mutate(se.ratio = se.coef.samp25wtd/se.coef.samp25)
+round_df(se.samp25wtd, 3)
+
+
+## ---- message=SHOW_MSG---------------------------------------------------
 # compute se for Zdiff(coef)
-zdiffse <- sqrt(se4$modse.fit.ego.samp.25.^2 + se4$modse.fit.ego.samp.25strat.^2)
+se.diff <- sqrt(se.coef.samp25^2 + se.coef.samp25wtd^2)
 
-# compare the coef: fit to stratified samp
-coefs4 <- tibble::rownames_to_column(data.frame(coef(fit)))%>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.ego.samp.25strat)))) %>%
-  mutate(Zdiff = (coef.fit. - coef.fit.ego.samp.25strat.)/zdiffse) %>%
-  select(-coef.fit.)
+# compare the coef: fit to weighted samp
+coefs4 <- tibble::rownames_to_column(data.frame(coef(fit.net)))%>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25))))  %>%
+  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25wtd)))) %>%
+  mutate(Zdiff.25wtd.net = (coef.fit.samp25wtd. - coef.fit.net.)/se.diff) 
 
 round_df(coefs4, 3)
-
-round_df(se4, 3)
 
 
