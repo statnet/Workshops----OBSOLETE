@@ -916,8 +916,8 @@ mixingmatrix(mesa, "Grade")
 
 # to get the row conditional probabilities:
 
-mixingmatrix(mesa.ego, "Grade", rowprob=T)
-mixingmatrix(mesa.ego, "Race", rowprob=T)
+round(mixingmatrix(mesa.ego, "Grade", rowprob=T),3)
+round(mixingmatrix(mesa.ego, "Race", rowprob=T),3)
 ```
 
 We can also examine the observed number of ties, 
@@ -1013,42 +1013,41 @@ and GOF.
 
 
 One thing that is different from a standard `ergm` call is that we need
-to specify the scaling, both for the *pseudo-population ($N'$)* that will be
-used to set the target statistics during estimation, 
-and for the *population (N)* size that the final
-rescaled coefficients will represent. Recall,
+to specify the scaling, both for  
+the *population (N)* size for the model estimates, and for the *pseudo-population ($N'$)* that will be
+used to set the target statistics during estimation. Recall,
 
-Population size $(|N|)$
-: If we wanted to rescale the final estimates to reproduce
-the expected values in the true population network, we would need to know $N$, the
-size of the popuation.  In general, we do not know this, so the most useful
-scaling is a per capita scaling, which can easily be transformed into any value
-of $|N|$ later (for simulation, or other purposes).  For per capita scaling, $|N|=1$. In `ergm.ego`, it is controlled by the `popsize` top-level argument.
+* Population size $(|N|)$ : This determines the size
+of the network that the fitted model parameters represent.  If we wanted to scale the final parameter estimates to reproduce
+the expected values of the network statistics in the true population network, we would need to know $N$, the
+size of the popuation.  In general, we do not know $N$, so the most useful
+scaling is a per capita scaling, where $|N|=1$.  
+This value can easily be changed to another value
+of $|N|$ later (for simulation, or other purposes).   In `ergm.ego`, it is controlled by the `popsize` top-level argument.  
 
 
-Pseudo-population $(|N'|)$
-: Recall from above that the target statistics can
-be scaled to an arbitrary population size for estimation.  What size should we use?
+* Pseudo-population size $(|N'|)$: This determines the population size used during the estimation process.  The target statistics can
+be scaled to an arbitrary population size for estimation
+purposes.  So, what size should we use?
 Several principles guide this choice:
 
-* *Bias* -- In general, estimation bias is reduced 
+  * *Bias* -- In general, estimation bias is reduced 
 the closer $N'$ is to $N$ (usually larger).
 
-* *Computing time* -- The larger the pseudo-population, 
+  * *Computing time* -- The larger the pseudo-population, 
 the longer the estimation takes.
 
-* *Sample weights* -- In general, it is good practice for the
+  * *Sample weights* -- In general, it is good practice for the
 smallest sample weight to produce at least 1 observation in the 
 pseudo-population network, though more is better.
 
 This leads to different guidelines for data with and without weights.
-
 Simulation studies in Krivitsky & Morris (2017) suggest that a good rule of thumb
 is to have a minimum pseudo-population size of 1,000 for unweighted data.  For
 weighted data the pseudo-populations size should be at least
 1 * sampleSize/smallestWeight (or 3 * sampleSize/smallestWeight to be safe), or 1000 (whichever is larger).
 
-In `ergm.ego`, $|N'|$ is controlled by a combination of four factors:
+In `ergm.ego`, the `ppopsize` $|N'|$ is controlled by a combination of four factors:
 
 * the sample size $|S|$ (i.e., number of egos),
 * the top-level argument `popsize` ($|N|$ or 1) (default: 1),
