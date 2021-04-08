@@ -753,7 +753,8 @@ summary(magnolia~edges+triangle)
 
 If we try to fit this "simple" model:
 ```{r, eval=F}
-fit <- ergm(magnolia~edges+triangle)
+fit <- ergm(magnolia~edges+triangle,
+            control=control.ergm(MCMLE.effectiveSize=NULL))
 ```
 
 ```
@@ -775,7 +776,7 @@ Very interesting.  Instead of converging, the algorithm heads off into networks 
 
 ```{r, eval=T, message=F, warning = F}
 fit <- ergm(magnolia~edges+triangle, 
-            control=control.ergm(MCMLE.maxit=2))
+            control=control.ergm(MCMLE.maxit=2,MCMLE.effectiveSize=NULL))
 
 ```
 
