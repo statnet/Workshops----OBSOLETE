@@ -536,13 +536,13 @@ summary(samp.fit)
 ```
 
 So, all else equal, a relationship is much more likely to *form* if it will close a mutual pair; the conditional log-odds are increased by 
-`r round(samp.fit$formation.fit$coef[[2]],2)`
+`r round(coef(samp.fit)[[2]],2)`
 which translates to an increase in the conditional odds of 
-`r round(exp(samp.fit$formation.fit$coef[[2]]),2)`
+`r round(exp(coef(samp.fit)[[2]]),2)`
 (note that the change statistic can equal only $0$ or $1$ in this case).  
 
 The reciprocity effect on persistence is also positive, but less strong and not statistically signifiant; the point estimate is an increase of 
-`r round(samp.fit$dissolution.fit$coef[[2]],2)`
+`r round(coef(samp.fit)[[6]],2)`
 in the conditional log-odds of persistence, a bit more than double the conditional odds.
 
 The coefficients for transitive triads (hierarchical) are positive and borderline significant for both formation and persistence.  The coefficients for cyclical triads (egalitarian) are negative for both models, but not significant.
