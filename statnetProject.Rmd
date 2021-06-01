@@ -3,8 +3,8 @@
 All `statnet` packages are open-source, written for the **R** computing
 environment, and published on CRAN.  The source repositories are hosted on [GitHub](https://github.com/statnet).   Our website is [statnet.org](http://statnet.org/)
 
-* Need help?  For general questions and comments, please email the statnet users group 
-[mailing list](https://statnet.org/trac/wiki/FrequentlyAskedQuestions#statnetusersgroup).  (Note you'll need to join first)
+* Need help?  For general questions and comments, please email the statnet users group at [statnet_help@uw.edu](statnet_help@uw.edu).  You'll need to join the listserv if you're not already a member.  You can do that here:
+[statnet_help listserve](https://mailman13.u.washington.edu/mailman/listinfo/statnet_help).
 
 * Found a bug in our software? Please let us know by filing an issue in the appropriate package [GitHub repository](https://github.com/statnet), with a reproducible example.
 
