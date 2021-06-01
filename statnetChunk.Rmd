@@ -8,4 +8,6 @@ environment, and published on CRAN.  The source repositories are hosted on [GitH
 
 * Found a bug in our software? Please let us know by filing an issue in the appropriate [GitHub repository](https://github.com/statnet), with a reproducible example.
 
-* Want to request some new functionality?  We welcome suggestions -- you can make a request by filing an issue on the [GitHub repository](https://github.com/statnet) for the specific package.  The chances that this functionality will be developed are substantially improved if the requests are accompanied by some proposed code (we are happy to review pull requests).  
+* Want to request some new functionality?  We welcome suggestions -- you can make a request by filing an issue on the [GitHub repository](https://github.com/statnet) for the specific package.  The chances that this functionality will be developed are substantially improved if the requests are accompanied by some proposed code (we are happy to review pull requests).
+
+* For all other issues, please email us at [contact@statnet.org](mailto:contact@statnet.org).
