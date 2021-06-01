@@ -2108,7 +2108,7 @@ Gibson, D.R. (2003) 'Participation Shifts: Order and Differentiation in Group Co
 
 Handcock MS, Hunter DR, Butts CT, Goodreau SM, Morris M (2003b). 
 *statnet: Software tools for the Statistical Modeling of Network Data*. 
-Statnet Project, Seattle, WA. Version 3, http://www.statnetproject.org.
+Statnet Project, Seattle, WA. Version 3, http://statnet.org/.
 
 Hunter DR, Handcock MS, Butts CT, Goodreau SM, Morris M (2008b). 
 "ergm: A Package to Fit, Simulate and Diagnose Exponential-Family Models for Networks". 
