@@ -1,8 +1,8 @@
 
 *This tutorial is a joint product of the Statnet Development Team:* 
   
+Pavel N. Krivitsky (University of New South Wales)  
 Martina Morris (University of Washington)  
-Pavel N. Krivitsky (University of Wollongong)  
 Mark S. Handcock (University of California, Los Angeles)    
 Carter T. Butts (University of California, Irvine)    
 David R. Hunter (Penn State University)   
