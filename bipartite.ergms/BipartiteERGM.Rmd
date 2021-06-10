@@ -1,0 +1,525 @@
+---
+title: "Bipartite ERGM"
+author: "Alina R. Kuvelkar and David R. Hunter"
+date: "2021 Social Networks and Health Workshop"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## An affiliation network:  Women and social events
+
+```{r, latentnet, include=FALSE}
+library(latentnet)
+```
+
+\small
+Let us revisit the famous southern women dataset due to Davis et al.\ (1941):
+
+\tiny
+```{r, southernWomen, echo=TRUE, tidy=FALSE}
+require(latentnet) # Load latentent (which depends on ergm, network)
+data(davis) # Load southern women dataset
+davis
+```
+
+\small
+- The value of `bipartite` tells how many mode-1 nodes there are.
+
+## An affiliation network:  Women and social events
+
+\small
+- The `plot` method for `network` objects has many capabilities; see `?plot.network`.
+
+\tiny
+```{r, southernWomenPlot, echo=TRUE, tidy=FALSE, fig.cap="The bipartite network dataset known as southern women is part of the latentnet package", out.width=130}
+set.seed(123)
+plot(davis, displaylabels=TRUE, vertex.col = c(rep("Red", 18), rep("Green", 14)),
+     vertex.sides = 4*c(rep(10, 18), rep(1, 14)), vertex.cex = c(rep(3, 18), rep(3, 14)), 
+     label.cex = 0.4, label.pos = 5)
+```
+
+## Adjacency Matrices for Bipartite Networks
+
+- In the adjacency matrix for the southern women network, each row represents one of the women and each column represents one of the events.   
+
+\tiny
+```{r, include=TRUE, echo=TRUE}
+davis_A <- as.matrix.network.adjacency(davis)
+davis_A
+```
+
+## Affiliation network as hyper-network:
+
+\small
+- The southern women network may be expressed as a hyper-network, where each "edge" (event)
+may have arbitrarily many nodes (actors):
+
+\tiny
+```{r, hypernetwork, echo=TRUE}
+# Obtain women's names from network using %v% operator
+names <- (davis %v% "vertex.names")[1:18]
+# Create list where each item is an "edge"; look at first 5 of them
+apply(davis_A, 2, function(event) names[event==1])[1:5]
+```
+
+\small 
+- The ability to express a hyper-network as a bipartite network means that we can
+analyze the former using tools designed for the latter.
+
+## ERGM basics
+
+\small
+- We fit the southern women dataset to the simplistic Erd\H{o}s-Renyi (Gilbert) model
+using the `ergm` package:
+
+\tiny
+```{r, ErdosRenyi, echo=TRUE, message=FALSE}
+# Full coefficient information for Erdos-Renyi fit:
+coef(summary(ergm(davis ~ edges)))
+```
+
+\small
+- We can derive the `edges` coefficient estimate 
+directly:  Since there are 89 edges in the network out of
+$18\times 14 = 252$ possible, the log-odds of the estimated edge probability is
+
+\tiny
+```{r, LogOdds, echo=TRUE}
+# log-odds of p/n equals log(p / (n-p))
+log(89 / (252 - 89))
+```
+
+## Dyad-independent ERGM terms
+
+\small
+- The `sociality` term adds a separate statistic to the model for each node, equal to its degree.  
+- We can confine attention to the women (nodes 1 through 18):
+
+\tiny
+```{r, sociality summary, echo=TRUE}
+# summary with an ergm formula reports the network's observed statistics
+summary(davis ~ sociality(nodes = 1:18))
+```
+
+\small
+- These are examples of \textcolor{blue}{dyad-independent} statistics, because 
+\textcolor{blue}{the change in any one of them, when a single dyad is changed from 0 to 1, may be calculated without knowing any other dyad's status.}
+
+## Dyad-independent ERGM terms
+
+- When an ERGM consists only of dyad-independent statistics, it may be fitted using (only) logistic
+regression.  
+- This is good from a computational standpoint but it's potentially doubtful in a social network that dyads are truly statistically independent.
+
+## Dyad-independent ERGM terms
+
+\small
+- In the case of the dyad-independent model with `sociality` statistics, we can calculate
+each coefficient estimate by hand.  
+- Here are the `ergm`-based estimates:
+
+\tiny
+```{r, sociality model, echo=TRUE, message=FALSE}
+ergm(davis ~ sociality(nodes = 1:18))$coef
+```
+
+\small
+- For instance, each node with degree 7 (out of a possible 14) has a coefficient estimate
+equal to the log-odds of 1/2, which equals zero.
+
+## Projections with Bipartite Networks
+
+- To apply analyses used in one-mode networks to bipartite networks, the projection approach is often used. 
+
+- Two separate one-mode projections can be created from every bipartite network. 
+
+- \textcolor{blue}{An edge between two nodes exists in the one-mode projection iff there is at least one two path between the two nodes in the original bipartite network.}
+
+
+## Calculating One-Mode Projections
+
+- One-mode projections for bipartite networks are calculated using the adjacency matrix.
+
+- Let $\textbf{A}$ be the adjacency matrix for a bipartite network. 
+
+The person-to-person one-mode projection is given by
+$\textbf{A}(\textbf{A}^\top)$.
+
+The group-to-group one-node projection is given by 
+$(\textbf{A}^\top)\textbf{A}$.
+
+\textcolor{blue}{If $A$ is a $p\times g$ matrix, then $\textbf{A}(\textbf{A}^\top)$ is $p\times p$ and
+$(\textbf{A}^\top)\textbf{A}$ is $g\times g$.  These matrices retain weight (count) information.}
+
+
+## Woman-to-Woman One-Mode Projection
+
+- In this projection, two women are linked if they were in at least one events together. 
+
+\tiny
+```{r, include=TRUE, echo=TRUE, tidy=FALSE, fig.cap="Projection of the southern women bipartite network onto the nodes representing women", out.width=130}
+P <- davis_A %*% t(davis_A)
+women <- as.network(P, directed=FALSE)
+set.seed(123)
+plot(women, displaylabels=TRUE, vertex.col = c(rep("Red", 18)),
+     vertex.cex = c(rep(2.5, 18)), label.cex = 0.3, label.pos = 5)
+```
+
+
+## Event-to-Event One-Mode Projection 
+
+- In this projection, two events are linked if at least one woman was a part of both. 
+
+\tiny
+```{r, include=TRUE, echo=TRUE, tidy=FALSE, fig.cap="Projection of the southern women bipartite network onto the nodes representing events", out.width=130}
+G <- t(davis_A) %*% davis_A
+events <- as.network(G, directed=FALSE)
+set.seed(456)
+plot(events, displaylabels=TRUE, vertex.col = c(rep("Green", 14)), vertex.cex = c(rep(4, 14)), 
+     label.cex = 0.4, label.pos = 5, vertex.sides = 4 * c(rep(1, 14)))
+```
+
+## Weighted Projections
+
+- Information contained by the bipartite structure is often lost when modeling using the one-mode projection. 
+
+- \textcolor{blue}{Different bipartite networks can produce the same one-mode projection.}
+
+- One method in which some of the information can be retained is to use a weighted projection. 
+
+## Weighted Woman-to-Woman One-Mode Projection
+
+- Here, the weight on an edge represents how many events both women are a part of. 
+
+\tiny
+```{r, include=TRUE, echo=TRUE, tidy=FALSE, fig.cap="Weighted projection of the southern women bipartite network onto the nodes representing women", out.width=125}
+#list of the edges in the women one-mode projection
+edges_women <- as.edgelist(women) 
+#retrieve the weights from the projection matrix 
+weights_women <- apply(edges_women, 1, function(row) P[row[1],row[2]])
+#plot the network with the edges labelled by the weights
+set.seed(123)
+plot(women, displaylabels=TRUE, vertex.col = c(rep("Red", 18)), vertex.cex = c(rep(4, 18)), 
+label.cex = 0.4, label.pos = 5, edge.label = weights_women)
+```
+
+
+## Weighted Event-to-Event One-Mode Projection
+
+- Here, the weight on an edge represents how many women are a part of both events.
+
+\tiny
+```{r, include=TRUE, echo=TRUE, tidy=FALSE, fig.cap="Weighted projection of the southern women bipartite network onto the nodes representing women", out.width=130, warning=FALSE}
+#list of the edges in the events one-mode projections
+edges_events <- as.edgelist(events)
+#retrieve the weights from the projection matrix 
+weights_events <- apply(edges_events, 1, function(row) G[row[1],row[2]])
+#plot the network with the edges labelled by the weights
+set.seed(456)
+plot(events, displaylabels=TRUE, vertex.col = c(rep("Green", 14)), vertex.cex = c(rep(4, 14)), 
+     label.cex = 0.4, label.pos = 5, vertex.sides = 4*c(rep(1, 14)), edge.label = weights_events, 
+     edge.col = "Red")
+```
+
+
+## Potential Drawbacks of Using the Projection Approach 
+
+- While weighted projections incorporate some of the data contained in the bipartite structure, they are more difficult to analyze using ERGMs. 
+
+- Weighted projections as well lose some information. 
+
+- In general, modeling using the one-mode projections is not ideal unless the data 'lost' is not pertinent to the analysis. 
+
+## Dyad-dependent ERGM terms
+
+\tiny
+```{r, DDTermsPlot, echo=TRUE, tidy=FALSE, fig.cap="A 3-b2star (left), a 4-cycle (right), and a 2-b2star (bottom)", out.width=60}
+# Define a subset of nodes that contains a 3-star, a 4-cycle, and a 2-star.  Then plot.
+subset <- c(1:2, 11:13, 17:20, 28:29)
+set.seed(4) # plot.network uses randomness in placing nodes, so set.seed will keep same arrangement
+plot(davis %s% subset, displaylabels=TRUE, vertex.col = c(rep("Red", 7), rep("Green", 4)),
+     vertex.sides = 4*c(rep(10, 7), rep(1, 4)), vertex.cex = c(rep(3, 7), rep(3, 4)), 
+     label.cex = 2, label.pos = 1)
+```
+
+\tiny
+```{r, DDterms, echo=TRUE, tidy=FALSE, message=FALSE}
+summary(davis ~ b2star(3) + cycle(4) + b2star(2) + b1star(2))
+```
+
+\small
+- Each of the terms above is \textcolor{blue}{dyad-dependent}. 
+- Only `b2star(2)` and `b1star(2)` may be obtained from a projection:
+
+\tiny
+```{r, DDterms2, echo=TRUE, tidy=FALSE, message=FALSE}
+# Summing below- (or above-)diagonal entries of a projection adjacency matrix gives 2-star counts 
+c(sum(P[lower.tri(P)]), sum(G[lower.tri(G)])) 
+```
+
+## Dyad-dependent ERGM terms
+
+\tiny
+```{r, b2starModel, echo=TRUE, tidy=FALSE, message=FALSE, cache=TRUE}
+fit1 <- ergm(davis ~ sociality(nodes = 1:18) + b2star(3))
+tail(coefficients(summary(fit1)))
+```
+
+\small
+- Fitting this ERGM cannot be done simply via logistic regression because of `b2star(3)`.
+- The positive, statistically significant coefficient estimate for the `b2star(3)` term tells
+us this network has more 3-woman groups who attended an event together than we'd expect by chance,
+even after correcting for each woman's individual sociality.
+
+## An affiliation network:  Students joining clubs 
+
+The students joining extracurricular clubs dataset (McFarland 1999) contains data on 1262 students across 91 different clubs. 
+
+\tiny
+```{r, echo=TRUE, tidy=FALSE, cache=TRUE}
+#load the raw data from www.stat.cmu.edu
+magact96 = read.delim(
+  "http://www.stat.cmu.edu/~brian//780/stanford%20social%20network%20labs/00%20data/mag_act96.txt", 
+                      na.strings = "na", check.names = FALSE)
+#save the attribute data (ID #, gender, grade, race)
+magattrib = magact96[,1:4]
+head(magattrib)[1:5,]
+#create adjacency matrix with students as rows and clubs as columns
+g96 <- as.matrix(magact96[,-(1:4)]); row.names(g96) = magact96[,1]
+head(g96)[1:5,1:5]
+```
+
+## An affiliation network:  Students joining clubs
+
+We will now use the adjacency matrix $g96$ to create a bipartite network object. 
+
+\tiny
+```{r, echo=TRUE, tidy=FALSE, cache=TRUE}
+#create m96 object
+g96a <- g96
+
+#remove missing data 
+NArows <- which(is.na(magattrib[,2])) #remove NA missing values
+NArows <- union(NArows, which(is.na(magattrib[,3])))
+NArows <- union(NArows, which(is.na(magattrib[,4])))
+NArows <- union(NArows, which(magattrib[,2]=='.')) #remove "." missing values
+NArows <- union(NArows, which(magattrib[,3]=='.'))
+NArows <- union(NArows, which(magattrib[,4]=='.'))
+NArows <- union(NArows, which(magattrib[,2]=='')) #remove " " missing values
+NArows <- union(NArows, which(magattrib[,3]==''))
+NArows <- union(NArows, which(magattrib[,4]==''))
+NArows <- union(NArows, which(magattrib[,2]=='3')) #remove observations with a gender value of 3
+
+g96a <- g96[-NArows,] #remove missing data from the adjacency matrix 
+gendera<- as.numeric(as.character(magattrib[-NArows,2])) #create gender attribute  
+gradea<- as.numeric(as.character(magattrib[-NArows,3])) #create grade attribute 
+racea<- as.numeric(as.character(magattrib[-NArows,4])) #create race attribute 
+
+#create network object
+Schoolnw <- network(g96a, undirected=T, bipartite=1262) 
+Schoolnw %v% 'gender' <- c(gendera, rep(NA,91))
+Schoolnw %v% 'grade' <- c(gradea, rep(NA,91))
+Schoolnw %v% 'race' <- c(racea, rep(NA,91))
+```
+
+
+## An affiliation network:  Students joining clubs
+
+\small
+Here is the newly created network object:
+
+\tiny
+```{r, echo=TRUE, tidy=FALSE}
+Schoolnw
+```
+
+## An affiliation network:  Students joining clubs
+
+\tiny
+```{r, schoolclubsPlot, echo=TRUE, tidy=FALSE, fig.cap="Students (left) who join extracurricular clubs (right)", out.width=100}
+set.seed(123)
+a <- structure(c(sample(c(1:100), 1262, replace=TRUE),rep(300, 91), 
+                 sample(c(1:364), 1262, replace=TRUE), seq(to = 1, from = 364, by = -4)), 
+               .Dim = c(1353L, 2L), .Dimnames = list(NULL, c("cx", "cy")))
+node_colors <- c((Schoolnw %v% "grade")[1:1262] - 5 , rep("Green1", 91))
+plot.network(Schoolnw, displayisolates = FALSE, coord=a, edge.col="gray", 
+             vertex.cex = 0.5, vertex.col = node_colors, 
+             vertex.sides = c((Schoolnw %v% "gender")[1:1262]*16-12, rep(4, 91)))
+```
+
+## ERGMs including nodal covariates
+
+\small
+Compared to unipartite networks, ERGMs employing nodal covariate main effects
+look very similar for bipartite networks:
+
+\tiny
+```{r, MainEffects, echo=TRUE, message=FALSE}
+coefficients(summary(ergm(Schoolnw ~ edges + b1factor("gender") + b1cov("grade"))))
+```
+
+\small
+- Use `b1factor` and `b1cov` instead of `nodefactor` and `nodecov` but difference is mostly cosmetic.
+- This is a dyad-independent model so it is simple to fit.
+- Here, `"grade"` is treated as quantitative but we could have used 
+`b1factor("grade")` instead.
+
+## Homophily for affiliation networks
+
+\small
+- \textcolor{blue}{Homophily is totally different than for unimodal networks.}  
+- Here is a unimodal example:
+
+\tiny
+```{r, nodematch, echo=TRUE, message=FALSE}
+data(faux.mesa.high)
+coefficients(summary(ergm(faux.mesa.high ~ nodematch("Grade", diff=TRUE))))
+```
+
+\small
+- We cannot use `nodematch`, which counts the number of edges whose nodes match on a
+categorical covariate, for affiliation networks.
+
+## Homophily for affiliation networks
+
+\small
+- One homophily-like statistic is the number of two-paths whose end nodes match on some attribute.
+
+\tiny
+```{r, twopaths, echo=TRUE, out.width=50, fig.cap="Red nodes are either solid or dashed. There are 4 two-paths connecting matching red nodes."}
+edglst <- cbind(c(1, 1, 2, 3, 3, 4, 5), c(6, 7, 6, 7, 6, 7, 6))
+smnw <- as.network(edglst, bipartite = 5, directed = FALSE)
+mode <- rep(1:2, c(5, 2))
+coord <- cbind( x =14 * mode - 13, y = c(29, 23, 17, 11, 5, 23, 11))
+plot(smnw, coord = coord, jitter = FALSE, label = c(letters[1:5], 1:2), label.cex = 1.2, 
+     label.pos = 5, vertex.col = mode + 1, vertex.cex = 6, vertex.sides = 44 - 20 * mode,
+     edge.lty = 2, vertex.lwd = 6, vertex.lty = c(1, 1, 1, 3, 3, 1, 1), ylim=c(1, 33))
+```
+
+## Homophily for affiliation networks
+
+\small
+- Another statistic is the number of matching node pairs connected by two-paths
+- Still another is the number of edges contained in a matching two-path.
+- The `b1nodematch` and `b2nodematch` terms in `ergm` implement (and generalize) these ideas.
+
+\tiny
+```{r, b1nodematchsummary, message=FALSE, cache=TRUE, echo=TRUE, tidy=FALSE}
+summary(Schoolnw ~ b1nodematch("grade", diff=TRUE))
+summary(Schoolnw ~ b1nodematch("grade", alpha=0)) 
+summary(Schoolnw ~ b1nodematch("grade", beta=0))
+```
+
+## Homophily for affiliation networks
+
+\small
+- \textcolor{blue}{Because homophily is not a dyad-independent concept in bipartite networks,
+it can be very difficult to fit ERGMs that use any of the above statistics.}
+
+\tiny
+```{r, b1nodematchfit, message=FALSE, cache=TRUE, echo=TRUE}
+coefficients(summary(ergm(Schoolnw ~ edges + b1factor("grade") + b1nodematch("grade", beta=0))))
+```
+
+## Bipartite networks involving homogeneous nodes
+
+\small
+- \textcolor{blue}{Not all bipartite networks are affiliation networks.}
+- Colleagues from the Network Modeling Group at the University of Washington
+are studying properties of networks that can be simulated from egocentric data
+collected as part of the National Survey of Family Growth
+(<https://www.cdc.gov/nchs/nsfg/index.htm>)
+- Here we load a simulated cross-sectional network based on Seattle responses:
+
+\tiny
+```{r, MiniSeattle, echo=TRUE}
+load("Snw.RData") ; print(Snw)
+```
+
+## Bipartite networks involving homogeneous nodes
+
+\small
+- This network, generated randomly using the `san` function of the `ergm` package to approximate
+Seattle statistics from the NSFG, models only heterosexual relationships, making it bipartite.
+
+\tiny
+```{r, MiniSeattlePlot, warning=FALSE, out.width=150, fig.cap="Bipartite network where all nodes are people "}
+sexIDval <- as.integer(as.factor(Snw %v% "sex.ident"))
+plot(Snw, vertex.col = 1+sexIDval, vertex.sides = 1+sexIDval+12*(sexIDval==1))
+legend("topleft", legend = c("F", "MSF", "MSMF"), fill=2:4, pch=c(1, 2, 5))
+```
+
+
+## Enforcing sample space constraints
+
+\small
+- Bipartite constraints, among others, may reduce the sample space of possible networks.
+- Even a "simple" model may be difficult to fit for some sets of constraints:
+
+\tiny
+```{r, monogamous, message=FALSE, warning=FALSE, echo=TRUE, cache=TRUE}
+fit2 <- ergm(Snw ~ edges + nodematch("race"),
+             constraints = ~bd(maxout = 1) + blocks(attr = ~sex, levels2 = diag(TRUE, 2)))
+coefficients(summary(fit2))
+```
+
+\small
+- Ordinarily a model with `edges` and `nodematch` would be dyad-independent, but not with 
+the bounded degree constraint.
+- The `nodematch` term is only sensible because the nodes are all of the same type (people).
+
+
+## Enforcing sample space constraints
+
+\small
+An alternative method for enforcing constraints is to include `offset` terms, i.e., statistics
+whose coefficients are fixed and known and, in this case, set to $-\infty$:
+
+\tiny
+```{r, monogamous2, message=FALSE, warning=FALSE, echo=TRUE, cache=TRUE}
+fit3 <- ergm(Snw ~ edges + nodematch("race") + 
+                     offset(concurrent) + offset(nodematch("sex")), offset.coef = c(-Inf, -Inf))
+coefficients(summary(fit3))
+coefficients(summary(fit2)) # This is the previous fit 
+```
+
+## Enforcing sample space constraints
+
+\small
+- Without the prohibition on concurrent ties, the sample space is simply bipartite.
+- \textcolor{blue}{Warning:  If a constraint exists and is not modeled, estimates will be biased}
+
+\tiny
+```{r, monogamous3, message=FALSE, warning=FALSE, echo=TRUE}
+fit4 <- ergm(Snw ~ edges + nodematch("race"),
+             constraints = ~blocks(attr = ~sex, levels2 = diag(TRUE, 2)))
+coefficients(summary(fit4))
+```
+
+\small
+- The coefficients above may be estimated directly using this information:
+
+\tiny
+```{r, monogamous3AltCalc, echo=TRUE}
+table(Snw %v% "sex", Snw %v% "race")
+summary(Snw ~ edges + nodematch("race"))
+```
+
+## Thank you
+
+\small
+- We referred in this presentation to video presentations by Jim Moody and Brian Aronson
+at <https://sites.duke.edu/dnac/training/>
+- Jim discusses bipartite networks begining around the 6-minute mark in Part 2 of his introductory lecture: <https://www.youtube.com/watch?v=xZCWcX_u0SQ>
+- Brian discusses ERGMs for unipartite networks beginning around the 46-minute mark of his lecture:
+<https://www.youtube.com/watch?v=KZHhRYokugU>
+
+```{r, southernWomenPlotRevisited, echo=FALSE, out.width=130}
+set.seed(123)
+plot(davis, displaylabels=TRUE, vertex.col = c(rep("Red", 18), rep("Green", 14)),
+     vertex.sides = 4*c(rep(10, 18), rep(1, 14)), vertex.cex = c(rep(3, 18), rep(3, 14)), 
+     label.cex = 0.4, label.pos = 5)
+```
