@@ -8,53 +8,62 @@ output:
     theme: cosmo
     toc: yes
     toc_float: true
-    toc_depth: 4
   pdf_document:
     toc: yes
 ---
 
-```{r setup, cache=FALSE, include=FALSE}
+```{r setup, include=FALSE}
 library(knitr)
 knitr::opts_chunk$set(cache=T, comment=NA, fig.align='center')
-options(width=100)
-```
-```{r include=FALSE}
-SHOW_MSG = FALSE
 ```
 
-_Last updated: `r Sys.Date()`_
+```{r install, include=F}
+loadedNamespaces()
+# unloadNamespace("ergm")
+# unloadNamespace("statnet.common")
 
-*This tutorial is a joint product of the Statnet Development Team:* 
+master_lib <- "~/R/GHmaster-library"
 
-Martina Morris (University of Washington)  
-Pavel N. Krivitsky (University of Wollongong)  
-Mark S. Handcock (University of California, Los Angeles)    
-Carter T. Butts (University of California, Irvine)    
-David R. Hunter (Penn State University)    
-Steven M. Goodreau (University of Washington)    
-Skye Bender de-Moll (Oakland)  
+# #Make lib 1st position in libPath
+defaultPaths <- .libPaths()
+.libPaths(c(master_lib, defaultPaths))
+.libPaths()
+
+# remotes::install_github("statnet/ergm.ego@master",
+#                         lib = master_lib)
+
+#devtools::dev_mode(on=T, path = .libPaths()[1])
+library(ergm.ego)
+
+sessioninfo::package_info(pkgs = c("statnet.common", "network", "rle",
+                                   "ergm", "ergm.ego", "egor"),
+                          dependencies = FALSE)
+```
 
 
-For general questions and comments, please refer to the
-[`statnet` wiki](statnet.org/wiki)
-and the `statnet` users group and mailing list   
-http://statnet.org/statnet_users_group.shtml
+_Last updated `r Sys.Date()`_
+
+```{r dev, child = '../statnetDevTeam.Rmd'}
+```
+   
+The network modeling software demonstrated in this tutorial is authored by Pavel Krivitsky (`ergm.ego`).
+
+---
+
+```{r project, child = '../statnetProject.Rmd'}
+```
+
+---
 
 ## Introduction to this workshop/tutorial.
 
-This workshop and tutorial provide an introduction to 
-key features of the packages that the
-`statnet` suite provides for statistical modeling of
-network data with *Exponential family Random Graph Models* (ERGMs).
-The packages we will be using are:
-
-* [`network`](https://cran.r-project.org/web/packages/network/index.html) -- storage and manipulation of network data
-* [`sna`](https://cran.r-project.org/web/packages/sna/index.html) -- descriptive statistics and graphics for exploratory network analysis`
-* [`ergm`](https://cran.r-project.org/web/packages/ergm/index.html) -- statistical tools for estimating ERGMs, model assessment, and network simulation.
-
-All `statnet` packages are open-source, written for the **R** computing
-environment, and published on CRAN.  The source repositories are hosted
-on [GitHub](statnet.github.io).  
+This tutorial provides an introduction to 
+statistical modeling of egocentrically sampled
+network data with *Exponential family Random Graph Models* (ERGMs).  The
+primary package we will be demonstrating is `ergm.ego`, but we will 
+make use of utilities from other `statnet` packages at various points.  As of version 1.0, `ergm.ego` depends on the `egor` package for 
+egocentric network data management.
+ 
 
 ### Prerequisites
 
@@ -66,7 +75,7 @@ The workshops are conducted using `Rstudio`.
 
 
 
-## 1. Software Installation and Preliminaries
+## 1. Installation
 
 Open an R session, and set your working directory to the location
 where you would like to save this work.
@@ -79,44 +88,6 @@ install.packages('ergm.ego')
 ```
 
 This will install all of the "dependencies" -- the other R packages that `ergm.ego` needs.
-
-We will also need two other packages (from the 
-["tidyverse"](https://cran.r-project.org/web/packages/tidyverse/index.html))
-for this workshop:
-```{r, eval=FALSE}
-install.packages("dplyr")
-install.packages("tibble")
-```
-
-Load these packages
-```{r cache=FALSE, message=FALSE}
-library(ergm.ego)
-library(dplyr)
-library(tibble)
-```
-
-Add define some functions we'll use later
-```{r}
-# Rounding of numeric columns only in dataframes 
-round_df <- function(df, digits) {
-  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
-  
-  df[,nums] <- round(df[,nums], digits = digits)
-  
-  (df)
-}
-
-# extract se's for estimates from fit object
-se.coef <- function(fit,src) sqrt(diag(vcov(fit, source=src)))
-
-```
-
-Check package versions
-
-```{r cache=FALSE}
-sessionInfo()
-```
-
 
 ## 2. Overview of ergm.ego
 
@@ -159,7 +130,7 @@ represented in the model.
 
 [//]: (switch here to showing examples:  1. ergmEgo paper, 2. AJPH paper)
 
-### 2a. Motivating example:  Analyzing racial disparities in HIV in the US
+###2a. Motivating example:  Analyzing racial disparities in HIV in the US
 
 The work on `ergm.ego` was originally motivated by a specific question 
 in the field of HIV epidemiology---Does network structure help
@@ -237,7 +208,7 @@ One metric for network exposure is the probability of being in a component of si
 The principles of egocentric inference can be extended to temporal ERGMs (TERGMs).  While we will not cover that in this workshop, an example can
 be found in another paper that sought to evaluate the network hypothsis for racial disparities in HIV in the US (Morris et al. 2009).  In that paper, egocentric data from the National Longitudinal Survey of Adolescent Health (AddHealth) was analyzed, and an example of the resulting dynamic complete network simulation (on 10,000 nodes) can be found in this ["network movie"](http://statnet.org/movies). 
 
-The movie below is another simpler example of what you can do with egocentrically sampled data and the `statnet` software.  It shows an epidemic spreading on a small dynamic contact network that is simulated with a STERGM estimated from egocentrically sampled network data.  The movie was produced by the R packages `EpiModel` and `ndtv`, which are part of the `statnet` package suite (and are also available on CRAN).
+The movie below is another simpler example -- an epidemic spreading on a small dynamic contact network that is simulated with a STERGM estimated from egocentrically sampled network data.  The movie was produced by the R packages `EpiModel` and `ndtv`, which are based on the `statnet` tools (and are also available on CRAN).
 <div style="width:50%; height=50%">
 ![](images/netmovie.gif)
 </div>
@@ -248,14 +219,14 @@ The movie below is another simpler example of what you can do with egocentricall
 
 The full technical details on ERGM estimation and inference from egocentrically
 sampled data have been published in
-[Krivitsky and Morris (2017)](http://projecteuclid.org/euclid.aoas/1491616887).
+[Krivitsky and Morris,2017](http://projecteuclid.org/euclid.aoas/1491616887)
 This section of the tutorial provides a brief introduction to the key concepts.
 
 ### 3a. Exponential-family random graph models
 
 ERGMs represent a general class of models based in exponential-family theory for 
 specifying the probability distribution 
-for a set of random graphs or networks. Within this framework, one can---among other tasks---obtain maximum-likehood estimates (MLEs) for the parameters of a specified model 
+for a set of random graphs or networks. Within this framework, one can---among other tasks---obtain maximum-likehood estimates for the parameters of a specified model 
 for a given data set; test individual models for goodness-of-fit, perform various types of model comparison; and simulate additional networks with the underlying probability 
 distribution implied by that model.
 
@@ -263,54 +234,15 @@ The general form for an ERGM can be written as:
 $$
 P(Y=y;\theta,x)=\frac{\exp(\theta^{\top}g(y,x))}{\kappa(\theta,x)}\qquad (1)
 $$
-where:
-
-* $Y$ is the random variable for the state of the network (with realization $y$), 
-
-* $g(y,x)$ is a vector of model statistics for network y, 
-
-* $\theta$ is the vector of coefficients for those statistics, and 
-
-* $\kappa(\theta)$ represents the quantity in the numerator summed over all possible networks (typically constrained to be all networks with the same node set as $y$).
-
-If you're not familiar with the compact notation here, note that the numerator represents a formula that is linear in the log form:
-
-$$
-log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
-$$
-where $p$ is the number of terms in the model.  From this one can more easily observe the analogy to a traditional statistical model:  the coefficients $\theta$ represent the size and direction of the effects of the covariates $g(y)$ on the overall probability of the network.
-
-The ERGM expression for the probability of the entire graph shown above can be re-expressed in terms of the conditional log-odds of a single tie between two actors:
-
-$$
-\operatorname{logit}{(Y_{ij}=1|y^{c}_{ij})=\theta'\delta(y_{ij})}
-$$
-
-where 
-
-* $Y_{ij}$ is the random variable for the state of the actor pair $i,j$ (with realization $y_{ij}$), and 
-
-* $y^{c}_{ij}$ signifies the complement of $y_{ij}$, i.e. all dyads in the network other than $y_{ij}$. 
-
-* $\delta(y_{ij})$ is a vector of the "change statistics" for each model term.  The change statistic records how the $g(y)$ term changes if the $y_{ij}$ tie is toggled on or off.  So:
-
-$$
-\delta(y_{ij}) = g(y^{+}_{ij})-g(y^{-}_{ij})
-$$
-
-where 
-
-* $y^{+}_{ij}$ is defined as $y^{c}_{ij}$ along with $y_{ij}$ set to 1, and 
-* $y^{-}_{ij}$ is defined as $y^{c}_{ij}$ along with $y_{ij}$ set to 0.  
-
-So $\delta(y_{ij})$ equals the value of $g(y)$ when $y_{ij}=1$ minus the value of $g(y)$ when $y_{ij}=0$, but all other dyads are as in $g(y)$.  
-
-This expression shows that the coefficient $\theta$ can be interpreted as that term's contribution to the log-odds of an individual tie, conditional on all other dyads remaining the same.  The coefficient for each term in the model is multiplied by the number of configurations that tie will create (or remove) for that specific term.
+where $Y$ is the random variable for the state of the network (with realization y), 
+$g(y,x)$ is a vector of model statistics for network y, 
+$\theta$ is the vector of coefficients for those statistics, and $\kappa(\theta)$ represents the quantity in the numerator summed over all possible networks 
+(typically constrained to be all networks with the same node set as $y$).
 
 The model terms $g(y,x)$ are functions of network statistics that we hypothesize may be more or less common than what would be expected in a simple random graph (where all ties have the same probability).  When working with egocentrically sampled network data, the statistics one can include in the model are limited by the requirement that they can be observed in the sample data
-[more details below](ergm.ego_tutorial.html#Egocentric-statistics)
+[more details in section 4.2](ergm.ego_tutorial.html#Egocentric-statistics)
 
-A key distinction in model terms is _dyad independence_ or _dyad dependence_.  Dyad independent terms (like nodal homophily terms) imply no dependence between dyads---the presence or absence of a tie may depend on nodal attributes, but not on the state of other ties.  Dyad dependent terms (like degree terms, or triad terms), by contrast, imply dependence between dyads.  The design of an egocentric sample means that most observable statistics are dyad independent, but there are a few, 
+A key distinction in model terms is whether they are _dyad independent_ or _dyad dependent_.  Dyad independent terms (like `nodematch` for attribute homophily) imply no dependence between dyads---the presence or absence of a tie may depend on nodal attributes, but not on the state of other ties.  Dyad dependent terms (like `degree` for nodal degree, or triad-related terms like `gwesp`), imply dependence between dyads.  The design of an egocentric sample means that most observable statistics are dyad independent, but there are a few, 
 like degree, that are dyad dependent. 
 
 ### 3b. Network Sampling
@@ -333,7 +265,7 @@ and alter recruitment may be investigator-driven, or respondent-driven.  This gi
 Egocentric network sampling comprises a range of designs developed specifically 
 for the collection of network data in social
 science survey research. The design is (ideally) based on a probability
-sample of respondents ("egos") who, via interview, are asked to nominate a
+sample of respondents ("egos"") who, via interview, are asked to nominate a
 list of persons ("alters") with whom they have a specific type of relationship ("tie"),
 and then asked to provide information on 
 the characteristics of the alters and/or the ties.  The alters 
@@ -393,6 +325,8 @@ Cons:
 
 ## 4. Theoretical Framework and Definitions
 
+### Some notation
+
 We'll need some notation for this (sorry, and a warning that it will get hairier).
 
 #### Population network
@@ -435,13 +369,13 @@ $e^a_{i,k}\equiv( x_{j,k})_{j\in y_i}$ | and its alters.
 
 ### 4a. Specifying Egocentric ERGMs
 
-Egocentric ERGMs are specified the same way they would be in `ergm`: via terms (e.g. `nodematch`)
+Egocentric ERGMs are specified the same way as plain `ergm`: via terms (e.g. `nodematch`)
 used to represent predictors on the right-hand size of equations used
-in calls to:
+in:
 
-* `summary` (to obtain measurements of network statistics on a dataset)
-* `ergm.ego` (to estimate an ERGM)
-* `simulate` (to simulate networks from an ERGM fit)
+* calls to `summary` (to obtain measurements of network statistics on a dataset)
+* calls to `ergm.ego` (to estimate an ERGM)
+* calls to `simulate` (to simulate networks from an ERGM fit)
 
 The terms that can be used in an ERGM depend on the type of network being
 analyzed (directed or undirected, one-mode or two-mode ("bipartite"), binary or
@@ -461,30 +395,24 @@ $$
 g_{k}(y,x)\equiv \textstyle\sum_{i\in N} h_{k}(e_i)   
 $$
 for some function $h_{k}(\cdot)$ of egocentric information
-associated with a single actor.  
+associated with a single actor. 
 
-****
-
-In plain language, a statistic is egocentric if you can take the individual
-level measure of that statistic (say, the number of ties), sum this (or a simple function of this) across all individuals 
-in the population (i.e., an egocentric census) and recover the network level statistic (here, the total number of ties in the network).  
-
-****
-
-The set of egocentric statistics includes **dyadic-independent** 
+The space of egocentric statistics includes **dyadic-independent** 
 statistics that can be expressed in the general form of
 $$
 g_{k}(y,x)=\sum_{ij\in y} f_k(x_i,x_j)          
 $$
-for some symmetric function $f_k(\cdot,\cdot)$ of two actors' attributes; 
-and some **dyadic-dependent** statistics that can be expressed as
+for some
+symmetric function $f_k(\cdot,\cdot)$ of two actors' attributes; 
+and some **dyadic-dependent**
+statistics that can be expressed as
 $$
 g_{k}(y,x)=\sum_{i\in N} f_k ({x_{i},(x_j)_{j\in y_i}})
 $$ 
 for some function $f_k(\cdot,\dotsb)$ of the attributes of an actor and 
 their network neighbors.  
 
-*The statistics that are identifiable in an egocentric sample depend on the specific egocentric study design:*
+*The statistics that are identifiable in an egocentric sample depend on the specific egocentric study design.*
 
 Basic (minimal) egocentric design (alter attributes only)
 : * Nodal Covariate/Factor effects
@@ -505,7 +433,19 @@ The table below (from Krivitsky & Morris 2017)
 shows some examples of egocentric statistics,
 and gives their representations in terms of of 
 $h_{k}(\cdot)$.
-![Examples of egocentric statistics](images/Table1.png)  
+
+Table: Examples of egocentric statistics for undirected networks, reproduced from Krivitsky and Morris (2017). $x _ {i,k}$ may be a dummy variable indicating $i$'s membership in a particular exogenously defined group. $h_{k}(e_i)$ that sum over ties are halved because each tie is observed egocentrically twice: once at each end. \label{tab:egostats}
+
+| Statistic                                         | $g_{k}( y,x)$                                                  | $h _ {k}(e_i)$                                                 |
+|:------------------------------------------------------------- | :---------------------------------: | :---------------------------------: |
+| General sum over ties                             | $\sum _ {(i,j)\in y} f _ k(x _ i,x _ j)$                        | $\frac{1}{2}\sum _ {j'\in e^\text{a} _ i} f _ k\big(e^\text{e}_i,e^\text{a}_{i,j'}\big)$                   |
+| Number of ties in the network                     | $\lvert  y \rvert\equiv \sum _ {(i,j) \in  y} 1$                              | $\frac{1}{2}\lvert e^\text{a}_{i}\rvert$                                                              |
+| \quad weighted by actor covariate $x _ {i,k}$ | $\sum _ {(i,j) \in  y} (x _ {i,k}+x _ {j,k})$                   | $\frac{1}{2} \big(e^\text{e}_{i,k} \lvert e^\text{a}_{i}\rvert + \sum _ {j'\in e^\text{a} _ i} e^\text{a}_{i,j',k} \big)$ |
+| \quad weighted by difference in $x _ {i,k}$   | $\sum _ {(i,j) \in  y} \lvert x _ {i,k}-x _ {j,k}\rvert$               | $\frac{1}{2}\sum _ {j'\in e^\text{a} _ i} \lvert e^\text{e}_{i,k}-e^\text{a}_{i,j',k}\rvert$                     |
+| \quad within groups identified by $x _ {i,k}$ | $\sum _ {(i,j) \in  y} 1_{x _ {i,k}=x _ {j,k}}$              | $\frac{1}{2}\sum _ {j'\in e^\text{a} _ i} 1_{ e^\text{e}_{i,k}= e^\text{a}_{i,j',k}}$                  |
+| General sum over actors                           | $\sum _ {i\in N} f _ k\big\{x _ {i},(x _ j) _ {j\in y_{i}}\big\}$ | $f _ k\big(e^\text{e}_i,e^\text{a}_{i}\big)$                                                 |
+| Number of actors with $d$ neighbors               | $\sum _ {i\in N} 1_{\lvert  y_{i}\rvert=d}$                                | $1_{\lvert e^\text{a}_{i}\rvert=d}$                                                          |
+| \quad weighted by actor covariate $x _ {i,k}$ | $\sum _ {i\in N} x _ {i,k} 1_{\lvert  y_{i}\rvert=d}$                  | $e^\text{e}_{i,k}1_{\lvert e^\text{a}_{i}\rvert=d}$                                                |
 
 [^1]:
 This does not mean that the mean degree  itself cannot be estimated from egocentric data, only that our inferential results might not apply.
@@ -513,69 +453,39 @@ This does not mean that the mean degree  itself cannot be estimated from egocent
  
 ### 4b. Theoretical basis for inference
 
-The framework for inference relies on two basic properties of  exponential family models:
+The framework for inference relies on two basic properties of 
+exponential family models:
 
 * For MLEs, the expected value of a sufficient statistic ($g(y,x)$) in the model is equal to its observed value.
 
 * The MLE is a smooth function of the sufficient statistic, and is defined for "in between" values of the statistics as well (e.g., fractional edges).
 
-MLE's for exponential family models *uniquely* maximize the probability of the observed statistics under the model (the "likelihood").  Any network with the same observed statistics will have the same probability.
+MLE's uniquely maximize the probability of the observed statistics under the model, and any network with the same observed statistics will have the same probability.
 
-Egocentric inference involves two steps: estimating the sufficient statistics $g(y)$, and then using these to estimate the ERGM coefficients $\theta$.
+Design-based estimation of ERGMs is done in three steps:
 
-#### 4.b1.  Preliminaries:  The scaling assumption for design based inference of the sufficient statistics
-
-With an egocentric sample, we don't observe these sufficient statistics, we observe a *sampled* version of them.
-So the first question is how the sample statistics scale up to the population level.  If we know this, then we can
-estimate the population level sufficient statistics.
-
-A natural scaling assumption for dyadic independent statistics is
-that they scale on a *per capita* basis, i.e., that the mean degree (degree *per capita*) stays constant as the network size changes.
-$$
-\text{Mean Degree} = \frac{2\times\text{ties}}{\text{nodes}} = \frac{2T}{n}
-$$
-For example, if a network of 5 people has 10 ties, the mean degree (degree *per capita*) is $\frac{2*ties}{nodes} = \frac{20}{5} = 4$,
-so we would expect a network of 20 people to have 
-$\frac{20*4}{2} = 40$ ties.  
-As with everything network, things are more complicated for
-dyad-dependent statistics.  We will not cover the scaling for dyad-dependent statistics in this workshop, but if you are
-interested see [Krivtsky and Kolaczyk (2015)](https://projecteuclid.org/euclid.ss/1433341477).
-
-This type of estimate can easily be adapted to handle sample weights.
-
-With this assumption, we can use a simple "design-based" 
-estimator to estimate the sufficient statistics for our models from the observednsampled network statistics.  
-
-#### 4.b2  Estimation and Inference for ERGMs from egocentric data
-
-In a nutshell:
-
-1. Estimate the ERGM's sufficient statistics using a "design-based" estimater that relies on the *per capita* scaling assumption
-$$g(y,x)\approx \tilde{g}(e _ S)=\frac{|N|}{|S|} \textstyle\sum_{i\in S} h _ {k}(e _ i).$$
-  * This is an estimate for a population total, so it is consistent and asymptotically normal (by the CLT).
-	* We can estimate its variance as we would the variance of a mean.
-
+1. Estimate the ERGM's sufficient statistics $$g(y,x)\approx \tilde{g}(e _ S)=\frac{|N|}{|S|} \textstyle\sum_{i\in S} h _ {k}(e _ i).$$
+    * This is an estimate for a population total, so it's consistent, asymptotically normal (by the CLT).
+	* We can estimate its variance as we would a variance of a mean.
 2. Fit the ERGM by finding $\hat{\theta}$ that corresponds to (that is, produces) $\tilde{g}(e _ S)$.
     * It exists because of ERGM's properties.
-
 3. Use Delta Method to transfer properties of $\tilde{g}(e _ S)$ to $\hat{\theta}$.
     * We can do this, because MLE is a smooth function of $g(y,x)$.
 
-This approch allow us to use
+Together, these allow us to use
 any statistics that can be observed in an egocentric sample as a term in an
-ERG model, estimate the model from a complete *pseudo-network* that has 
-the appropriately scaled sufficient statistics, and test
-the coefficients for statistical significance.  With
-the fitted model, we can also simulate networks that
-we know will be centered on the (scaled)
-joint distribution of the observed statistics.
+ERG model, to estimate the model from a complete pseudo-network that has 
+the same (or appropriately scaled) sufficient statistics,
+and the networks simulated from the fitted model will be centered on the (scaled)
+observed statistics.
 
 
 
-#### 4b3. Practical issues
+#### 4b1. Practical issues
 
 In practice, egocentric sample statistics generally need to be 
-adjusted for network size and some types of observable discrepancies. 
+adjusted for network size and some
+types of observable discrepancies. 
 
 ##### Network Size
 
@@ -584,84 +494,75 @@ obvious way that egocentric estimation differs
 from a standard ERGM estimation on a completely observed
 network.  With a network census, the network size is known;
 by contrast, with a network sample, we don't typically know the size of the network from
-which it is drawn.  However, if the egos are a
-random sample from the population, and the network
+which it is drawn.  However, if the
 statistics we observe in the sample scale in a known way with network size, then
-we can adjust for this in the estimation.  The resulting parameter estimates will be "size invariant".
+we can adjust for this in the estimation, and the resulting parameter estimates
+(with the exception of the edges term) will be "size invariant".
 
 Here we will follow Krivitsky, Handcock, and Morris (2011), who showed that one can
-obtain a *per capita* size invariant parameterization for dyad-independent
+obtain a "per capita" size invariant parameterization for dyad-independent
 statistics by using an offset, approximately equal to $-\log(n)$, where $n$ is
-the number of nodes in the network.  
-
-****
-
-A term with a known coefficient in statistical modeling is called an "offset".  In this case the coefficient on the $-\log(n)$ offset is 1.
-
-****
-
-The intuition
-is that this transforms the density-based parameterization 
-that is the default scale for ERGMs (ties per dyad) into a mean degree-based parameterization
+the number of nodes in the network.  The intuition
+is that this transforms the density-based parameterization (ties per dyad) 
+that is the natural scale for ERGMs into a mean degree-based parameterization
 (ties per node):
-
+$$
+\text{Mean Degree} = \frac{2\times\text{ties}}{\text{nodes}} = \frac{2T}{n}
+$$
 $$
 \text{Density} = \frac{\text{ties}}{\text{dyads}} = \frac{T}{\frac{n(n-1)}{2}} = \frac{\text{Mean Degree}}{(n-1)}
 $$
 
 Once the number of edges is adjusted to preserve the mean degree, Krivitsky et al. show that all of the dyad
 independent terms are properly scaled.  For degree-based terms, we would want, by
-analogy, for per capita invariance to preserve the degree probability distribution.
+analogy, for per capita invariance to preserve the degree probability distribution.  
 Experimental results suggest that the mean-degree preserving offset has this
 property, but a mathematical proof is elusive.
 
 ##### Observable discrepancies
 
-In the population level network, the number of ties between groups must balance:  the number
-of undirected ties between group 1 and group 2 is the same as between group 2 and group 1, 
-because we observe the group attribute of each node for every tie.  
-
-In an egocentrically
-sampled network, this equality is no longer guaranteed. Sampling variability and measurement error can both lead to discrepancies: tie subtotals that are 
+What we mean by discrepancy is: undirected tie subtotals that are 
 required to balance in theory,
-but are observed not to balance in the sample.  
+but are observed not to balance in the sample.  This can happen when ties are
+broken down by nodal attributes, and the number of ties that group 1 reports
+to group 2 are not equal to the number that group 2 reports to group 1.  
 
-This is another unique feature of egocentrically sampled network data.    
+This is another unique feature of egocentrically sampled network data.  With
+a network census, you would have the complete edgelist, with the appropriate
+nodal attributes for each member of the dyad, so the reports would always
+balance.  For an egocentrically sampled
+network, and even for an egocentric census, a discrepancy can arise, either
+from sampling variability, or from measurement error.  
 
-In `ergm.ego`, *we assume that any discrepancy is due to sampling variation*, 
-and effectively take the average of the discrepant reports to estimate
+In `ergm.ego`, *we assume that any discrepancy is due to sampling variation*, and effectively take the average of the discrepant reports to estimate
 the number of ties for that ego-alter tie configuration.  If you know the 
-source of the discrepancy in your specific dataset, or want to make a different assumption
+source of the discrepancy, or want to make a different assumption
 you may want to address this before fitting the data in `ergm.ego`.
 
 ##### Constructing the egocentric **target statistics**
 
 Now that we have a simple way to construct a consistent set of egocentric statistics
-and implement a size-invariant parameterization, we can set up the *target statistics* needed
-for the ERGM estimation.  In many applications, the population size is in the millions.  Therefore, we use *per capita* scaling to
-limit the size of the network we use for estimation, and increase the speed and
-efficiency of the process.
+and implement a size-invariant parameterization, we can set up the *target statistics*
+for the ERGM estimation: instead of using $|N|$ we use $|N'|$.
 
-We first scale the sample statistics to a *pseudo-population* size $|N'|$.
 The resulting values are the target statistics that we pass to `ergm`.
-We can then fit whe model with an offset of $-\log(|N'|)$, which will return
+
+If we wanted to obtain population estimates from `ergm.ego` for a population
+with a known size $N$, we would fit the model with an
+offset of $\log(N/{N'})=\log(N) - \log(N')$.  In general, however, we do not know $N$.  So we often
+fit with an offset of $-\log(N')$, which will return
 the per capita estimates that can
 be easily rescaled to any value for simulation purposes.
 
-Note that if we want to obtain population estimates from `ergm.ego` for a population
-with a known size $|N|$, we can fit the model with an
-offset of $\log(|N|/{|N'|})=\log(|N|) - \log(|N'|)$.  This is what the parameters *would have been* had we fit the ERGM to the population of size $|N|$.
-
-
-#### 4b4. Inference:  Estimating the standard errors of the ERGM coefficients
+#### 4b2. Inference:  Estimating the standard errors of the ERGM coefficients
 
 The standard errors for coefficients in an `ergm.ego` fit are designed to represent the
 uncertainty in our estimate.  For ERGMs, this uncertainty can be thought of as
 coming from three possible sources:
 
-1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
-2. The sampling process of egos: What other samples _could_ have been drawn? 
-3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
+* 1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
+* 2. The sampling process of egos: What other samples _could_ have been drawn? 
+* 3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
 
 Most treatments of ERGM estimation treat the coefficient
 $\theta$ as a parameter of a superpopulation process 
@@ -687,14 +588,14 @@ for egocentrically sampled data.
 
 To get a list of documented functions, type:
 
-```{r eval=FALSE}
-help(package="ergm.ego")
+```{r,eval=FALSE}
+library(help='ergm.ego')
 ```
 
 The main `R` objects unique to `ergm.ego` are:
 
 
-* `egodata` objects for storing the original data (the analog to `network` objects in `ergm`), 
+* `egor` objects for storing the original data (the analog to `network` objects in `ergm`), 
 * `ergm.ego` objects, which store the model fit results (the analog to `ergm` objects in `ergm`).  
 
 Once you simulate from the fit, the resulting objects are just `network` objects.
@@ -702,76 +603,81 @@ Once you simulate from the fit, the resulting objects are just `network` objects
 The set of functions can be divided into groups as follows:
 
 
-### 5a. Data construction and manipulation:   `egodata` objects and their related functions
+### 5a. Data construction and manipulation:   `egor` objects and their related functions
 
+An `egor` object comprises a `tibble` (a data frame with slightly different behavior), each of whose rows represents an ego, and which has a special column, `.alts`, containing more `tibble`s with alters and alter attributes. (Another column, `.aaties`, contains alter--alter nominations; its format is subject to change.)
 
-The primary data construction function is `as.egodata`.  This function will transform data stored in other formats into an `egodata` object that can be used for analysis.  The two format conversions currently supported include:
+It also has attributes `ego.design`, a `survey.design` object specifying how the egos were selected and `alter.design`, a list specifying things like maximum numbers of alters.
 
-**R** data frames
+`egor` objects can be constructed from
+
+R data frames (`egor()`)
 : This is the method used to read in data from an egocentric sample.
-: * a data frame containing information on egos, which must include a column for unique ego IDs (defaulting to `egoID`)
 : * a data frame containing information on alters, which also must have the ego ID column for the ego who nominated them
-: * optionally, a vector of length equal to the number of egos, containing their sampling weights
+: * optionally, arguments to `svydesign()` function from the `survey` package, specifying the go design
 
-`network` objects
+`CSV` files (`read.*()`)
+: `egor` package has utilities for loading egocentric data from a variety of formats; currently buggy
+
+`network` objects (`as.egor()`)
 : The function will create an egocentric census from an existing network. Mostly used for testing and pedagogical purposes.
 
+`egodata` objects (`as.egor()`)
+: `egodata` is deprecated, so only a method to convert `egodata` objects to `egor` exists.
 
-The `as.network` method for `egodata` will transform an egodata 
+
+The `as.network` method for `egor` will transform an egor 
 object into a network object
 with a target number of nodes and no edges.  The nodes will have the 
 attributes of the egos in the dataset, replicating the egos as needed, 
 and taking into account their sampling weights.
 
-Functions for querying 'egodata' objects include:
 
-* `dim` -- the number of egos, and the number of columns in the 'egos' table
-and the 'alters' table.
-* `nrow` -- the number of egos
-* `dimnames` -- the `egoIDs`, and the column names in the 'egos' table and the 'alters' table.
+Querying `egor` objects
 
-Functions for extracting subsets from 'egodata' objects include:
+`egor` is just a fancy data frame, so standard indexing and subsetting Just Works (TM).
 
-* `head` --- first few rows of each component of `egodata` 
-* `sample` -- a `sample` method for `egodata` object with the target number of egos
-* `subset` -- allows you to define a condition for the subset of egos to choose, 
-and which columns of the `egos` and `alters` tables to select.
+Some special methods are also implemented
+
+* `sample` -- a `sample` method for `egor` object with the target number of egos
+* `subset` -- allows you to define a condition for the subset of egos, alters, or alter--alter ties to choose
 * `na.omit` -- returns an `egodata` object without NAs in their 
 (or their alter's) columns
-
-
+* `ego.design` can be used to query or set the sampling design.
+* `alter.design` can be used to query or set the alter selection information.
 
 ### 5b. Model terms available for ergm.ego
 
 As with ERGM terms, terms in `ergm.ego` are coded as functions in **R**.  The possible
 terms in an `ergm.ego` model are inherently limited to the egocentric ones: statistics that can be inferred from an egocentric sample.  In general, these will include variants on nodal covariate
-terms, mixing terms, and degree distribution terms.  The terms actually available
+terms, mixing terms, and degree distribution terms, and triadic terms.  The terms actually available
 in `ergm.ego` are limited in addition to those that have been coded up.  At this
-point this is a small subset (n=11) of the terms currently available for `ergm`,
+point this is a small subset (n=14) of the terms currently available for `ergm`,
 but they have the same names and arguments as their `ergm` counterparts.
 
 For a list of terms currently included in the ergm.ego, type:
 
-```{r eval=FALSE}
+```{r,eval=FALSE}
 help('ergm.ego-terms')
 ```
 
 Dyad independent terms include density and vertex attribute based measures:
 
-* Density:  `edges`
-* Vertex attribute effects:  `nodefactor` (for discrete/nominal vars) and `nodecov` (for continuous)
-* Homophily:  `nodematch` (for homophily), `nodemix` (for general mixing patterns) and `absdiff`
+* Density:  edges
+* Vertex attribute effects:  nodefactor (for discrete/nominal vars) and nodecov (for continuous)
+* Homophily:  nodematch (for homophily), nodemix (for general mixing patterns) and absdiff
 
 Dyad dependent terms include degree-based measures:
 
-* Degree: `degree`, `degrange` and `degreepopularity`
-* Concurrency: `concurrent` and `concurrentties`
+* Degree: degree, degrange, gwdegree, and degreepopularity
+* Concurrency: concurrent and concurrentties
 
+Triadic terms include, `esp`, `gwesp`, `transitiveties` and `cyclicalties`, but only if alter--alter ties have been observed.
 
 
 ### 5c. ERG Model-related functions
 
-There are four current functions, each mimics the equivalent function in `ergm`
+There are three current functions, each mimics the equivalent function in `ergm`
 
 Function    | Purpose
 ----------- | -----------------------------------------------------------------
@@ -782,7 +688,7 @@ Function    | Purpose
 
 ### 5d. Simulation related functions
 
-There are two current functions, again mimicking the equivalent function in `ergm`
+There are two current functions, again mimicking the equivalent function in `ergm'
 
 Function    | Purpose
 ----------- | -----------------------------------------------------------------
@@ -802,6 +708,19 @@ from `ergm.ego` and `ergm`.
 
 Preliminaries:
 
+```{r}
+library(ergm.ego)
+```
+
+
+Check package versions
+
+
+```{r,eval=FALSE}
+sessionInfo()
+```
+
+
 Set seed for simulations -- this is not necessary, but it ensures that we all get the same results (if we execute the same commands in the same order).
 
 ```{r cache=FALSE}
@@ -809,7 +728,9 @@ set.seed(1)
 ```
 
 
-### 6a. Reading in Data
+### 6a. The `egodata` object
+
+We'll start by using one of the built-in datasets in the `ergm` package, and transform it to an `egodata` object so we can see what that looks like.
 
 Start by creating a network object from the faux.mesa.high data:
 
@@ -828,31 +749,66 @@ legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 Now, let's turn this into an egodata object:
 
 ```{r}
-mesa.ego <- as.egodata(mesa) # Generates warning because there are no vertex IDs.
+mesa.ego <- as.egor(mesa) 
 ```
 
 Take a look at this object -- there are several ways to do this:
 
 ```{r}
-str(mesa.ego)
-summary(mesa.ego)
-head(mesa.ego$egos)
-head(mesa.ego$alters)
+names(mesa.ego) # what are the components of this object?
+mesa.ego # prints a few lines for each component
+View(mesa.ego) # opens the component in the Rstudio source window
+class(mesa.ego) # what type of "object" is this?
+
 ```
 
-Note that the ego table contains the `egoID`, and the nodal attributes Race, Grade and Sex.
-The alter table also contains the `egoID`, an equivalent set of nodal attributes.
-The `egoID` column is used by functions that know how to work with `egodata` objects
-to match alters to the ego that nominated them.  The alters
-do not have unique IDs (because we do not know if they are unique).
-
-
-So that you get a chance to read in egodata from a .csv file, let's write out the
-ego and alter tables, and then read them back in to create an egodata object:
+Each of the components of the egodata object is a simple table, or data.frame.
 
 ```{r}
-write.csv(mesa.ego$egos, file="mesa.ego.table.csv", row.names=FALSE)
-write.csv(mesa.ego$alters, file="mesa.alter.table.csv", row.names=FALSE)
+class(mesa.ego$ego) # and what type of objects are the components?
+class(mesa.ego$alter)
+class(mesa.ego$aatie)
+```
+The ego table contains the ego ID (`.egoID`), and the nodal attributes Race, Grade and Sex.  This is equivalent to a standard person-based survey sample flat file format.
+
+```{r}
+mesa.ego$ego # first few rows of the ego table
+```
+
+
+The alter table is a type of edgelist: it lists the edges for each ego.  It contains the alter ID (`.alt`), the corresponding ego ID, and a set of alter nodal attributes.  Note that this is a slightly different data structure than a standard network edgelist.  
+
+* The standard network edgelist contains one unique record for each edge; both ego and alter ID may appear more than once (depending on their degree), but the link is only represented once.  
+
+* The alter table in this `egodata` object is a different type of edgelist, as it is "egocentric."  When derived from a network census, as we did above, each tie will be represented *twice*: once with the first node as the ego, and once with the other node as the ego.  As a result, the number of times alters will appear in the `.altID` list is equal to their degree, as is the number of times their ID will appear in the `.egoID` list.  When the alter table is derived from an egocentric *sample* of a network, it is likely that each tie will only be represented once, unless some of the alters are sampled as egos.  When the sampling fraction is small (e.g., for the General Social Survey friendship network data), it is very unlikely that alters will be sampled.
+
+```{r}
+mesa.ego$alter # first few rows of the alter table
+
+# ties show up twice, but alter info is linked to .altID
+mesa.ego$alter %>% filter((.altID==1 & .egoID==25) | (.egoID==1 & .altID==25))
+```
+
+The aatie table lists the egoID, and the IDs of the two alters that have tie.  The alters are distinguished as `.srcID` and `.tgtID` to allow for the possibility of directed tie data.  In the case of undirected tie data, as we have here, each alter-alter tie will be represented twice, just swapping the target and source IDs.
+
+```{r}
+mesa.ego$aatie # first few rows of the alter table
+```
+
+#### Reading in data
+
+Since the egodata tables are simple rectangular matrices, it's easy to read in external data and use it to construct an egodata object.  You just need to make sure that the structure of the external file is consistent with the structure of the tables we looked at above.
+
+To demonstrate we will construct an egodata object derived our `mesa.ego` data that has the features of an egocentrically sampled data set: the alters are not uniquely identified.
+
+First, we write out the first two tables in our `mesa.ego` into external datafiles, deleting the `.altID` from the alter file.
+
+```{r}
+# egos
+write.csv(mesa.ego$ego, file="mesa.ego.table.csv", row.names = F)
+
+# alters
+write.csv(mesa.ego$alter[,-1], file="mesa.alter.table.csv", row.names = F)
 ```
 
 Now read them back in:
@@ -860,20 +816,23 @@ Now read them back in:
 ```{r}
 mesa.egos <- read.csv("mesa.ego.table.csv")
 head(mesa.egos)
-mesa.alters <- read.csv("mesa.alter.table.csv")
-head(mesa.alters)
+mesa.alts <- read.csv("mesa.alter.table.csv")
+head(mesa.alts)
 ```
 
-And to create an `egodata` object from them, we use the *as.egodata* function:
+To create an egodata object from data frames, we use the `egor()` function:
 
 ```{r}
-test <- as.egodata(mesa.egos,alters=mesa.alters,egoIDcol="egoID")
-head(test$egos)
-head(test$alters)
+my.egodata <- egor(egos = mesa.egos, 
+                   alters = mesa.alts, 
+                   ID.vars = list(ego = ".egoID"))
+my.egodata
 ```
 
+Note how the alter data no longer have a unique alter identifier.
+
 We will explore some of the other functions available for manipulating the
-`egodata` object in a later section.
+`egor` object in a later section.
 
 
 ### 6b. Exploratory data analysis with `ergm.ego`
@@ -885,51 +844,63 @@ observable statistics are the same as those that `ergm.ego` can estimate.
 We can use standard **R** commands to view nodal attribute frequencies:
 
 ```{r}
-table(mesa.ego$egos$Sex, exclude=NULL)
-table(mesa.ego$egos$Race, exclude=NULL)
-barplot(table(mesa.ego$egos$Grade), 
-        main="Mesa Grade Distribution", ylab="frequency")
+# to reduce typing, we'll pull the ego and alter data frames
+egos <- mesa.ego$ego
+alters <- mesa.ego$alter
+
+table(egos$Sex, exclude=NULL)
+table(egos$Race, exclude=NULL)
+barplot(table(egos$Grade), ylab="frequency")
 
 # compare egos and alters...
 
 par(mfrow=c(1,2))
-barplot(table(mesa.ego$egos$Race, exclude=NULL)/nrow(mesa.ego$egos),
+barplot(table(egos$Race)/nrow(egos),
         main="Ego Race Distn", ylab="percent",
         ylim = c(0,0.5))
-barplot(table(mesa.ego$alters$Race, exclude=NULL)/nrow(mesa.ego$alters),
+barplot(table(alters$Race)/nrow(alters),
         main="Alter Race Distn", ylab="percent",
         ylim = c(0,0.5))
 ```
 
-To look at the mixing matrix, we use the same function we would use in `ergm`:  `mixingmatrix`.  
-The function will return either the crosstabulation
-of the counts of ties by the attribute selected, or the conditional row probabilities.
+To look at the mixing matrix, we'll use the
+`mixingmatrix()` function on the egodata object, and  
+we'll compare the output to what we would get from using this
+function on the original network object.
+
+Note how the ties on the diagonal are counted twice in the `ergm.ego` data, compared with the original network data, but the off-diagonal tie counts are the same.  Note also, though, that these off-diagonal counts are symmetric, because this is undirected data.  So, in both cases, the off-diagonal ties are actually being counted twice (once above and once below the diagonal), but in the original network version, the ties on the diagonal are only counted once.
 
 ```{r}
 # to get the crosstabulated counts of ties:
-
 mixingmatrix(mesa.ego,"Grade")
 
 # contrast with the original network crosstab:
-
 mixingmatrix(mesa, "Grade")
 
+```
+
+You can also use this function to calculate the row probabilities of the mixing matrix:
+
+```{r}
 # to get the row conditional probabilities:
 
-round(mixingmatrix(mesa.ego, "Grade", rowprob=T),3)
-round(mixingmatrix(mesa.ego, "Race", rowprob=T),3)
+round(mixingmatrix(mesa.ego, "Grade", rowprob=T), 2)
+round(mixingmatrix(mesa.ego, "Race", rowprob=T), 2)
 ```
 
 We can also examine the observed number of ties, 
-mean degree, and degree
-distributions.
+mean degree, and degree distributions.  
 
 ```{r}
-# ties
-nrow(mesa.ego$alters)
+# first, using the original network
+network.edgecount(faux.mesa.high)
 
-# mean degree
-nrow(mesa.ego$alters)/nrow(mesa.ego$egos)
+# compare to the egodata
+# note that the ties are double counted, so we need to divide by 2.
+nrow(mesa.ego$alter)/2
+
+# mean degree -- here we want to count each "stub", so we don't divide by 2
+nrow(mesa.ego$alter)/nrow(mesa.ego$ego)
 
 
 # overall degree distribution
@@ -942,7 +913,7 @@ summary(mesa.ego ~ degree(0:13, by="Sex"))
 For the degree distribution we used
 the`summary`function in the same way that we would use it in 
 `ergm` with a `network` object.
-But the summary function also has an egodata 
+But the summary function also has an `egor` 
 specific argument, `scaleto`, that
 allows you to scale the summary statistics 
 to a network of arbitrary size.
@@ -951,7 +922,7 @@ of size 100,000, or a network that is 100 times larger than the sample.
 
 ```{r}
 summary(mesa.ego ~ degree(0:10), scaleto=100000)
-summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego$egos)*100)
+summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego)*100)
 
 ```
 
@@ -963,8 +934,9 @@ statistics that expect integer values.  The second scaling does result in intege
 counts because it is a multiple of the sample size.
 
 We can plot the degree distribution
-using another generic function `degreedist`.  As with the `mixingmatrix` function, 
-this can return either the counts or the proportions at each degree.
+using another `egodata` specific function:
+`degreedist`.  As with the `mixingmatrix` function, this can return either
+the counts or the proportions at each degree.
 
 ```{r}
 # to get the frequency counts
@@ -977,7 +949,7 @@ degreedist(mesa.ego, by="Sex")
 degreedist(mesa.ego, by="Sex", prob=T)
 ```
 
-The `degreedist` function also has an argument that lets you overplot the expected
+The `degreedist` method for `egor` also has an argument that lets you overplot the expected
 degree distribution for a Bernoulli random graph with the same expected density.
 
 ```{r}
@@ -1013,41 +985,42 @@ and GOF.
 
 
 One thing that is different from a standard `ergm` call is that we need
-to specify the scaling, both for  
-the *population (N)* size for the model estimates, and for the *pseudo-population ($N'$)* that will be
-used to set the target statistics during estimation. Recall,
+to specify the scaling, both for the *pseudo-population ($N'$)* that will be
+used to set the target statistics during estimation, 
+and for the *population (N)* size that the final
+rescaled coefficients will represent. Recall,
 
-* Population size $(|N|)$ : This determines the size
-of the network that the fitted model parameters represent.  If we wanted to scale the final parameter estimates to reproduce
-the expected values of the network statistics in the true population network, we would need to know $N$, the
-size of the popuation.  In general, we do not know $N$, so the most useful
-scaling is a per capita scaling, where $|N|=1$.  
-This value can easily be changed to another value
-of $|N|$ later (for simulation, or other purposes).   In `ergm.ego`, it is controlled by the `popsize` top-level argument.  
+Population size $(|N|)$
+: If we wanted to rescale the final estimates to reproduce
+the expected values in the true population network, we would need to know $N$, the
+size of the popuation.  In general, we do not know this, so the most useful
+scaling is a per capita scaling, which can easily be transformed into any value
+of $|N|$ later (for simulation, or other purposes).  For per capita scaling, $|N|=1$. In `ergm.ego`, it is controlled by the `popsize` top-level argument.
 
 
-* Pseudo-population size $(|N'|)$: This determines the population size used during the estimation process.  The target statistics can
-be scaled to an arbitrary population size for estimation
-purposes.  So, what size should we use?
+Pseudo-population $(|N'|)$
+: Recall from above that the target statistics can
+be scaled to an arbitrary population size for estimation.  What size should we use?
 Several principles guide this choice:
 
-  * *Bias* -- In general, estimation bias is reduced 
+* *Bias* -- In general, estimation bias is reduced 
 the closer $N'$ is to $N$ (usually larger).
 
-  * *Computing time* -- The larger the pseudo-population, 
+* *Computing time* -- The larger the pseudo-population, 
 the longer the estimation takes.
 
-  * *Sample weights* -- In general, it is good practice for the
+* *Sample weights* -- In general, it is good practice for the
 smallest sample weight to produce at least 1 observation in the 
 pseudo-population network, though more is better.
 
 This leads to different guidelines for data with and without weights.
+
 Simulation studies in Krivitsky & Morris (2017) suggest that a good rule of thumb
 is to have a minimum pseudo-population size of 1,000 for unweighted data.  For
 weighted data the pseudo-populations size should be at least
 1 * sampleSize/smallestWeight (or 3 * sampleSize/smallestWeight to be safe), or 1000 (whichever is larger).
 
-In `ergm.ego`, the `ppopsize` $|N'|$ is controlled by a combination of four factors:
+In `ergm.ego`, $|N'|$ is controlled by a combination of four factors:
 
 * the sample size $|S|$ (i.e., number of egos),
 * the top-level argument `popsize` ($|N|$ or 1) (default: 1),
@@ -1056,14 +1029,14 @@ In `ergm.ego`, the `ppopsize` $|N'|$ is controlled by a combination of four fact
 
 If `ppopsize` is left at its default (`"auto"`),
 
-* If `popsize` is left at 1, `ppopsize` $=|S|\times$`ppopsize.mul`.
-* If `popsize` is specified (as |N|), `ppopsize` $=|N|\times$`ppopsize.mul`.
+* If `popsize` is left at 1, $|S|\times$`ppopsize.mul`.
+* If `popsize` is specified, use $|N|\times$`ppopsize.mul`.
 
 You can also force one of these two regimes by setting `ppopsize` to `"samp"` or `"pop"`, respectively, or set it to a number to force a particular $|N'|$ ignoring `ppopsize.mul`.
 
 For more information, see
 
-```{r eval=FALSE}
+```{r}
 ?control.ergm.ego
 ```
 
@@ -1076,7 +1049,7 @@ term, and we will demonstrate this below.
 Let's start with simple edges-only model to see what's the same and what
 is different from a call to `ergm`:
 
-```{r message=SHOW_MSG}
+```{r}
 fit.edges <- ergm.ego(mesa.ego ~ edges)
 summary(fit.edges)
 ```
@@ -1103,7 +1076,7 @@ size, or number of egos), and `popsize`$= 1$,
 so the scaling returns the per capita estimates from
 the model parameters.
 
-The summary shows the `netsize.adj` = `r -log(205)`, which is $-\log(205)$.
+The summary shows the `netsize.adj`$= `r -log(205)`, which is $-\log(205)$.
 
 The summary function also reports that:
 ```
@@ -1180,7 +1153,7 @@ degree distribution assessment.
 ```{r cache=FALSE}
 set.seed(1)
 ```
-```{r message=SHOW_MSG}
+```{r}
 fit.deg0 <- ergm.ego(mesa.ego ~ edges + degree(0), control=control.ergm.ego(ppopsize=1000))
 summary(fit.deg0)
 ```
@@ -1196,17 +1169,12 @@ So, we've now fit the isolates exactly, and the fit is better,
 but this now suggests there are more nodes with just one tie than
 would be expected, given the mean degree, and the number of isolates.
 
-And just to round things off, let's fit a relatively large model.  Note that
-we specify the omitted group for the Race nodefactor term with the `levels`
-argument.  In general, it's a good idea to omit the largest group, so that the comparisons have a robust base.  That's group "2" here, Hispanics.
+And just to round things off, let's fit a relatively large model
 
-```{r cache=FALSE}
-set.seed(1)
-```
-```{r, message=SHOW_MSG}
+```{r}
 fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1) 
                       + nodefactor("Sex")
-                      + nodefactor("Race", levels=-2)
+                      + nodefactor("Race", base=2)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 summary(fit.full)
@@ -1238,22 +1206,17 @@ results -- but it is also possible to simulate complete networks from this fit:
 
 ```{r}
 sim.full <- simulate(fit.full)
+summary(mesa.ego ~ edges + degree(0:1)
+                      + nodefactor("Sex")
+                      + nodefactor("Race", base=2)
+                      + nodefactor("Grade")
+                      + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
-# compare values of the observed to the simulated statistics
-cbind( original = summary(mesa ~ edges + degree(0:1)
-                          + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                          + nodematch("Sex") + nodematch("Race") + nodematch("Grade")),
-       simulated = summary(sim.full ~ edges + degree(0:1)
-                           + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                           + nodematch("Sex") + nodematch("Race") + nodematch("Grade")),
-       difference = summary(mesa ~ edges + degree(0:1)
-                            + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                            + nodematch("Sex") + nodematch("Race") + nodematch("Grade")) -
-                    summary(sim.full ~ edges + degree(0:1)
-                            + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                            + nodematch("Sex") + nodematch("Race") + nodematch("Grade")))
-
-# eyeball the plot of the simulated data
+summary(sim.full ~ edges + degree(0:1)
+                      + nodefactor("Sex")
+                      + nodefactor("Race", base=2)
+                      + nodefactor("Grade")
+                      + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 plot(sim.full, vertex.col="Grade")
 legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 ```
@@ -1262,19 +1225,17 @@ We can use network size invariance to simulate networks of a different size, alb
 
 ```{r}
 sim.full2 <- simulate(fit.full, popsize=network.size(mesa)*2)
+summary(mesa~edges + degree(0:1)
+                      + nodefactor("Sex")
+                      + nodefactor("Race", base=2)
+                      + nodefactor("Grade")
+                      + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))*2
 
-cbind( original = summary(mesa ~ edges + degree(0:1)
-                          + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                          + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))*2,
-       simulated = summary(sim.full2 ~ edges + degree(0:1)
-                           + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                           + nodematch("Sex") + nodematch("Race") + nodematch("Grade")),
-       difference = summary(mesa ~ edges + degree(0:1)
-                            + nodefactor("Sex") + nodefactor("Race", levels=-2) + nodefactor("Grade")
-                            + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))*2 -
-                    summary(sim.full2 ~ edges + degree(0:1)
-                            + nodefactor("Sex") + nodefactor("Race", levels=-2)
-                            + nodefactor("Grade") + nodematch("Sex") + nodematch("Race") + nodematch("Grade")))
+summary(sim.full2~edges + degree(0:1)
+                      + nodefactor("Sex")
+                      + nodefactor("Race", base=2)
+                      + nodefactor("Grade")
+                      + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
 ```
 
@@ -1308,273 +1269,156 @@ faux.magnolia.high -> fmh
 (N <- network.size(fmh))
 ```
 
-Let's start by fitting an ERGM to the complete network, and looking at the coefficients.  We're going to use a model without any
-triadic terms, because we want to be able to compare these results to results from egocentrically sampled versions of these data.
-And, we'll again use the largest race group as the reference level -- in this case White (level 6).
+Let's start by fitting an ERGM to the complete network, and looking at the coefficients:
 
-```{r, message=SHOW_MSG}
-fit.net <- ergm(fmh ~ edges+degree(0) 
-                       + nodefactor("Race", levels= -6) + nodefactor("Sex") 
-                       + nodematch("Race") + nodematch("Sex") + absdiff("Grade"))
-plot(gof(fit.net))
+```{r}
+fit.ergm <- ergm(fmh~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")
+                    +nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"))
 ```
-
-#### **Egocentric census**
 
 Now, suppose we only observe an egocentric view of the data -- as an egocentric census.
-
 With an egocentric census, it's as though we give a survey to all of the students.
 Each student nominates her friends, but does not report the name of the friend, she
-only reports their sex, race and grade. How does the fit from `ergm.ego to this
-egocentric census compare to the complete-network ERGM estimates?
+only reports their sex, race and grade. How does the fit from ergm.ego to this
+egocentric census compare to the complete-network ergm estimates?
 
-```{r, census}
-fmh.ego <- as.egodata(fmh)
+```{r}
+fmh.ego <- as.egor(fmh)
 head(fmh.ego)
+
+egofit <- ergm.ego(fmh.ego~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")
+                  +nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"), popsize=N,
+				  control=control.ergm.ego(ppopsize=N))
+
+modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) # A convendience function.
+
+# Parameters recovered:
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofit)[-1],
+                       (coef(fit.ergm)-coef(egofit)[-1])/modse(egofit)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Ego census est", 
+                             "diff Z")
+round(param.compare, 3)
 ```
-```{r, message=SHOW_MSG}
-fit.census <- ergm.ego(fmh.ego ~ edges + degree(0) 
-                   + nodefactor("Race", levels= -6) + nodefactor("Sex") 
-                   + nodematch("Race") + nodematch("Sex") + absdiff("Grade"), 
-                   popsize=N)
-summary(fit.census)
-```
-
-Let's compare the standard errors from the two fits.  Here, we will treat the 
-complete network as the true, fixed population network.  Since the data for
-the second fit is an egocentric *census*, there is no *sampling* error 
-in the sufficient statistics for the egocentric model terms.  
-The only error source of error
-in the estimation of both models
-therefore comes from the MCMC algorithm used to approximate the likelihood.
-
-To extract the MCMC error component, we use our `se.coef` function written above,
-with the argument `src = "estimation"` (see `help(vcov.ergm)` for more information).
-```{r, message=SHOW_MSG}
-# note use of se.coef function we defined up top
-se.coef.net <- se.coef(fit.net, src = "estimation")
-se.coef.census <- se.coef(fit.census, src = "estimation")[-1]
-
-se.census <- tibble::rownames_to_column(data.frame(se.coef.net))  %>%
-  left_join(tibble::rownames_to_column(data.frame(se.coef.census))) %>%
-  mutate(se.ratio = se.coef.census/se.coef.net)
-round_df(se.census, 3)
-
-```
-Both the SEs and the differences in the SEs are very small, with no discernable pattern.  If desired,
-we could reduce the difference in the SEs between the two by increasing the size of our MCMC sample. (We'll leave that as an exercise for you, but we'll move on for now.)
-
-How do the coefficient estimates compare for the two fits?
-
-```{r, message=SHOW_MSG}
-# Parameters recovered (we're using utilities from the tidyverse here)
-# Compare fit to egocentric census:
-se.diff = sqrt(se.coef.net^2 + se.coef.census^2)
-
-coefs1 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.census)))) %>%
-  mutate(Zdiff = (coef.fit.net. - coef.fit.census.)/se.diff)
-
-round_df(coefs1, 3) # note use of round_df function we defined
-```
-
-To compare the coefficient estimates, we are using a z-score
-for the difference, based on the MCMC error in each run.  While there are some
-large z-scores, the magnitude of the differences in the coefficients are quite
-small (in the second decimal place). There is again
-no discernible pattern here, and we could make the z-score for the difference arbitrarily small by increasing the size of our MCMC sample.
-
 
 Again, we can diagnose the fitted egocentric model for proper convergence.
 
 ```{r eval=FALSE}
 # MCMC diagnostics. 
-mcmc.diagnostics(fit.census)
+mcmc.diagnostics(egofit)
 ```
 ```{r eval=FALSE}
 # Check whether the model converged to the right statistics:
-plot(gof(fit.census, GOF="model"))
+plot(gof(egofit, GOF="model"))
 ```
 
 Let's check whether the fitted model can be used to reconstruct the
 degree distribution.
 
 ```{r}
-plot(gof(fit.census, GOF="degree"))
+plot(gof(egofit, GOF="degree"))
 ```
 
-#### **Egocentric sample of the same size**
-
-What if we only had an equally large sample, instead of an egocentric census?
-Here, we take a simple random sample of N students with replacement.
-
-```{r sampN, cache=FALSE}
-set.seed(1)
-```
-```{r, message=SHOW_MSG}
-fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
-fit.sampN <- ergm.ego(fmh.egosampN ~ edges + degree(0) 
-                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
-                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
-                          popsize=N)
-summary(fit.sampN)
-```
-
-The standard errors in this fit represent both MCMC estimation error and sampling error.  Let's compare them to those from the original network fit.
-
-```{r, message=SHOW_MSG}
-# this time, use the se from src=all for the sampled net
-se.coef.sampN <- se.coef(fit.sampN, src = "all")[-1]
-
-# compare the s.e.'s
-se.sampN <- tibble::rownames_to_column(data.frame(se.coef.net)) %>%
-  left_join(tibble::rownames_to_column(data.frame(se.coef.sampN))) %>%
-  mutate(se.ratio = se.coef.sampN/se.coef.net)
-
-round_df(se.sampN, 3)
-
-```
-So -- the error associated with the sampling process is quite large, relative to the MCMC estimation error, even with a sample of the same size as the original network (1461).  We can see the impact of the sampling on our race distribution -- the smaller the group, the more variable the outcome will be (e.g., the "Other" group here):
-
-```{r}
-cbind("census" = table(fmh.ego$egos$Race),
-      "sampleN" = table(fmh.egosampN$egos$Race))
-```
-
-And the coefficient estimates?
-```{r, message=SHOW_MSG}
-se.diff = sqrt(se.coef.net^2 + se.coef.sampN^2) 
-# compare the coef
-coefs2 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.sampN)))) %>%
-  mutate(Zdiff = (coef.fit.net. - coef.fit.sampN.)/se.diff)
-
-round_df(coefs2, 3) # note use of round_df function we defined
-```
-No significant differences.
-
-#### **Egocentric 25% sample**
-
-What if we have a smaller sample? If we have a 25% sample 
-(0.25*N = `r round(0.25*N)` students),
-how will our standard errors be affected?
+What if we only had a large sample, instead of an egocentric census?
+Here, we sample N students with replacement.
 
 ```{r cache=FALSE}
-set.seed(2)
+set.seed(1)
 ```
-```{r samp25, message=SHOW_MSG}
-fmh.egosamp25 <- sample(fmh.ego, round(0.25*N), replace=TRUE)
-```
-Let's take a quick look at the racial breakdown of our sample, and compare it to
-the original complete net:
 ```{r}
-cbind("census" = table(fmh.ego$egos$Race),
-      "sample25%" = table(fmh.egosamp25$egos$Race))
+fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
+egofitN <- ergm.ego(fmh.egosampN ~ edges+degree(0:3)+nodefactor("Race")
+                                 +nodematch("Race")+nodefactor("Sex")+nodematch("Sex")
+                                 +absdiff("Grade"),popsize=N)
+
+# compare the coef
+param.compare <- cbind(coef(fit.ergm), coef(egofit)[-1], coef(egofitN)[-1])
+colnames(param.compare) <- c("Full nw est", "Ego census est", "Sample N est")
+round(param.compare, 3)
+                 
+# compare the s.e.'s
+se.compare <- cbind(modse(fit.ergm), 
+                    modse(egofit)[-1], 
+                    modse(egofitN)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Ego census SE", 
+                          "Sample N SE")
+round(se.compare, 3)
 ```
 
-```{r, message=SHOW_MSG}
-fit.samp25 <- ergm.ego(fmh.egosamp25 ~ edges + degree(0) 
-                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
-                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
-                          popsize=N)
+What if we have a smaller sample? If we have a sample of $N/4=`r round(N/4)`$ students,
+How will our standard errors be affected?
 
-# this time we build the s.e. matrix first, because sampling may lead to 
-# unobserved race group(s), and check the ratios of the se's
+```{r}
+set.seed(0) # Some samples have different sets of alter levels from ego levels.
+fmh.egosampN4 <- sample(fmh.ego, round(N/4), replace=TRUE)
 
-se.coef.samp25 <- se.coef(fit.samp25, src = "all")[-1]
-
-se.samp25 <- tibble::rownames_to_column(data.frame(se.coef.sampN))  %>%
-  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25))) %>%
-  mutate(se.ratio = se.coef.samp25/se.coef.sampN)
-round_df(se.samp25, 3)
+egofitN4 <- ergm.ego(fmh.egosampN4~edges+degree(0:3)+nodefactor("Race")
+                     +nodematch("Race")+nodefactor("Sex")+nodematch("Sex")
+                     +absdiff("Grade"), popsize=N)
+# compare the coef
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofit)[-1], 
+                       coef(egofitN)[-1], 
+                       coef(egofitN4)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Ego census est", 
+                             "Sample N est", 
+                             "Sample N/4 est")
+round(param.compare, 3)
+                 
+# compare the s.e.'s
+se.compare <- cbind(modse(fit.ergm), 
+                    modse(egofit)[-1], 
+                    modse(egofitN)[-1], 
+                    modse(egofitN4)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Ego census SE", 
+                          "Sample N SE", 
+                          "Sample N/4 SE")
+round(se.compare, 3)
 ```
 
 As with ordinary statistics, standard error is inverse-proportional to
-the square root of the sample size.  We've divided the sample size by 4, so the standard errors for the smaller sample 
-are about $\sqrt{4} = 2$ times larger.  There's some variability because the
-sampling size reduction varied a bit by group.
+the square root of the sample size.
 
-And the coefficients?
-```{r, message=SHOW_MSG}
-# compute se for Zdiff(coef)
-se.diff <- sqrt(se.coef.net^2 + se.coef.samp25^2)
-                
-# compare the coef: fit vs. 25% sample
-coefs3 <- tibble::rownames_to_column(data.frame(coef(fit.net))) %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25)))) %>%
-  mutate(Zdiff = (coef.fit.net. - coef.fit.samp25.)/se.diff)
-
-round_df(coefs3, 3)
-
-```
-Most differences are not significant.  But one (out of 11) is: the coefficient
-for Asian.  So, this particular sample produced a biased estimate.  As an exercise, change the seed, and rerun this section, to see what happens with another sample.
-
-#### **Egocentric 25% weighted sample**
-
-Finally, suppose that we stick with our smaller sample, 
-but modify our sampling design, oversampling the smaller
-minority groups by a factor of 4. 
-The inclusion probability for a non-white student 
-will now be 4 times greater than in a simple random sample.
-
-Once we weight our sample, we have to take account of the sampling 
-weights in the analysis.  `ergm.ego`
-can do this automatically for you, as long as the sampling weight is stored
-in a component of the `egodata` object called `egoWt`.  If we use the `sample` function
-on our `egodata` object, the probabilities are automatically stored in `egoWt`.
-
-```{r, message=SHOW_MSG}
-w <- 1 + 3*((fmh %v% "Race")!="White") # set up the weighting design
-
-fmh.egosamp25wtd <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
-
-# look at the egodata object, see the egoWt component:
-head(fmh.egosamp25wtd)
-```
-Let's take a quick look at the racial breakdown of our weighted sample, and compare it to the unweighted 25% sample:
-```{r}
-cbind("sample25%" = table(fmh.egosamp25$egos$Race),
-      "sampleWtd25%" = table(fmh.egosamp25wtd$egos$Race))
-```
-
-Fit the model to the weighted sample:
-```{r, message=SHOW_MSG}
-fit.samp25wtd <- ergm.ego(fmh.egosamp25wtd ~ edges + degree(0) 
-                          + nodefactor("Race", levels= -6) + nodefactor("Sex") 
-                          + nodematch("Race") + nodematch("Sex") + absdiff("Grade"),
-                          popsize=N)
-```
-
-Are the standard errors are improved by this sampling scheme?  Note here we are comparing the 25% sample to the 25% weighted sample.
+Suppose that we oversampled the minority groups by a factor of 4. We
+survey a non-white student 4 times more likely than in a simple random
+sample.
 
 ```{r}
-# again we create the s.e. matrix first, using the original fit to define the rows/terms
-se.coef.samp25wtd <- se.coef(fit.samp25wtd, src = "all")[-1]
+w <- 1+3*((fmh %v% "Race")!="White")
+fmh.egosampN4w <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
 
-se.samp25wtd <- tibble::rownames_to_column(data.frame(se.coef.samp25))  %>%
-  left_join(tibble::rownames_to_column(data.frame(se.coef.samp25wtd))) %>%
-  mutate(se.ratio = se.coef.samp25wtd/se.coef.samp25)
-round_df(se.samp25wtd, 3)
+head(fmh.egosampN4w)
+egofitN4w<-ergm.ego(fmh.egosampN4w~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")+nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"), popsize=N)
 ```
-The weighting did not improve our SEs for most parameters.
 
-But how do the coefficient estimates compare?
-```{r, message=SHOW_MSG}
-# compute se for Zdiff(coef)
-se.diff <- sqrt(se.coef.samp25^2 + se.coef.samp25wtd^2)
+Which standard errors are improved by this sampling scheme?
 
-# compare the coef: fit to weighted samp
-coefs4 <- tibble::rownames_to_column(data.frame(coef(fit.net)))%>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25))))  %>%
-  left_join(tibble::rownames_to_column(data.frame(coef(fit.samp25wtd)))) %>%
-  mutate(Zdiff.25wtd.net = (coef.fit.samp25wtd. - coef.fit.net.)/se.diff) 
+```{r}
+# compare the coef
 
-round_df(coefs4, 3)
+param.compare <- cbind(coef(fit.ergm), 
+                       coef(egofitN4)[-1], 
+                       coef(egofitN4w)[-1])
+colnames(param.compare) <- c("Full nw est", 
+                             "Sample N/4 est", 
+                             "Oversampled")
+round(param.compare, 3)
+                 
+# compare the s.e.'s
+
+se.compare <- cbind(modse(fit.ergm),  
+                    modse(egofitN4)[-1], 
+                    modse(egofitN4w)[-1])
+colnames(se.compare) <- c("Full nw SE", 
+                          "Sample N/4 SE", 
+                          "Oversampled SE")
+round(se.compare, 3)
 
 ```
-But we do see improvements in the estimates -- now there are no significant
-differences from the true values.
 
 ## 7. Ongoing Developments
 The package is under active development on GitHub. The public release (on CRAN) is in the repository statnet/ergm.ego--this is the place to go to report bugs or request features.  We also have a non-public development branch for working on new features and bugfixes.  If you are interested in contributing to the development of `ergm.ego`, please contact us through the GitHub interface.
@@ -1585,16 +1429,15 @@ The following features are currently implemented in the GitHub development branc
 
 * Support for more complex sampling designs, integrated with **R** package `survey`.
 
-* Support for directed relations.
-
 * Support for main effects of covariates measured only on the egos.
 
-* Support for alter--alter nominations, integrated with `egor`.
+* Support for alter--alter nominations, integrated with `egor` (available at `tilltnet/egor`).
 
 Additional functionality is planned in the near future:
 
-* Support for automatic fitting of `tergm`s.
+* Support for directed relaions.
 
+* Support for automatic fitting of `tergm`s.
 
 ## 8. References
 
@@ -1602,11 +1445,9 @@ Krivitsky, P. N., & Morris, M. (2017).
 Inference for social network models from egocentrically sampled data, with application to understanding persistent racial disparities in HIV prevalence in the US. 
 *Annals of Applied Statistics*, 11(1), 427-455.
 
-Krivitsky, Pavel N.; Kolaczyk, Eric D. On the Question of Effective Sample Size in Network Modeling: An Asymptotic Inquiry. Statist. Sci. 30 (2015), no. 2, 184--198. doi:10.1214/14-STS502. https://projecteuclid.org/euclid.ss/1433341477
-
 Morris, M., Kurth, A. E., Hamilton, D. T., Moody, J., & Wakefield, S. (2009).
 Concurrent partnerships and HIV prevalence disparities by race: linking science and public health practice. 
 *American Journal of Public Health*, 99(6), 1023-1023. 
 
-We are working on a paper describing the package for the *Journal of Statistical Software* with a target submission date in 2019.
+We are working on a paper describing the package for the *Journal of Statistical Software* with a target submission date in 2017.
 
