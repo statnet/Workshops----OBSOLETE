@@ -12,7 +12,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(knitr)
-knitr::opts_chunk$set(cache=T, comment=NA)
+knitr::opts_chunk$set(cache=F, comment=NA)
 ```
 
 
@@ -33,7 +33,7 @@ The network modeling software demonstrated in this tutorial is authored by Pavel
 
 ## Introduction to this workshop/tutorial.
 
-This workshop and tutorial provide an overview of 
+This workshop and tutorial provide an introduction to
 statistical modeling of
 network data with *Exponential family Random Graph Models* (ERGMs)
 using `statnet` software.  This online tutorial is also designed
@@ -43,6 +43,10 @@ The `statnet` packages we will be demonstrating are:
 * `network` -- storage and manipulation of network data
 * `sna` -- descriptive statistics and graphics for exploratory network analysis`
 * `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
+
+The `ergm` package has more advanced functionality that is not covered
+in this workshop.  An overview can be found in [this preprint](http://arxiv.org/abs/2106.04997).
+
 
 
 ### Prerequisites
@@ -281,29 +285,24 @@ probability for all ties,
 which is captured by the coefficient of the `edges` term.  How 
 should we interpret this coefficient? The easiest way is
 to return to the logit form of the ERGM. The log-odds that a tie is present is
-$$
-\small{
-\begin{eqnarray*}
-logit(p(y)) &=& \theta \times \delta(g(y)) \\
-& = & `r round(flomodel.01$coef,2)` \times \mbox{change in the number of ties}\\
-& = & `r round(flomodel.01$coef,2)` \times 1
-\end{eqnarray*}
-}
-$$
+
+
+\begin{align*}
+\operatorname{logit}(p(y)) &= \theta \times \delta(g(y)) \\
+& =  `r round(coef(flomodel.01),2)` \times \mbox{change in the number of ties}\\
+& =  `r round(coef(flomodel.01),2)` \times 1
+\end{align*}
+
 for every tie, since the addition of any tie to the network always increases the total number of ties by 1.
 
 The corresponding probability is obtained by taking the expit, or inverse
 logit, of $\theta$:
 
-$$
-\small{
-\begin{eqnarray*}
-& = & \exp(`r round(flomodel.01$coef,2)`)/
-(1+\exp(`r round(flomodel.01$coef,2)`))\\
-& = & `r round( exp(flomodel.01$coef)/(1 + exp(flomodel.01$coef)), 2)`
-\end{eqnarray*}
-}
-$$
+\begin{align*}
+& =  \exp(`r round(coef(flomodel.01),2)`)/
+(1+\exp(`r round(coef(flomodel.01),2)`))\\
+& =  `r round( exp(coef(flomodel.01))/(1 + exp(coef(flomodel.01))), 2)`
+\end{align*}
 
 This probability corresponds to the density we observe in the 
 flomarriage network: there are $20$ ties and 
@@ -334,21 +333,19 @@ Now, how should we interpret coefficients?
 The conditional log-odds of two actors having a tie, keeping the rest of the network
 fixed, is
 $$
-\small{
-`r round(flomodel.02$coef[[1]],2)` \times\mbox{change in the number of ties} + `r round(flomodel.02$coef[[2]],2)` \times\mbox{change in number of triangles.}
-}
+`r round(coef(flomodel.02)[[1]],2)` \times\mbox{change in the number of ties} + `r round(coef(flomodel.02)[[2]],2)` \times\mbox{change in number of triangles.}
 $$
 
 <br>
 
 * For a tie that will create no triangles, the conditional log-odds is:
-$`r round(flomodel.02$coef[[1]],2)`$.
+$r round(coef(flomodel.02)[[1]],2)``$.
 
 * if one triangle: 
-$`r round(flomodel.02$coef[[1]],2)` + `r round(flomodel.02$coef[[2]],2)` = `r round(flomodel.02$coef[[1]] + flomodel.02$coef[[2]],2)`$
+$`r round(coef(flomodel.02)[[1]],2)` + `r round(coef(flomodel.02)[[2]],2)` = `r round(coef(flomodel.02)[[1]] + coef(flomodel.02)[[2]],2)`$
 
 * if two triangles: 
-$`r round(flomodel.02$coef[[1]],2)` + 2 \times`r round(flomodel.02$coef[[2]],2)` = `r round(flomodel.02$coef[[1]] + 2*flomodel.02$coef[[2]],2)`$
+$`r round(coef(flomodel.02)[[1]],2)` + 2 \times`r round(coef(flomodel.02)[[2]],2)` = `r round(coef(flomodel.02)[[1]] + 2*coef(flomodel.02)[[2]],2)`$
 
 * the corresponding probabilities are 
 0.16, 
@@ -366,7 +363,7 @@ names(flomodel.02) # the ERGM object contains lots of components.
 
 
 ```{r}
-flomodel.02$coef # you can extract/inspect individual components
+coef(flomodel.02) # you can extract/inspect individual components
 ```
 
 #### Nodal covariates: effects on mean degree
@@ -385,9 +382,9 @@ flomodel.03 <- ergm(flomarriage~edges+nodecov('wealth'))
 summary(flomodel.03)
 ```
 
-Question:  What does the value of the **nodecov** statistic represent?
-
 And yes, there is a significant positive wealth effect on the probability of a tie.
+
+*Question:*  What does the value of the **nodecov** statistic represent?
 
 How do we interpret the coefficients here?  Note that the wealth effect operates on both nodes in a dyad.  The conditional log-odds of a tie between two actors is:
 
@@ -706,7 +703,7 @@ plot(flomodel.03.gof)
 ```{r}
 mesamodel.02 <- ergm(mesa~edges)
 mesamodel.02.gof <- gof(mesamodel.02~degree + esp + distance, 
-                        control.gof.formula(nsim=10))
+                        control = control.gof.formula(nsim=10))
 plot(mesamodel.02.gof)
 
 ```
