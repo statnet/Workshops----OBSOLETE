@@ -50,6 +50,12 @@ The `statnet` packages we will be demonstrating are:
 * [`ndtv`](https://cran.r-project.org/web/packages/ndtv/index.html) -- utilities for plotting temporal networks (including network movies)
 * [`tergm`](https://cran.r-project.org/web/packages/tergm/index.html) -- statistical tools for estimating TERGMs, model assessment, and dynamic network simulation.
 
+____
+
+If you are transitioning from the `tergm 3.x` package series, please note the user interface for model specification has changed in `tergm 4.0`.  At this time, the new version of `tergm 4.0` is backwards compatible, so if you have scripts based on the `3.x` syntax, they will continue to work.  But we will be deprecating the functionality in the future.
+
+____
+
 
 ### Prerequisites
 
@@ -257,7 +263,13 @@ are designed to facilitate that task.
 
 *For descriptive temporal network analysis*
 
-As the name suggests, this package generalizes the `sna` package functionality for temporal network data.  It provides utilities for calculating a range of cross-sectional and temporal statistics.
+As the name suggests, this package generalizes the `sna` package functionality for temporal network data.  It provides utilities for calculating a range of cross-sectional and temporal statistics.  We'll take a brief look at these here.
+
+For a detailed introduction to the `tsna` package, see the vignette.
+
+```
+vignette("tsna_vignette")
+```
 
 #### SNA metrics
 
@@ -376,13 +388,19 @@ Ok, so that's a whirlwind tour through the descriptive tools available in `statn
 
 Temporal ERGMs (STERGMs) are an extension of ERGMs for modeling dynamic networks in discrete time.    Where an ERGM posit a single model for the _prevalence_ of ties in a cross-sectional single network, TERGMs instead posit two or more models for the _tie dynamics_ in a network over time, and each model is itself an ERGM.  
 
-The TERGM model specifications use the standard formula syntax (~ term1 + term2 ...), with terms that represent network statistics, just like we do for ERGMs,  the term names are the same as they are in an ERGMs, and they refer to the same configuration (e.g., `edges` refer to a tie between two nodes, and `degree(1) refers to nodes with degree equal to 1).  However, the way the terms count these configurations is different, and depends on context. 
+Model specifications in the `tergm` package use the standard `R` formula syntax (~ term1 + term2 ...), with terms that represent network statistics, just like we do for ERGMs.  
 
-This is a very general class of models, with two important sub-classes that we will focus on here: the joint model and the separable model.
+* Many term names carry over from the `ergm` package, and they refer to the same configuration (e.g., `edges` refers to a tie between two nodes, and `degree(1) refers to nodes with degree equal to 1).  *However, the way the terms count these configurations is different, and depends on context.*
 
-The joint and separable sub-classes both specify a pair of equations, but they differ in how they represent the change dynamics.  But the joint and separable sub-classes differ in how and what those terms count.  
+* Some new temporally-specific terms are available.
 
-*  *The joint model* specifies a model for the starting network, and a model for the changes at later time points.   The model for the starting network is essentially an ERGM -- it represents the distribution of ties in the initial, static network.  The model for the changes, because it is a single formula, requires the factors that that influence tie formation and tie dissolution to be the same. The change model coefficients represent the change in the prevalence of a configuration relative to the starting network: if negative the prevalence of that configuration is declining, if positive it is increasing.
+* The biggest difference is in the syntax we use to identify what kinds of changes we want to track: these are specified using the new "operator" terms available in version 4.0 of the `ergm` and `tergm` packages.  There are five temporal operators:  `Form()`, `Diss()`, `Persist()`, `Cross()` and `Change()`. We will explain their use in detail below.
+
+TERGMs are a very general family of models.  Sub-classes within this family are defined by how tie changes are tracked and counted, and the model specification for each type of change.  We will focus on two important sub-classes in this tutorial: the joint model and the separable model.  These allow us to introduce all of the operator terms implemented in the `tergm` packages, and provide a good intuitive foundation for temporal model specification.
+
+The joint and separable models both specify a pair of equations, but they differ in how they represent the tie-change dynamics:  
+
+*  *The joint model* specifies a model for the starting network, and a model for the changes between time points.   The model for the starting network is essentially an ERGM -- it represents the distribution of ties in the initial, static network.  The model for the changes, because it is a single formula, requires the factors that that influence tie formation and tie dissolution to be the same. The change model coefficients represent the change in the prevalence of a configuration relative to the starting network: if negative the prevalence of that configuration is declining, if positive it is increasing.
 
 * *The separable model* specifies a formula for tie formation, and a formula for tie dissolution.  With this class one can represent different factors influencing tie formation and tie dissolution, by choosing different terms in the two models.  The coefficients in the formation model represent how creating a configuration impacts the conditional log-odds of this tie forming (positive or negative), and the coefficients in the dissolution model represent that impact on tie persistence (again positive or negative). 
 
@@ -513,8 +531,24 @@ In the following code, we pass five arguments: the network list that we want to 
 # 	times = c(1:3)
 # 	)
 
-samp.fit <- tergm(
-  samplist ~
+summary(NetSeries(samplist) ~
+    Form(~edges+mutual+cyclicalties+transitiveties) +
+    Diss(~edges+mutual+cyclicalties+transitiveties)
+	)
+
+summary(NetSeries(samplist) ~
+    Cross(~edges+mutual+cyclicalties+transitiveties) +
+    Change(~edges+mutual+cyclicalties+transitiveties)
+	)
+
+samp.fit2 <- tergm(samplist ~
+    Cross(~edges+mutual+cyclicalties+transitiveties) +
+    Change(~edges+mutual+cyclicalties+transitiveties),
+  estimate = "CMLE",
+  times = c(1:3)
+	)
+
+samp.fit <- tergm(samplist ~
     Form(~edges+mutual+cyclicalties+transitiveties) +
     Diss(~edges+mutual+cyclicalties+transitiveties),
   estimate = "CMLE",
