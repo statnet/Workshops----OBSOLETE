@@ -757,7 +757,7 @@ Take a look at this object -- there are several ways to do this:
 ```{r}
 names(mesa.ego) # what are the components of this object?
 mesa.ego # prints a few lines for each component
-View(mesa.ego) # opens the component in the Rstudio source window
+#View(mesa.ego) # opens the component in the Rstudio source window
 class(mesa.ego) # what type of "object" is this?
 
 ```
@@ -922,7 +922,7 @@ of size 100,000, or a network that is 100 times larger than the sample.
 
 ```{r}
 summary(mesa.ego ~ degree(0:10), scaleto=100000)
-summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego)*100)
+#summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego)*100)
 
 ```
 
@@ -1153,13 +1153,16 @@ degree distribution assessment.
 ```{r cache=FALSE}
 set.seed(1)
 ```
+
 ```{r}
 fit.deg0 <- ergm.ego(mesa.ego ~ edges + degree(0), control=control.ergm.ego(ppopsize=1000))
 summary(fit.deg0)
 ```
+
 ```{r eval=FALSE}
 mcmc.diagnostics(fit.deg0)
 ```
+
 ```{r}
 plot(gof(fit.deg0, GOF="model"))
 plot(gof(fit.deg0, GOF="degree"))
@@ -1169,19 +1172,24 @@ So, we've now fit the isolates exactly, and the fit is better,
 but this now suggests there are more nodes with just one tie than
 would be expected, given the mean degree, and the number of isolates.
 
-And just to round things off, let's fit a relatively large model
+And just to round things off, let's fit a relatively large model.  Here we'll specify the omitted category for Race as the largest group.
 
 ```{r}
 fit.full <- ergm.ego(mesa.ego ~ edges + degree(0:1) 
-                      + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
-                      + nodefactor("Grade")
-                      + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
+                     + nodefactor("Sex")
+                     + nodefactor("Race", levels = -LARGEST)
+                     + nodefactor("Grade")
+                     + nodematch("Sex") 
+                     + nodematch("Race") 
+                     + nodematch("Grade"))
 summary(fit.full)
 ```
+
+
 ```{r eval=FALSE}
-mcmc.diagnostics(fit.full)
+mcmc.diagnostics(fit.full, which = "plots")
 ```
+
 ```{r}
 plot(gof(fit.full, GOF="model"))
 plot(gof(fit.full, GOF="degree"))
@@ -1189,37 +1197,35 @@ plot(gof(fit.full, GOF="degree"))
 
 In general the model diagnostics look good. *If* this were a genuine sample of 205 students from a larger school, we could infer the following:
 
-* there are still many more isolates, and more degree 1 nodes than expected by chance
-* there are significant differences in mean degree by race, with the dominant group
-(Hispanics, the reference category) nominating fewer friends that the other groups
-* there may a difference in mean degree for 11th and 12th graders
-when compared to all the lower grades.
+* there are many more isolates, and more degree 1 nodes than expected by chance
+* there are significant differences in mean degree by race, with the largest group (Hispanics, the reference category) nominating fewer friends than most of the other groups
+* 7th graders nominate fewer friends than all other grades.
 * there are strong and significant homophily effects, for all three attributes
 
 We will leave this model here and go on to explore how the idea of sampling
-uncertainty is being used to produce the
-standard errors for our coefficients.
+uncertainty is being used to produce the standard errors for our coefficients.
 
-
-Note that we have implicitly used simulate here -- it's the basis of the GOF 
-results -- but it is also possible to simulate complete networks from this fit:
+It is possible to simulate complete networks from this `ergm.ego` fit object -- just as we would from an `ergm` fit object:
 
 ```{r}
 sim.full <- simulate(fit.full)
 summary(mesa.ego ~ edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels = -LARGEST)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
 summary(sim.full ~ edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels = -LARGEST)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 plot(sim.full, vertex.col="Grade")
 legend('bottomleft',fill=7:12,legend=paste('Grade',7:12),cex=0.75)
 ```
+
+(Note that we have implicitly used simulate already -- it's the basis of the GOF 
+results)
 
 We can use network size invariance to simulate networks of a different size, albeit one has to be careful:
 
@@ -1227,13 +1233,13 @@ We can use network size invariance to simulate networks of a different size, alb
 sim.full2 <- simulate(fit.full, popsize=network.size(mesa)*2)
 summary(mesa~edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels = -LARGEST)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))*2
 
 summary(sim.full2~edges + degree(0:1)
                       + nodefactor("Sex")
-                      + nodefactor("Race", base=2)
+                      + nodefactor("Race", levels = -LARGEST)
                       + nodefactor("Grade")
                       + nodematch("Sex") + nodematch("Race") + nodematch("Grade"))
 
@@ -1266,14 +1272,17 @@ For this section we will use the larger built-in network, `faux.magnolia.high`.
 ```{r}
 data(faux.magnolia.high)
 faux.magnolia.high -> fmh
-(N <- network.size(fmh))
+N <- network.size(fmh)
 ```
 
 Let's start by fitting an ERGM to the complete network, and looking at the coefficients:
 
 ```{r}
-fit.ergm <- ergm(fmh~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")
-                    +nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"))
+fit.ergm <- ergm(fmh ~ edges + degree(0:3) 
+                 + nodefactor("Race") + nodematch("Race")
+                 + nodefactor("Sex") + nodematch("Sex") 
+                 + absdiff("Grade"))
+data.frame(coef(fit.ergm))
 ```
 
 Now, suppose we only observe an egocentric view of the data -- as an egocentric census.
@@ -1286,97 +1295,103 @@ egocentric census compare to the complete-network ergm estimates?
 fmh.ego <- as.egor(fmh)
 head(fmh.ego)
 
-egofit <- ergm.ego(fmh.ego~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")
-                  +nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"), popsize=N,
+egofit <- ergm.ego(fmh.ego ~ edges + degree(0:3) 
+                   + nodefactor("Race") + nodematch("Race")
+                   + nodefactor("Sex") + nodematch("Sex") 
+                   + absdiff("Grade"), popsize=N,
 				  control=control.ergm.ego(ppopsize=N))
 
-modse <- function(fit) sqrt(diag(vcov(fit, sources="model"))) # A convendience function.
+# A convenience function.
+model.se <- function(fit) sqrt(diag(vcov(fit, sources="model"))) 
 
 # Parameters recovered:
-param.compare <- cbind(coef(fit.ergm), 
-                       coef(egofit)[-1],
-                       (coef(fit.ergm)-coef(egofit)[-1])/modse(egofit)[-1])
-colnames(param.compare) <- c("Full nw est", 
-                             "Ego census est", 
-                             "diff Z")
-round(param.compare, 3)
+coef.compare <- data.frame(
+  "Full nw est" = coef(fit.ergm), 
+  "Ego census est" = coef(egofit)[-1],
+  "diff Z" = (coef(fit.ergm)-coef(egofit)[-1])/model.se(egofit)[-1])
+
+round(coef.compare, 3)
 ```
 
 Again, we can diagnose the fitted egocentric model for proper convergence.
 
 ```{r eval=FALSE}
 # MCMC diagnostics. 
-mcmc.diagnostics(egofit)
+mcmc.diagnostics(egofit, which="plots")
 ```
+
+And check whether the model converged to the right statistics:
 ```{r eval=FALSE}
-# Check whether the model converged to the right statistics:
 plot(gof(egofit, GOF="model"))
 ```
 
-Let's check whether the fitted model can be used to reconstruct the
+Now let's check whether the fitted model can be used to reconstruct the
 degree distribution.
 
 ```{r}
 plot(gof(egofit, GOF="degree"))
 ```
 
-What if we only had a large sample, instead of an egocentric census?
+What if we only had an equally large sample, instead of an egocentric census?
 Here, we sample N students with replacement.
 
 ```{r cache=FALSE}
 set.seed(1)
 ```
+
 ```{r}
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
-egofitN <- ergm.ego(fmh.egosampN ~ edges+degree(0:3)+nodefactor("Race")
-                                 +nodematch("Race")+nodefactor("Sex")+nodematch("Sex")
-                                 +absdiff("Grade"),popsize=N)
+egofitN <- ergm.ego(fmh.egosampN ~ edges + degree(0:3) 
+                    + nodefactor("Race") + nodematch("Race") 
+                    + nodefactor("Sex") + nodematch("Sex")
+                    + absdiff("Grade"),
+                    popsize=N)
 
 # compare the coef
-param.compare <- cbind(coef(fit.ergm), coef(egofit)[-1], coef(egofitN)[-1])
-colnames(param.compare) <- c("Full nw est", "Ego census est", "Sample N est")
-round(param.compare, 3)
+coef.compare <- data.frame(
+  "Full nw est" = coef(fit.ergm), 
+  "Ego sample N est" = coef(egofitN)[-1],
+  "diff Z" = (coef(fit.ergm)-coef(egofitN)[-1])/model.se(egofitN)[-1])
+
+round(coef.compare, 3)
                  
 # compare the s.e.'s
-se.compare <- cbind(modse(fit.ergm), 
-                    modse(egofit)[-1], 
-                    modse(egofitN)[-1])
-colnames(se.compare) <- c("Full nw SE", 
-                          "Ego census SE", 
-                          "Sample N SE")
+se.compare <- data.frame(
+  "Full nw SE" = model.se(fit.ergm), 
+  "Ego census SE" =model.se(egofit)[-1], 
+  "Ego sample N SE" = model.se(egofitN)[-1])
+
 round(se.compare, 3)
 ```
 
-What if we have a smaller sample? If we have a sample of $N/4=`r round(N/4)`$ students,
-How will our standard errors be affected?
+What if we have a smaller sample? If we have a sample of $N/4=`r round(N/4)`$ students, how will our standard errors be affected?
 
 ```{r}
 set.seed(0) # Some samples have different sets of alter levels from ego levels.
+
 fmh.egosampN4 <- sample(fmh.ego, round(N/4), replace=TRUE)
 
-egofitN4 <- ergm.ego(fmh.egosampN4~edges+degree(0:3)+nodefactor("Race")
-                     +nodematch("Race")+nodefactor("Sex")+nodematch("Sex")
-                     +absdiff("Grade"), popsize=N)
+egofitN4 <- ergm.ego(fmh.egosampN4 ~ edges + degree(0:3) 
+                    + nodefactor("Race") + nodematch("Race") 
+                    + nodefactor("Sex") + nodematch("Sex")
+                    + absdiff("Grade"),
+                    popsize=N)
+
 # compare the coef
-param.compare <- cbind(coef(fit.ergm), 
-                       coef(egofit)[-1], 
-                       coef(egofitN)[-1], 
-                       coef(egofitN4)[-1])
-colnames(param.compare) <- c("Full nw est", 
-                             "Ego census est", 
-                             "Sample N est", 
-                             "Sample N/4 est")
-round(param.compare, 3)
-                 
+coef.compare <- data.frame(
+  "Full nw est" = coef(fit.ergm), 
+  "Ego sampl N/4 est" = coef(egofitN4)[-1],
+  "diff Z" = (coef(fit.ergm)-coef(egofitN4)[-1])/model.se(egofitN4)[-1])
+
+round(coef.compare, 3)
+
 # compare the s.e.'s
-se.compare <- cbind(modse(fit.ergm), 
-                    modse(egofit)[-1], 
-                    modse(egofitN)[-1], 
-                    modse(egofitN4)[-1])
-colnames(se.compare) <- c("Full nw SE", 
-                          "Ego census SE", 
-                          "Sample N SE", 
-                          "Sample N/4 SE")
+se.compare <- data.frame(
+  "Full nw SE" = model.se(fit.ergm), 
+  "Ego census SE" =model.se(egofit)[-1], 
+  "Ego Sample N SE" = model.se(egofitN)[-1],
+  "Ego Sample N/4 SE" = model.se(egofitN4)[-1])
+
 round(se.compare, 3)
 ```
 
@@ -1392,30 +1407,31 @@ w <- 1+3*((fmh %v% "Race")!="White")
 fmh.egosampN4w <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
 
 head(fmh.egosampN4w)
-egofitN4w<-ergm.ego(fmh.egosampN4w~edges+degree(0:3)+nodefactor("Race")+nodematch("Race")+nodefactor("Sex")+nodematch("Sex")+absdiff("Grade"), popsize=N)
+egofitN4w<-ergm.ego(fmh.egosampN4w ~ edges + degree(0:3) 
+                    + nodefactor("Race") + nodematch("Race") 
+                    + nodefactor("Sex") + nodematch("Sex")
+                    + absdiff("Grade"),
+                    popsize=N)
 ```
 
 Which standard errors are improved by this sampling scheme?
 
 ```{r}
+
 # compare the coef
+coef.compare <- data.frame(
+  "Full nw est" = coef(fit.ergm), 
+  "Ego sampl N/4 est" = coef(egofitN4)[-1],
+  "Oversampled" = coef(egofitN4w)[-1])
+ 
+round(coef.compare, 3)
 
-param.compare <- cbind(coef(fit.ergm), 
-                       coef(egofitN4)[-1], 
-                       coef(egofitN4w)[-1])
-colnames(param.compare) <- c("Full nw est", 
-                             "Sample N/4 est", 
-                             "Oversampled")
-round(param.compare, 3)
-                 
 # compare the s.e.'s
+se.compare <- data.frame(
+  "Full nw SE" = model.se(fit.ergm),
+  "Ego Sample N/4 SE" = model.se(egofitN4)[-1],
+  "Oversampled SE" = model.se(egofitN4w)[-1])
 
-se.compare <- cbind(modse(fit.ergm),  
-                    modse(egofitN4)[-1], 
-                    modse(egofitN4w)[-1])
-colnames(se.compare) <- c("Full nw SE", 
-                          "Sample N/4 SE", 
-                          "Oversampled SE")
 round(se.compare, 3)
 
 ```
