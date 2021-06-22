@@ -922,7 +922,7 @@ of size 100,000, or a network that is 100 times larger than the sample.
 
 ```{r}
 summary(mesa.ego ~ degree(0:10), scaleto=100000)
-#summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego)*100)
+summary(mesa.ego ~ degree(0:10), scaleto=nrow(mesa.ego$ego)*100)
 
 ```
 
