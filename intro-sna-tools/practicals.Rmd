@@ -1,0 +1,167 @@
+---
+title: "Practicals"
+author: "Michał Bojanowski and Lorien Jasny"
+date: "Sunbelt-NetSci 2021"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+params:
+  solutions: false
+---
+
+```{r setup, cache=FALSE, include=FALSE}
+requireNamespace("igraph")
+
+# Classroom data
+classroom_kids <- read.csv("classroom-nodes.csv", header=TRUE, 
+                           colClasses=c(name = "character"))
+classroom_play <- read.csv("classroom-edges.csv", header=TRUE, 
+                           colClasses = c(from="character", to="character"))
+classroom <- igraph::graph_from_data_frame(
+  classroom_play, 
+  vertices=classroom_kids,
+  directed=TRUE
+)
+rm(classroom_play, classroom_kids)
+```
+
+# Create small network
+
+Create a directed network shown on the figure below. Mind the labels of the nodes.
+
+```{r smallnet-make, include=params$solutions}
+g <- igraph::make_graph( ~  A --+ B:C, D --+ E:F, A +--+ D, G +--+ A:D  )
+```
+
+```{r smallnet-plot, echo=params$solutions}
+plot(g)
+```
+
+
+
+
+# Mutual ties
+
+Transform the network created above to an undirected network such that an undirected tie is present if and only if there are reciprocated ties in the original network. Visualize the network and check the correctness of the result.
+
+```{r mutties, include=params$solutions}
+gg <- igraph::as.undirected(g, mode="mutual")
+plot(gg)
+
+# Verify number of edges
+igraph::ecount(gg)
+```
+
+
+# Histograms of degree distributions
+
+Compute the degree distributions (in-, out- and total) for the classroom network and visualize it with a barchart.
+
+```{r degdist, include=params$solutions}
+barplot(igraph::degree_distribution(classroom), 
+        xlab="Total degree", ylab="Frequency")
+barplot(igraph::degree_distribution(classroom, mode="in"), 
+        xlab="In-degree", ylab="Frequency")
+barplot(igraph::degree_distribution(classroom, mode="out"), 
+        xlab="Out-degree", ylab="Frequency")
+```
+
+
+# Sociality and popularity
+
+Check whether popularity in the classroom is associated with sociality. We will measure popularity with in-degree and sociality with out-degree. Answer the question by
+
+- Creating a scatterplot showing the association between in- and out-degrees.
+- Compute the correlation coefficient between the two.
+
+
+```{r socpop, include=params$solutions}
+# Data frame with two variables containing in-degrees and out-degrees for each
+# vertex
+degs <- data.frame(
+  indegree=igraph::degree(classroom, mode="in"),
+  outdegree = igraph::degree(classroom, mode="out")
+)
+# Scatterplot
+plot(indegree ~ outdegree, data=degs,
+     xlab="Sociality", ylab="Popularity",
+     col = igraph::V(classroom)$female + 1 )
+# Correlation coef
+cor(degs)
+```
+
+
+# Other centrality measures
+
+Select two other centrality measures. Are they highly correlated as well? What two measures would have the lowest correlation?
+
+- Compute the correlation coefficient between the two.
+- Plot the network with one measure represented in size and the other in color
+
+```{r cents, include=params$solutions}
+# Data frame with two variables containing in-degrees and out-degrees for each
+# vertex
+cents <- data.frame(
+  bet=igraph::betweenness(classroom),
+  ev=igraph::eigen_centrality(classroom)$vector
+)
+
+# Scatterplot
+plot(bet ~ ev, data=cents,
+     xlab="Betweenness", ylab="Eigenvector",
+     col = igraph::V(classroom)$female + 1 )
+
+# Correlation coef
+cor(cents)
+
+# The plot using 'network' package
+classroom_network <- intergraph::asNetwork(classroom)
+plot(
+  classroom_network,
+  vertex.cex=cents$bet/25+1,
+  vertex.col=rgb(0,0,cents$ev/max(cents$ev))
+)
+```
+
+
+# Popularity in Faux Mesa High
+
+Look at the school liking" network `faux.mesa.high`. Who is the most popular boy? and girl? What grades are they in?
+
+- find the specific nodes
+- plot the network with grade colored by node and size by indegree, shape by sex
+
+```{r, include=params$solutions}
+load("introToSNAInR.Rdata")
+order(sna::degree(faux.mesa.high,cmode="indegree"))
+network::get.vertex.attribute(faux.mesa.high,"Sex")[1] #Female
+network::get.vertex.attribute(faux.mesa.high,"Grade")[1]
+network::get.vertex.attribute(faux.mesa.high,"Sex")[87] #Female
+network::get.vertex.attribute(faux.mesa.high,"Sex")[55] #Male
+network::get.vertex.attribute(faux.mesa.high,"Grade")[55]
+
+
+# Network visualization
+sexColor<-ifelse(network::get.vertex.attribute(faux.mesa.high,"Sex")=="F",4,50)
+network::plot.network(
+  faux.mesa.high,
+  vertex.col = rainbow(6)[network::get.vertex.attribute(faux.mesa.high,"Grade")-6],
+  vertex.cex=sna::degree(faux.mesa.high,cmode="indegree")/2,
+  vertex.sides=sexColor
+)
+```
+
+
+
+```{r link-to-solutions, include=!params$solutions, results = "asis", echo=FALSE}
+cat(
+  "# Solutions {-}
+
+
+  A version of this document with solutions can be found [here](practicals-solved.html)."
+)
+```
+
+
+
