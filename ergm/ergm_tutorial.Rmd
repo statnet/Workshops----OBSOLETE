@@ -976,8 +976,8 @@ a network.
 ## References
 
 For a general orientation to the `statnet` packages,
-the best place to start is the special volume of the *Journal of Statistical Software* (JSS) devoted to `statnet`, 
-vol. 24:  [https://www.jstatsoft.org/issue/view/v024](https://www.jstatsoft.org/issue/view/v024)
+the best place to start is the special volume of the *Journal of Statistical Software* (JSS) devoted to `statnet`:
+[https://www.jstatsoft.org/issue/view/v024](https://www.jstatsoft.org/issue/view/v024).
 The nine papers in this volume cover a wide range of theoretical and practical topics related to ERGMs, and their implementation in `statnet`.
 
 However, this volume was written in 2008.  The `statnet` code base has evolved considerably since that time, and with the release of
