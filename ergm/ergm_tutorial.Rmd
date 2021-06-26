@@ -280,8 +280,8 @@ to return to the logit form of the ERGM. The log-odds that a tie is present is
 
 \begin{align*}
 \operatorname{logit}(p(y)) &= \theta \times \delta(g(y)) \\
-& =  `r round(coef(flomodel.01),2)` \times \mbox{change in the number of ties}\\
-& =  `r round(coef(flomodel.01),2)` \times 1
+& =  `r signif(coef(flomodel.01), 3)` \times \mbox{change in the number of ties}\\
+& =  `r signif(coef(flomodel.01), 3)` \times 1
 \end{align*}
 
 for every tie, since the addition of any tie to the network always increases the total number of ties by 1.
@@ -290,16 +290,16 @@ The corresponding probability is obtained by taking the expit, or inverse
 logit, of $\theta$:
 
 \begin{align*}
-& =  \exp(`r round(coef(flomodel.01),2)`)/
-(1+\exp(`r round(coef(flomodel.01),2)`))\\
-& =  `r round( exp(coef(flomodel.01))/(1 + exp(coef(flomodel.01))), 2)`
+& =  \exp(`r signif(coef(flomodel.01), 3)`)/
+(1+\exp(`r signif(coef(flomodel.01), 3)`))\\
+& =  `r signif( exp(coef(flomodel.01))/(1 + exp(coef(flomodel.01))), 3)`
 \end{align*}
 
 This probability corresponds to the density we observe in the 
 flomarriage network: there are $20$ ties and 
 $\binom{16}{2} = (16 \times 15)/2 = `r 16*15/2`$ dyads, 
 so the probability of a tie
-is $20/`r 16*15/2` = `r round(20/(16*15/2),2)`$.
+is $20/`r 16*15/2` = `r signif(20/(16*15/2), 3)`$.
 
 #### Triad formation
 
@@ -325,24 +325,24 @@ Now, how should we interpret coefficients?
 The conditional log-odds of two actors having a tie, keeping the rest of the network
 fixed, is
 $$
-`r round(coef(flomodel.02)[[1]],2)` \times\mbox{change in the number of ties} + `r round(coef(flomodel.02)[[2]],2)` \times\mbox{change in number of triangles.}
+`r signif(coef(flomodel.02)[[1]], 3)` \times\mbox{change in the number of ties} + `r signif(coef(flomodel.02)[[2]], 3)` \times\mbox{change in number of triangles.}
 $$
 
 <br>
 
 * For a tie that will create no triangles, the conditional log-odds is:
-$r round(coef(flomodel.02)[[1]],2)``$.
+$`r signif(coef(flomodel.02)[[1]], 3)`$.
 
 * if one triangle: 
-$`r round(coef(flomodel.02)[[1]],2)` + `r round(coef(flomodel.02)[[2]],2)` = `r round(coef(flomodel.02)[[1]] + coef(flomodel.02)[[2]],2)`$
+$`r signif(coef(flomodel.02)[[1]], 3)` + `r signif(coef(flomodel.02)[[2]], 3)` = `r signif(coef(flomodel.02)[[1]] + coef(flomodel.02)[[2]], 3)`$
 
 * if two triangles: 
-$`r round(coef(flomodel.02)[[1]],2)` + 2 \times`r round(coef(flomodel.02)[[2]],2)` = `r round(coef(flomodel.02)[[1]] + 2*coef(flomodel.02)[[2]],2)`$
+$`r signif(coef(flomodel.02)[[1]], 3)` + 2 \times`r signif(coef(flomodel.02)[[2]], 3)` = `r signif(coef(flomodel.02)[[1]] + 2*coef(flomodel.02)[[2]], 3)`$
 
-* the corresponding probabilities are 
-0.16, 
-0.18, and 
-0.20.
+* the corresponding probabilities are shown here (note the use of the `coef` function):
+```{r ilogit}
+plogis(coef(flomodel.02)[[1]] + (0:2) * coef(flomodel.02)[[2]])
+```
 
 Let's take a closer look at the ergm object that the function
 outputs:
@@ -823,46 +823,39 @@ the geometrically-weighed edgewise shared partner term (GWESP).
 for a more intuitive description and empirical application see 
 [Goodreau, Kitts & Morris, 2009](http://link.springer.com/article/10.1353/dem.0.0045) )
 
-
+Let's see what using `gwesp` instead of `triangle` can do.  We can also control the number of Metropolis-Hastings
+(MCMC) proposals between sampled statistics in our Markov chain, one of the many control parameters that may
+be passed to functions in the `ergm` package using the `control=snctrl()' syntax
+(to see the many control parameters that may be set by the user in the `ergm` package, type `?snctrl`):
 ```{r gwesp, message = F, warning = F}
 set.seed(10101)
-fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),
+fit <- ergm(magnolia~edges+gwesp(0.25, fixed=T), 
+            control=snctrl(MCMC.interval = 10000),
             verbose=T)
-mcmc.diagnostics(fit)
 ```
 
 ```
 Evaluating network in model.
-
-Initializing Metropolis-Hastings proposal(s):
- ergm:MH_TNT
-
-Initializing model.
+Initializing unconstrained Metropolis-Hastings proposal: ‘ergm:MH_TNT’.
+Initializing model...
+Model initialized.
 Using initial method 'MPLE'.
+Fitting initial model.
+Starting maximum pseudolikelihood estimation (MPLE):
+Evaluating the predictor and response matrix.
+Maximizing the pseudolikelihood.
+Finished MPLE.
+Starting Monte Carlo maximum likelihood estimation (MCMLE):
 
  ... (output snipped)
- 
-Step length converged twice. Stopping.
-Evaluating log-likelihood at the estimate.
 
+Bridging finished.
 This model was fit using MCMC.  To examine model diagnostics and check for degeneracy, use the mcmc.diagnostics() function.
-
- ... (output snipped)
 ```
 
-Better, but not great. Here we'll change two things.  First, we'll add some more reasonable terms to the model, and 
-second, we'll make the fitting algorithm more robust by making the MCMC simulation longer.
-
-```{r gwesp-plus}
-set.seed(10101)
-fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T)+nodematch('Grade')+
-              nodematch('Race')+nodematch('Sex'),
-            control = control.ergm(MCMC.interval=10000),
-            verbose=T)
+```{r gwesp-diagnostics}
 mcmc.diagnostics(fit)
 ```
-
-Success! Of course, in real life one might have a lot more trial and error.
 
 **MORAL:**  Degeneracy is an indicator of a poorly specified model.  It is not a property of all ERGMs, but it is associated with some dyadic-dependent terms, in particular, the reduced homogenous Markov specifications (e.g., 2-stars and triangle terms).  For a good technical discussion of unstable terms see [Schweinberger 2012.](http://www.tandfonline.com/doi/abs/10.1198/jasa.2011.tm10747#.U6R2FvldWSo)  For a discussion of  alternative terms that exhibit more stable behavior see [Snijders et al. 2006.](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9531.2006.00176.x/abstract) and for the gwesp term (and the curved exponential family terms in general) see [Hunter and Handcock 2006.](http://amstat.tandfonline.com/doi/abs/10.1198/106186006X133069#.U7MxWPldWSo)
 
