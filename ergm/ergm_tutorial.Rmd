@@ -71,16 +71,17 @@ The full set of installation intructions with details can be found on the [`stat
 
 If you have not already downloaded the `statnet` packages for this workshop, the quickest way to install these (and the other most commonly used packages from the `statnet` suite),  is to open an R session and type: 
 
-```{r,eval=FALSE}
+```{r install-ergm,eval=FALSE}
 install.packages('ergm')
 ```
 
-```{r}
+```{r loadPackage}
+#
 library(ergm)
 ```
 
 You can check the version number with:
-```{r}
+```{r version}
 packageVersion("ergm")
 ```
 
@@ -140,18 +141,18 @@ tutorial, and links to more information are provided in
 
 You can get the list of all available terms, and the syntax for using them, by typing:
 
-```{r, eval=FALSE}
+```{r ergm-terms-help, eval=FALSE}
 ?'ergm-terms'
 ```
 
 You can also search for terms with keywords:
 
-```{r}
+```{r homophily-terms-search}
 search.ergmTerms(keyword='homophily')
 ```
 
 For more information, see the vignette on `ergm-terms`:
-```{r}
+```{r vignette}
 vignette('ergm-term-crossRef')
 ```
 
@@ -195,7 +196,7 @@ nodes, ties and dyads can also come in various forms.  All can
 be read into _R_ using either standard methods (for .csv files),
 or methods from the `network` package.  For more information:
 
-```{r}
+```{r pajek}
 ?read.paj
 ?read.paj.simplify
 ?loading.attributes
@@ -203,20 +204,21 @@ or methods from the `network` package.  For more information:
 
 However you read them in, the data will need to be transformed into a `network` object --- the format that statnet uses to store and work with network data.  For information on how to do this:
 
-```{r}
+```{r network-help}
 ?network
 ```
 
 
 The `ergm` package also contains several network data sets, and we will use those here for demonstration purposes.  
 
-```{r}
+```{r ergm-datasets}
 data(package='ergm') # tells us the datasets in our packages
 ```
 
 We'll start with Padgett's data on Renaissance Florentine families for our first example.  As with all data analysis, we start by looking at our data using graphical and numerical descriptives.
 
-```{r}
+```{r florentine-plots}
+set.seed(123) # The plot.network function uses random values
 data(florentine) # loads flomarriage and flobusiness data
 flomarriage # Look at the flomarriage network properties (uses `network`), esp. the vertex attributes
 par(mfrow=c(1,2)) # Setup a 2 panel plot
@@ -240,7 +242,7 @@ commonly used functions for ERG modeling.
 The syntax for specifying a model in the `ergm` package follows **R**'s
 formula convention:
 
-$$ my.network \sim my.vector.of.model.terms $$
+$$ \mbox{my.network} \sim \mbox{my.vector.of.model.terms} $$
 
 This syntax is used for both the `summary` and `ergm` functions.  The
 `summary` function simply returns the numerical values of the
@@ -249,8 +251,8 @@ the model with those statistics.
 
 ---
 
-It is good practice to always
-run a `summmary` command on a model before fitting it with `ergm`.  This is the ERGM equivalent of performing some descriptive analysis on your covariates.  This can help you make sure you understand what the term represents, and it can help to flag potential problems that will
+It is good practice to
+run a `summmary` command on any model before fitting it with `ergm`.  This is the ERGM equivalent of performing some descriptive analysis on your covariates.  This can help you make sure you understand what the term represents, and it can help to flag potential problems that will
 lead to poor modeling results.
 
 ---
@@ -263,7 +265,7 @@ edges in the network, $\sum{y_{ij}}$. The name of this ergm-term is `edges`,
 and when included in an ERGM its 
 coefficient controls the overall density of the network.
 
-```{r}
+```{r flomarriage-edges}
 summary(flomarriage ~ edges) # Look at the $g(y)$ statistic for this model
 flomodel.01 <- ergm(flomarriage ~ edges) # Estimate the model 
 summary(flomodel.01) # Look at the fitted model object
@@ -308,9 +310,10 @@ This is an example of a dyad dependent term: The status of any triangle containi
 dyad $y_{ij}$ depends on the status of dyads of the form $y_{ik}$ and $y_{jk}$.
 This means that any model containing the ergm-term `triangle` has the property
 that dyads are not probabilistically independent of one another.
-As a result, the estimation algorithm automatically changes to MCMC, and because this is a form of stochastic estimation your results may differ slightly.
-
-```{r, message = FALSE}
+As a result, `ergm` automatically uses its stochastic MCMC-based estimation algoirthm, 
+so your results may differ slightly unless you use the same `set.seed` value:
+```{r flomarriage-triangle, message = FALSE}
+set.seed(321)
 summary(flomarriage~edges+triangle) # Look at the g(y) stats for this model
 flomodel.02 <- ergm(flomarriage~edges+triangle) 
 summary(flomodel.02)
@@ -344,14 +347,14 @@ $`r round(coef(flomodel.02)[[1]],2)` + 2 \times`r round(coef(flomodel.02)[[2]],2
 Let's take a closer look at the ergm object that the function
 outputs:
 
-```{r}
+```{r flomarriage-ergm-object}
 class(flomodel.02) # this has the class ergm
 
 names(flomodel.02) # the ERGM object contains lots of components.
 ```
 
 
-```{r}
+```{r ergm-object-coef}
 coef(flomodel.02) # you can extract/inspect individual components
 ```
 
@@ -360,7 +363,7 @@ coef(flomodel.02) # you can extract/inspect individual components
 We saw earlier that wealth appeared to be associated with higher
 degree in this network.  We can use `ergm` to test this.  Wealth is a nodal covariate, so we use the ergm-term **nodecov**.
 
-```{r}
+```{r flomarriage-wealth}
 summary(wealth) # summarize the distribution of wealth
 # plot(flomarriage, 
 #      vertex.cex=wealth/25, 
@@ -406,12 +409,13 @@ This model specification does not include a term for homophily by wealth, i.e., 
 
 Let's try a larger network, a simulated mutual friendship network based on one of the schools from the AddHealth study.  Here, we'll examine the homophily in friendships by grade and race.  Both are discrete attributes so we use the ergm-term ***nodematch***.
 
-```{r}
+```{r faux-mesa-high}
 data(faux.mesa.high) 
 mesa <- faux.mesa.high
 ```
 
-```{r}
+```{r plot-mesa}
+set.seed(1)
 mesa
 par(mfrow=c(1,1)) # Back to 1-panel plots
 plot(mesa, vertex.col='Grade')
@@ -419,7 +423,7 @@ legend('bottomleft',fill=7:12,
        legend=paste('Grade',7:12),cex=0.75)
 ```
 
-```{r}
+```{r mesa-ergm}
 fauxmodel.01 <- ergm(mesa ~edges + 
                        nodefactor('Grade') + nodematch('Grade',diff=T) +
                        nodefactor('Race') + nodematch('Race',diff=T))
@@ -429,7 +433,7 @@ summary(fauxmodel.01)
 Two of the coefficients are estimated as `-Inf`
 (the nodematch coefficients for race Black and Other). Why is this?
 
-```{r}
+```{r mesa-mixingmatrix}
 table(mesa %v% 'Race') # Frequencies of race
 mixingmatrix(mesa, "Race")
 ```
@@ -440,7 +444,7 @@ no within-group ties. The empty cells are what produce the -Inf estimates.
 
 We would have caught this earlier if we had looked at the $g(y)$ stats at the beginning:
 
-```{r}
+```{r mesa-summary}
 summary(mesa ~edges  + 
           nodefactor('Grade') + nodematch('Grade',diff=T) +
           nodefactor('Race') + nodematch('Race',diff=T))
@@ -453,7 +457,8 @@ See also the ergm-term ***nodemix*** for fitting mixing patterns other than homo
 
 Let's try a model for a directed network, and examine the tendency for ties to be reciprocated ("mutuality").  The ergm-term for this is ***mutual***.  We'll fit this model to the third wave of the classic Sampson Monastery data, and we'll start by taking a look at the network.
 
-```{r}
+```{r samplk}
+set.seed(2)
 data(samplk) 
 ls() # directed data: Sampson's Monks
 samplk3
@@ -461,7 +466,8 @@ plot(samplk3)
 summary(samplk3~edges+mutual)
 ```
 The plot now shows the direction of a tie, and the $g(y)$ statistics for this model in this network are 56 total ties and 15 mutual dyads.  This means 30 of the 56 ties are reciprocated, i.e., they are part of dyads in which both directional ties are present. 
-```{r, message = F}
+```{r samplk3-ergm, message = F}
+set.seed(3)
 sampmodel.01 <- ergm(samplk3~edges+mutual)
 summary(sampmodel.01)
 ```
@@ -474,7 +480,8 @@ It is important to distinguish between the absence of a tie and the absence of d
 
 Start by estimating an ergm on a network with two missing ties, where both ties are identified as missing.
 
-```{r}
+```{r missing-data}
+set.seed(4)
 missnet <- network.initialize(10,directed=F) # initialize an empty net with 10 nodes
 missnet[1,2] <- missnet[2,7] <- missnet[3,6] <- 1 # add a few ties
 missnet[4,6] <- missnet[4,9] <- missnet[5,6] <- NA # mark a few dyads missing
@@ -503,7 +510,7 @@ the value of the coefficient will change.  Can you predict whether it will
 get bigger or smaller?  Can you calculate it
 directly before checking the output of an `ergm` fit?  Let's see what happens.
 
-```{r}
+```{r missnet-mod}
 missnet_bad <- missnet # create network with missing dyads set to 0
 missnet_bad[4,6] <- missnet_bad[4,9] <- missnet_bad[5,6] <- 0
 
@@ -539,9 +546,10 @@ The terms that can be used in a model also depend on the type of network being a
 
 ### Terms provided with ergm
 
+MUST CHANGE THIS.  Don't need ergm-terms-help for the second time?
 For a list of available terms that can be used to specify an ERGM, type:
 
-```{r,eval=FALSE}
+```{r ergm-terms-help2,eval=FALSE}
 help('ergm-terms')
 ```
 
@@ -601,7 +609,8 @@ We will first consider a simple dyadic dependent model where the algorithm works
 whether there are more (or less) degree 1 nodes than we would expect,
 given the density.
 
-```{r, message = F}
+```{r flobusiness, message = F}
+set.seed(314159)
 summary(flobusiness~edges+degree(1))
 fit <- ergm(flobusiness~edges+degree(1))
 summary(fit)
@@ -614,7 +623,8 @@ This is what you want to see in the MCMC diagnostics:  the MCMC sample statistic
 
 There are many control parameters for the MCMC algorithm ("help(control.ergm)"), and we'll play with some of these below.  To see what the algorithm is doing at each step, you can drop the sampling interval down to 1:
 
-```{r, eval=FALSE}
+```{r flobusiness-MCMCinterval, eval=FALSE}
+set.seed(271828)
 fit <- ergm(flobusiness~edges+degree(1),
             control=control.ergm(MCMC.interval=1))
 ```
@@ -639,7 +649,8 @@ quick look here at how the simulation function works.
 
 The `simulate` command is easy to run:
 
-```{r}
+```{r flomarriage-simulate}
+set.seed(101)
 flomodel.03.sim <- simulate(flomodel.03,nsim=10)
 
 class(flomodel.03.sim) # what does this produce?
@@ -657,7 +668,7 @@ plot(flomodel.03.sim[[1]],
      vertex.cex = (flomodel.03.sim[[1]] %v% "wealth")/25)
 ```
 
-Voila. Of course, yours will look somewhat different.
+Voil\`a. Of course, yours will look somewhat different.
 
 Simulation from a model is a very powerful tool for
 examining the range of variation that can be expected from this model, both in the sufficient statistics that define the model, and in other statistics not explicitly specified by the model.  Simulation plays a large role in analyizing egocentrically sampled data, and if you take the `tergm` workshop, you will see how we can use simulation to examine the temporal implications of a model based on a single cross-sectional egocentrically sampled dataset.
@@ -683,18 +694,19 @@ the original network to the distribution of values we get in simulated networks 
 The **gof** function is a bit different than the **summary**, **ergm**, and **simulate** functions, in that it currently only takes 3 ergm-terms as arguments:  degree, esp (edgwise share partners), and distance (geodesic distances).  Each of these terms captures an aggregate network distribution, at either the node level (degree), the edge level (esp), or the dyad level (distance).
 
 
-```{r}
+```{r flomarriage-gof}
+set.seed(54321) # The gof function uses random values
 flomodel.03.gof <- gof(flomodel.03)
 flomodel.03.gof
 plot(flomodel.03.gof)
 ```
 
-```{r}
+```{r mesa-gof}
+set.seed(12345)
 mesamodel.02 <- ergm(mesa~edges)
 mesamodel.02.gof <- gof(mesamodel.02~degree + esp + distance, 
                         control = control.gof.formula(nsim=10))
 plot(mesamodel.02.gof)
-
 ```
 
 For a good example of model exploration and fitting for the Add Health
@@ -727,7 +739,8 @@ In that worst case scenario, we end up not being able to obtain coefficent estim
 
 For this, we'll using a larger network, faux.magnolia.high, and look at a simple model for triad closure.
 
-```{r}
+```{r magnolia}
+set.seed(10)
 data('faux.magnolia.high')
 magnolia <- faux.magnolia.high
 magnolia
@@ -738,64 +751,72 @@ summary(magnolia~edges+triangle)
 ```
 
 If we try to fit this "simple" model:
-```{r, eval=F}
+```{r magnolia-triangle, eval=F}
+set.seed(100)
 fit <- ergm(magnolia~edges+triangle,
             control=control.ergm(MCMLE.effectiveSize=NULL))
 ```
 
 ```
-Iteration 1 of at most 20: 
-Convergence test P-value: 1.4e-87 
-The log-likelihood improved by 1.183 
-Iteration 2 of at most 20: 
-Convergence test P-value: 3.8e-04 
-The log-likelihood improved by 0.1518 
-Iteration 3 of at most 20: 
-```
-
-```
-Error: Number of edges in a simulated network exceeds that in the observed by a factor of more than 20. This is a strong indicator of model degeneracy. If you are reasonably certain that this is not the case, increase the MCMLE.density.guard control.ergm() parameter.
+Starting maximum pseudolikelihood estimation (MPLE):
+Evaluating the predictor and response matrix.
+Maximizing the pseudolikelihood.
+Finished MPLE.
+Starting Monte Carlo maximum likelihood estimation (MCMLE):
+...
+Iteration 4 of at most 60:
+Optimizing with step length 0.3963.
+The log-likelihood improved by 1.1568.
+Estimating equations are not within tolerance region.
+Iteration 5 of at most 60:
+Error in ergm.MCMLE(init, nw, model, initialfit = (initialfit <- NULL),  : 
+  Number of edges in a simulated network exceeds that in the observed by a factor of more than 20. This is a strong indicator of model degeneracy or a very poor starting parameter configuration. If you are reasonably certain that neither of these is the case, increase the MCMLE.density.guard control.ergm() parameter.
 ```
 
 Very interesting.  Instead of converging, the algorithm heads off into networks that are much much more dense than the observed network.  This is such a clear indicator of a degenerate model specification that the algorithm stops after 3 iterations, to avoid heading off into areas that would cause memory issues.  If you'd like to peek a bit more under the hood, you can stop the algorithm earlier to catch where it's heading:
 
 
-```{r, eval=T, message=F, warning = F}
+```{r magnolia-triangle-halted, eval=T, message=F, warning = F}
+set.seed(1000)
 fit <- ergm(magnolia~edges+triangle, 
             control=control.ergm(MCMLE.maxit=2,MCMLE.effectiveSize=NULL))
-
 ```
 
 ```
-Starting maximum likelihood estimation via MCMLE:
-
+Starting maximum pseudolikelihood estimation (MPLE):
+Evaluating the predictor and response matrix.
+Maximizing the pseudolikelihood.
+Finished MPLE.
+Starting Monte Carlo maximum likelihood estimation (MCMLE):
 Iteration 1 of at most 2:
-Optimizing with step length 0.707275631968435.
-The log-likelihood improved by 8.688.
-
+Optimizing with step length 0.2805.
+The log-likelihood improved by 3.0798.
+Estimating equations are not within tolerance region.
 Iteration 2 of at most 2:
-Optimizing with step length 1.
-The log-likelihood improved by 3.539.
-
-Step length converged once. Increasing MCMC sample size.
-
+Optimizing with step length 0.0420.
+The log-likelihood improved by 4.6627.
+Estimating equations are not within tolerance region.
 MCMLE estimation did not converge after 2 iterations. The estimated coefficients may not be accurate. Estimation may be resumed by passing the coefficients as initial values; see 'init' under ?control.ergm for details.
-
- ... (output snipped)
-
+Finished MCMLE.
+Evaluating log-likelihood at the estimate. Fitting the dyad-independent submodel...
+Bridging between the dyad-independent submodel and the full model...
+Setting up bridge sampling...
+Using 16 bridges: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 .
+Bridging finished.
 This model was fit using MCMC.  To examine model diagnostics and check for degeneracy, use the mcmc.diagnostics() function.
 ```
 
-```{r, eval=T, results='hide', fig.show='asis'}
+```{r mcmc-diagnostics, eval=T, results='hide', fig.show='asis'}
 mcmc.diagnostics(fit)
 ```
 
 
-Clearly, somewhere very bad.
+Clearly, this Markov chain is heading somewhere very bad.
 
-This turns out to be one of the classic degenerate specifications, and we now understand much more about why it does not produce reasonable levels of triadic closure.
+This turns out to be one of the classic degenerate model specifications,
+and we now understand much more about why it does not produce reasonable levels of triadic closure.
 
-We also now have more robust version of modeling triangles:
+We also now have a more robust way of modeling triangles:
 the geometrically-weighed edgewise shared partner term (GWESP). 
 (For a technical introduction to GWESP see 
 [Hunter and Handcock, 2006](http://www.tandfonline.com/doi/abs/10.1198/106186006X133069#.U6R5WfldWSo);
@@ -803,7 +824,8 @@ for a more intuitive description and empirical application see
 [Goodreau, Kitts & Morris, 2009](http://link.springer.com/article/10.1353/dem.0.0045) )
 
 
-```{r, message = F, warning = F}
+```{r gwesp, message = F, warning = F}
+set.seed(10101)
 fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T),
             verbose=T)
 mcmc.diagnostics(fit)
@@ -828,16 +850,15 @@ This model was fit using MCMC.  To examine model diagnostics and check for degen
  ... (output snipped)
 ```
 
-Better, but not great. Here we'll change two things -- add some more reasonable terms to the model, and add in some robustness to the fitting algorithm by making the MCMC simulation longer.
+Better, but not great. Here we'll change two things.  First, we'll add some more reasonable terms to the model, and 
+second, we'll make the fitting algorithm more robust by making the MCMC simulation longer.
 
-```{r}
+```{r gwesp-plus}
+set.seed(10101)
 fit <- ergm(magnolia~edges+gwesp(0.25,fixed=T)+nodematch('Grade')+
               nodematch('Race')+nodematch('Sex'),
             control = control.ergm(MCMC.interval=10000),
             verbose=T)
-```
-
-```{r}
 mcmc.diagnostics(fit)
 ```
 
