@@ -1,0 +1,83 @@
+---
+title: "zzz"
+output: html_fragment
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(gt)
+```
+
+```{r thetable, echo=FALSE}
+cap_labels <- tibble::enframe(c(
+  vattr = "Vertex attributes",
+  eattr = "Edge attributes",
+  gattr = "Graph attributes",
+  list.attr = "Attributes can be lists",
+  hgraph = "Hypergraphs",
+  mgraph = "Multigraphs",
+  bips = "Bipartite"
+))
+
+list(
+  network = c(
+    "bips",
+    "hgraph",
+    "vattr",
+    "eattr", 
+    "gattr",
+    "list.attr"
+  ),
+  igraph = c(
+    "bips",
+    "mgraph",
+    "vattr", 
+    "eattr", 
+    "gattr",
+    "list.attr"
+  ),
+  graphNEL = c(
+      "eattr",
+      "vattr",
+      "gattr"
+    ),
+  graphAM = c(
+      "eattr",
+      "vattr",
+      "gattr"
+    )
+) %>%
+  tibble::enframe(name = "package", value = "dat") %>%
+  unnest(dat) %>%
+  mutate(
+    has = "v"
+  ) %>%
+  pivot_wider(names_from = package, values_from = has,values_fill = "x") %>%
+  left_join(cap_labels, by = c("dat" = "name")) %>%
+  gt(
+    rowname_col = "value"
+  ) %>%
+  data_color(
+    columns = network:graphAM,
+    colors = function(x) recode(x, "v"="Forestgreen", x="darkred"),
+    apply_to = "text"
+  ) %>%
+  cols_hide(dat) %>%
+  tab_spanner(
+    label = "Package / Class",
+    columns = everything()
+  ) %>%
+  tab_footnote(
+    footnote = "Package 'graph'.",
+    location = cells_column_labels(c(graphNEL, graphAM))
+  ) %>%
+  tab_footnote(
+    footnote = "Networks with multiple edges in the same dyad.",
+    location = cells_stub(dat == "mgraph")
+  ) %>%
+    tab_footnote(
+    footnote = "Networks with edges connecting sets of vertices.",
+    location = cells_stub(dat == "hgraph")
+  )
+```

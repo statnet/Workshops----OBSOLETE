@@ -17,6 +17,18 @@ library(knitr)
 knitr::opts_chunk$set(cache=F, comment=NA, fig.align='center')
 ```
 
+```{r testing, message = FALSE, warning = FALSE}
+master_lib <- "~/R/GHmaster-library"
+
+# #Make lib 1st position in libPath
+defaultPaths <- .libPaths()
+.libPaths(c(master_lib, defaultPaths))
+.libPaths()
+
+library(tergm, lib.loc=master_lib)
+
+```
+
 _Last updated: `r Sys.Date()`_
 
 <div style = "width:60%; height = 60%">
@@ -100,13 +112,6 @@ exploiting this benefit, using functions from base R and other packages seamless
 Make sure the packages are attached:
 
 ```{r library, message = FALSE, warning = FALSE}
-master_lib <- "~/R/GHmaster-library"
-
-# #Make lib 1st position in libPath
-defaultPaths <- .libPaths()
-.libPaths(c(master_lib, defaultPaths))
-.libPaths()
-
 library(tergm)
 library(tsna)
 library(ndtv)
@@ -386,27 +391,62 @@ Ok, so that's a whirlwind tour through the descriptive tools available in `statn
 
 ## 3. Statistical Modeling
 
-Temporal ERGMs (STERGMs) are an extension of ERGMs for modeling dynamic networks in discrete time.    Where an ERGM posit a single model for the _prevalence_ of ties in a cross-sectional single network, TERGMs instead posit two or more models for the _tie dynamics_ in a network over time, and each model is itself an ERGM.  
+Temporal ERGMs (STERGMs) are an extension of ERGMs for modeling dynamic networks in discrete time.    Where an ERGM posits one model for the _prevalence_ of ties in a single cross-sectional single network, TERGMs instead typically posit two or more models for the _tie dynamics_ in a network over time, and each model is itself an ERGM.  
 
-Model specifications in the `tergm` package use the standard `R` formula syntax (~ term1 + term2 ...), with terms that represent network statistics, just like we do for ERGMs.  
 
-* Many term names carry over from the `ergm` package, and they refer to the same configuration (e.g., `edges` refers to a tie between two nodes, and `degree(1) refers to nodes with degree equal to 1).  *However, the way the terms count these configurations is different, and depends on context.*
+## TERGM model terms
 
-* Some new temporally-specific terms are available.
+Model specifications in the `tergm` package use the standard `R` formula syntax (~ term1 + term2 ...), with terms that represent network statistics, just like we do for ERGMs. 
 
-* The biggest difference is in the syntax we use to identify what kinds of changes we want to track: these are specified using the new "operator" terms available in version 4.0 of the `ergm` and `tergm` packages.  There are five temporal operators:  `Form()`, `Diss()`, `Persist()`, `Cross()` and `Change()`. We will explain their use in detail below.
+Many term names carry over from the `ergm` package, and they refer to the same configuration (e.g., `edges` refers to a tie between two nodes, and `degree(1) refers to nodes with degree equal to 1).  *However, the way the terms count these configurations is different, and depends on context.*
 
-TERGMs are a very general family of models.  Sub-classes within this family are defined by how tie changes are tracked and counted, and the model specification for each type of change.  We will focus on two important sub-classes in this tutorial: the joint model and the separable model.  These allow us to introduce all of the operator terms implemented in the `tergm` packages, and provide a good intuitive foundation for temporal model specification.
+Some new temporally-specific terms are available for monitoring.
+
+## TERGM Operators
+
+The biggest difference you'll notice in specifying a TERGM is that this typically involves more than one formula.  The formulas are specified using the new "operators" available in version 4.0 of the `tergm` package.  
+
+There are five temporal operators:  `Form()`, `Diss()`, `Persist()`, `Cross()` and `Change()`.  Each operator tracks a specific type of change.
+
+* `Form()` tracks the formation of ties between timesteps, so the terms in this model represent the factors that influence tie formation.  For example, `Form(~edges)` is a model for homogeneous tie formation, and the estimated coefficient would represent the log-odds of a tie forming in each timestep.  
+
+* `Diss()` tracks the dissolution of ties between timesteps, so the terms in this model represent the factors that influence tie dissolution  For example, `Diss(~edges)` is a model for homogeneous tie dissolution, and the estimated coefficient would represent the log-odds of a tie forming in each timestep.
+
+* `Persist()` tracks the persistence of ties between timesteps -- so it is the opposite of `Diss()` and only one of these can be used in specifying a model.  For example, `Persist(~edges)` is a model for homogeneous tie persistence, and the estimated coefficient is equal to the `Diss(~edges)` coefficient multiplied by `-1`.
+
+* `Change()` tracks the total number of dyads that change between timesteps, both formations and dissolutions.  So it represents the rate of "churn" or turnover in dyad status. The `Change(~edges)` model would specify a homogenous rate of change, and the estimated coefficient would represent the log-odds of a dyad changing status -- either forming a tie or dissolving a tie --  in each timestep.
+
+* `Cross()` tracks the cross-sectional structure of the network over time, and in this sense it is not a model for tie-dynamics.  This operator is analogous to a cross-sectional `ergm` -- but it operates on a set of networks (typically, a time-series).  It effectively summarizes the average of a structural feature across these networks. For example, `Cross(~edges)` is a model for homogeneous tie density, and the estimated coefficient would represent the log-odds of a tie existing in the network at each timepoint.
+
+You can mix these operators in different ways, but no more than 2 operators can include the same model term, otherwise a model will be overspecified.
+
+And while the operators can be mixed in different ways, there are two pairings that are most frequently used:  `Form() + Diss()` and `Cross() + Change()`.  So we focus on these here.
+
+
+## TERGM classes
+
+TERGMs are a very general family of models.  Sub-classes within this family are defined by how tie changes are tracked and counted (the "operators" you use), and the model specification for each type of change (the model terms in the operators).  
+
+We will focus on two important classes of TERGMs in this tutorial: the joint model and the separable model.  These allow us to introduce all of the operator terms implemented in the `tergm` packages, and provide a good intuitive foundation for temporal model specification.
 
 The joint and separable models both specify a pair of equations, but they differ in how they represent the tie-change dynamics:  
 
-*  *The joint model* specifies a model for the starting network, and a model for the changes between time points.   The model for the starting network is essentially an ERGM -- it represents the distribution of ties in the initial, static network.  The model for the changes, because it is a single formula, requires the factors that that influence tie formation and tie dissolution to be the same. The change model coefficients represent the change in the prevalence of a configuration relative to the starting network: if negative the prevalence of that configuration is declining, if positive it is increasing.
+*  *The joint model* Joint models specify a process for tie dynamics using operators that are dependent within time steps; the `Cross() + Change()` model is the classice example.  Here, a single dyad change will affect both the `Cross()` cross-sectional network statistics and the changes counted in the `Change()` model statistics at each timestep. The terms in the two operators are correlated, so must be jointly evaluated at each step of estimation or simulation (hence the name).
 
-* *The separable model* specifies a formula for tie formation, and a formula for tie dissolution.  With this class one can represent different factors influencing tie formation and tie dissolution, by choosing different terms in the two models.  The coefficients in the formation model represent how creating a configuration impacts the conditional log-odds of this tie forming (positive or negative), and the coefficients in the dissolution model represent that impact on tie persistence (again positive or negative). 
+* *The separable model* Separable models specify a process for tie dynamics using operators that are independent within time-step (though they may be dependent between time steps); the `Form() + Diss()` (or `Persist()`) model is the classic example.  Here, a single dyad change will affect either the `Form()` model statistics or the `Diss()/Persist()` model statistics at each timestep, but not both, because that dyad will either not have an edge or have an edge in the starting network.  So the terms in the two operators are uncorrelated, and can be separately evaluated at each step for estimation or simulation.
+
+This distinction has important implications for the type of data that can be used to estimate a TERGM, so it is a key difference to keep in mind.
 
 ### The joint model
 
  -- To Do --
+ 
+Imagine a time series of 5 networks, with identical cross-sectional structure.  The dynamics that could produce this pattern lie on a continuum.  At one end is a process with no change at all: every tie persists and every empty dyad stays empty.  At the other end is a process of maximal change:  every tie dissolves at each timestep, and a new set of the same number of ties is formed in the same configurations. 
+ 
+ that's right. cross-sectional statistics (whether via Cross() operator or just bare statistics) as well as Change() violate separability between formation and dissolution.
+
+They are also not separable from each other, either, because whereas a single-dyad change from t-1 to t will affect either Form statistic, Diss statistic, but not both (because that dyad will either not have an edge or have an edge in t-1, but not both), that dyad change will simultaneously affect both the cross-section of t and the change network from t-1 to t (in the same or opposite directions).
+
 
 ### The separable model: STERGMs
 
@@ -765,7 +805,7 @@ startTime <- Sys.time()
 tergm.fit.1 <- tergm(
   flobusiness ~ 
     Form(~ edges + gwesp(0, fixed=T)) + 
-    Diss(~ offset(edges)),
+    Persist(~ offset(edges)),
   targets = "formation",
   offset.coef = log(9),
   estimate = "EGMME",
@@ -782,30 +822,14 @@ In the X11 window, you should see the MCMC traceplots showing the progress of th
 
 ![](images/STERGM-X11.png)
 
-The real-time feedback suggests that the fitting went well, but let's double-check:
+The real-time feedback suggests that the fitting went well, but let's double-check by running the `mcmc.diagnostics`:
 ```{r mcmcdiag1, eval = FALSE}
-mcmc.diagnostics(tergm.fit.1)
+mcmc.diagnostics(tergm.fit.1, which="plots") # only returns the plots
 ```
 
-```
-Sample statistics summary:
-
-Iterations = 10:2509
-Thinning interval = 1 
-Number of chains = 1 
-Sample size per chain = 2500 
-
-1. Empirical mean and standard deviation for each variable,
-   plus standard error of the mean:
-   
- = = = = = = Lots of output snipped = = = = = = 
-```
 ![](images/STERGM-fit1diag.png)
 
-These look pretty good.  The serial correlation evident in the traceplots 
-could be reduced by modifying some of `tergm`'s control parameters.  You can
-experiment with increasing the `mcmc.interval` to see how that works.  But
-the level of serial correlation here is not enough to cause concern.
+These look pretty good.  The serial correlation evident in the traceplots could be reduced by modifying some of `tergm`'s control parameters.  You can experiment with increasing the `mcmc.interval` to see how that works.  But the level of serial correlation here is not enough to cause concern.
 
 So, we'll move on to explore the fit object to see what we have:
 
