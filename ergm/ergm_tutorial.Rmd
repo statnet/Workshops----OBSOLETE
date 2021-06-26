@@ -62,8 +62,8 @@ background in linear and generalized linear models in statistics.
 
 Minimally, you will need to install the latest version of **R**
 [(available here)](https://cran.r-project.org)
-and the `statnet` packages `ergm` and `sna` to
-run the code presented here (`ergm` will automatically install `network`).  
+and the `statnet` packages `ergm` and `network` to
+run the code presented here (`ergm` will automatically install `network` when it is loaded).  
 The workshops are conducted using the free version of `Rstudio`
 [(available here)](https://rstudio.org).
 
@@ -72,31 +72,20 @@ The full set of installation intructions with details can be found on the [`stat
 If you have not already downloaded the `statnet` packages for this workshop, the quickest way to install these (and the other most commonly used packages from the `statnet` suite),  is to open an R session and type: 
 
 ```{r,eval=FALSE}
-install.packages('statnet')
+install.packages('ergm')
 ```
 
 ```{r}
-library(statnet)
+library(ergm)
 ```
 
-<!-- For this tutorial, we will use one more package (latticeExtra), which is recommended (but not required) by ergm: -->
-
-<!-- ```{r,eval=FALSE} -->
-<!-- install.packages('latticeExtra') -->
-<!-- require(latticeExtra) -->
-<!-- ``` -->
-
-Check your package versions against this:
-
+You can check the version number with:
 ```{r}
-sessionInfo()
+packageVersion("ergm")
 ```
 
-Set a seed for simulations -- this is not necessary, but it ensures that 
-you will get the same results as the online tutorial (if we execute the same commands in the same order).
-```{r}
-set.seed(0)
-```
+Throughout, we will set a random seed via `set.seed()` for commands in tutorial that require simulating random 
+values---this is not necessary, but it ensures that you will get the same results as the online tutorial.
 
 ## 1. Statistical network modeling with ERGMs
 
@@ -134,7 +123,7 @@ where
 * $\theta$ is the vector of coefficients for those statistics, and 
 * $k(\theta)$ represents the quantity in the numerator summed over all possible networks (typically constrained to be all networks with the same node set as $y$).
 
-If you're not familiar with the compact notation here, note that the numerator represents a formula that is linear in the log form:
+If you're not familiar with the compact notation here, the numerator represents a formula that is linear in the log form:
 
 $$
 \log({\exp(\theta'g(y))}) = \theta_1g_1(y) + \theta_2g_2(y)+ ... + \theta_pg_p(y)
@@ -386,7 +375,7 @@ And yes, there is a significant positive wealth effect on the probability of a t
 
 *Question:*  What does the value of the **nodecov** statistic represent?
 
-How do we interpret the coefficients here?  Note that the wealth effect operates on both nodes in a dyad.  The conditional log-odds of a tie between two actors is:
+How do we interpret the coefficients here?  The wealth effect operates on both nodes in a dyad.  The conditional log-odds of a tie between two actors is:
 
 
 $$
@@ -437,7 +426,7 @@ fauxmodel.01 <- ergm(mesa ~edges +
 summary(fauxmodel.01)
 ```
 
-Note that two of the coefficients are estimated as -Inf
+Two of the coefficients are estimated as `-Inf`
 (the nodematch coefficients for race Black and Other). Why is this?
 
 ```{r}
@@ -449,7 +438,7 @@ The problem is that there are very few students in the Black and
 Other race categories, and these few students form 
 no within-group ties. The empty cells are what produce the -Inf estimates.
 
-Note that we would have caught this earlier if we had looked at the $g(y)$ stats at the beginning:
+We would have caught this earlier if we had looked at the $g(y)$ stats at the beginning:
 
 ```{r}
 summary(mesa ~edges  + 
@@ -562,7 +551,7 @@ A more complete discussion of many of these terms can be found in
 the 'Specifications'
 paper in the [*Journal of Statistical Software v24(4)*](http://www.jstatsoft.org/v24/i04)
 
-Finally, note that models with only dyad independent terms are estimated in statnet using a logistic regression algorithm to maximize the likelihood.  Dyad dependent terms require a different approach to estimation, which, in statnet, is based on a Monte Carlo Markov Chain (MCMC) algorithm that stochastically approximates the Maximum Likelihood.
+Finally, models with only dyad independent terms are estimated in statnet using a logistic regression algorithm to maximize the likelihood.  Dyad dependent terms require a different approach to estimation, which, in statnet, is based on a Monte Carlo Markov Chain (MCMC) algorithm that stochastically approximates the Maximum Likelihood.
 
 ### Coding new ergm-terms
 
@@ -573,7 +562,7 @@ also be found in the
 [*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides and installation instructions from the workshop we teach on coding ergm-terms can be found
 [here](https://github.com/statnet/Workshops/tree/master/ergm.userterms).
 
-Note that writing up new `ergm` terms requires some knowledge of 
+Writing up new `ergm` terms requires some knowledge of 
 C and the ability
 to build R from source.  While the latter is covered in the tutorial, the many environments for building R and the rapid changes in these environments make these instructions obsolete quickly. 
  
@@ -883,7 +872,7 @@ While the `ergm` package has had this capability for many years (and old ERGM wo
 We now have a separate workshop/tutorial for `ergm.ego`, so we no longer cover this material in the current ERGM workshop.  As always, this workshop material can be found online at the [statnet Workshops wiki](https://github.com/statnet/Workshops/wiki).
 
 
-## 9. Additional functionality in statnet and other package
+## 9. Additional functionality in statnet and other packages
 
 `statnet` is actually a suite of packages that are designed to work together, and provide tools for a wide range of different types of network data analysis.  Examples include temporal network models and dynamic network vizualizations, analysis of egocentrically sampled network data, multilevel network modeling, latent cluster models and network diffusion and epidemic models.  Development is ongoing, and there are new packages, and new functionality added to existing packages on a regular basis. 
 
@@ -974,9 +963,9 @@ a network.
 
 The best place to start is the special issue of the *Journal of Statistical Software* (JSS) devoted to `statnet`:  [link](https://www.jstatsoft.org/issue/view/v024)
 
-The nine papers in this issue cover a wide range of theoretical and practical topics related to ERGMs, and their implementation in `statnet`.
+The nine papers in this volume cover a wide range of theoretical and practical topics related to ERGMs, and their implementation in `statnet`.
 
-HOWEVER:  Note that this issue was written in 2008.  The statnet code base has evolved considerably since that time, so some of the syntax specified in the articles may no longer work (in most cases because it has been replace with something better).
+HOWEVER:  This volume was written in 2008.  The statnet code base has evolved considerably since that time, so some of the syntax specified in the articles may no longer work (in most cases because it has been replace with something better).
 
 For social scientists, a good introductory application paper is:
 
