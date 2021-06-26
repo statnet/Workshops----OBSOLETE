@@ -137,7 +137,7 @@ The statistics $g(y)$ can be thought of as the "covariates" in the model.  In th
 
 As a result, every term in an ERGM must have an associated algorithm for computing its value for your network.  The `ergm` package in `statnet` includes about 150 term-computing algorithms.  We will explore some of these terms in this 
 tutorial, and links to more information are provided in 
-[section 3.](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation).
+[section 3](ergm_tutorial.html#model-terms-available-for-ergm-estimation-and-simulation).
 
 You can get the list of all available terms, and the syntax for using them, by typing:
 
@@ -339,7 +339,7 @@ $`r signif(coef(flomodel.02)[[1]], 3)` + `r signif(coef(flomodel.02)[[2]], 3)` =
 * if two triangles: 
 $`r signif(coef(flomodel.02)[[1]], 3)` + 2 \times`r signif(coef(flomodel.02)[[2]], 3)` = `r signif(coef(flomodel.02)[[1]] + 2*coef(flomodel.02)[[2]], 3)`$
 
-* the corresponding probabilities are shown here (note the use of the `coef` function):
+* the corresponding probabilities are shown here (note the use of the `plogis` and `coef` functions):
 ```{r ilogit}
 plogis(coef(flomodel.02)[[1]] + (0:2) * coef(flomodel.02)[[2]])
 ```
@@ -546,33 +546,35 @@ The terms that can be used in a model also depend on the type of network being a
 
 ### Terms provided with ergm
 
-MUST CHANGE THIS.  Don't need ergm-terms-help for the second time?
-For a list of available terms that can be used to specify an ERGM, type:
+The `ergm` package provides myriad terms, and it can be difficult to absorb the full array of available model
+terms in any one place.  This is particularly true with the release of `ergm` version 4.0, which expands the
+user's ability to create terms even further through the use of operators.  As mentioned
+[above in Section 1](ergm_tutorial.html#the-model-statistics-gy-ergm-terms), it is possible to search for specific
+topics using `search.ergmTerms` or to obtain
+help on the full array of terms using `help("ergm-terms")`.  
 
-```{r ergm-terms-help2,eval=FALSE}
-help('ergm-terms')
-```
+The list of all terms is quite lengthy, so it may be helpful to start with a more concise list such as the one found
+[here](https://statnet.github.io/nme/d2-ergmterms.html).
+A more detailed discussion can be found in
+the 'Specifications' paper in the [*Journal of Statistical Software v24(4)*](http://www.jstatsoft.org/v24/i04)
 
-A table of commonly used terms can be found [here](https://statnet.github.io/nme/d2-ergmterms.html)
-
-A more complete discussion of many of these terms can be found in
-the 'Specifications'
-paper in the [*Journal of Statistical Software v24(4)*](http://www.jstatsoft.org/v24/i04)
-
-Finally, models with only dyad independent terms are estimated in statnet using a logistic regression algorithm to maximize the likelihood.  Dyad dependent terms require a different approach to estimation, which, in statnet, is based on a Monte Carlo Markov Chain (MCMC) algorithm that stochastically approximates the Maximum Likelihood.
+To appreciate the expanded capabilities of the `ergm` package as of the release of version 4.0, we recommend
+[Krivitsky et al (2021)](https://arxiv.org/abs/2106.04997).  In this article, Section 3 describes the enhanced flexibility
+to create specialized model terms involving functions of nodal covariates, and Section 4 explains how operators
+further extend the types of terms at the user's disposal.
 
 ### Coding new ergm-terms
 
-There is a `statnet` package --- `ergm.userterms` ---
-that provides the utilities needed to write new
-ergm-terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
+There is a `statnet` package, `ergm.userterms`, that provides the utilities needed to write new
+`ergm` terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
 also be found in the 
-[*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides and installation instructions from the workshop we teach on coding ergm-terms can be found
+[*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides and
+installation instructions from the workshop we teach on coding ergm-terms can be found
 [here](https://github.com/statnet/Workshops/tree/master/ergm.userterms).
 
-Writing up new `ergm` terms requires some knowledge of 
-C and the ability
-to build R from source.  While the latter is covered in the tutorial, the many environments for building R and the rapid changes in these environments make these instructions obsolete quickly. 
+Writing up new `ergm` terms requires some knowledge of C and the ability
+to build R from source.  While the latter is covered in the tutorial, the many environments for building R and the
+rapid changes in these environments make these instructions obsolete quickly. 
  
 ## 4. Assessing convergence for dyad dependent models: MCMC Diagnostics
 
@@ -975,11 +977,14 @@ a network.
 
 ## References
 
-The best place to start is the special issue of the *Journal of Statistical Software* (JSS) devoted to `statnet`:  [link](https://www.jstatsoft.org/issue/view/v024)
-
+For a general orientation to the `statnet` packages,
+the best place to start is the special issue of the *Journal of Statistical Software* (JSS) devoted to `statnet`:  [link](https://www.jstatsoft.org/issue/view/v024)
 The nine papers in this volume cover a wide range of theoretical and practical topics related to ERGMs, and their implementation in `statnet`.
+However, this volume was written in 2008.  The `statnet` code base has evolved considerably since that time, and with the release of
+`ergm` version 4.0, the most current paper describing the capabilities of the `ergm` package is
+[Krivitsky et al (2021)](https://arxiv.org/abs/2106.04997).
 
-HOWEVER:  This volume was written in 2008.  The statnet code base has evolved considerably since that time, so some of the syntax specified in the articles may no longer work (in most cases because it has been replace with something better).
+so some of the syntax specified in the articles may no longer work (in most cases because it has been replace with something better).
 
 For social scientists, a good introductory application paper is:
 
