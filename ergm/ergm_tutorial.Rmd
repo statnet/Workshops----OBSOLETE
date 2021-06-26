@@ -2,12 +2,14 @@
 title: "Exponential Random Graph Models (ERGMs) using statnet"
 author: "Statnet Development Team"
 output:
+  pdf_document:
+    toc: yes
   html_document:
     fig_width: 8
     highlight: kate
     theme: cosmo
     toc: yes
-    toc_float: true
+    toc_float: yes
 ---
 
 ```{r setup, include=FALSE}
