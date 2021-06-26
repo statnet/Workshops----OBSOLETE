@@ -41,7 +41,6 @@ for self-study, with example code and self-contained data.
 The `statnet` packages we will be demonstrating are:
 
 * `network` -- storage and manipulation of network data
-* `sna` -- descriptive statistics and graphics for exploratory network analysis`
 * `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
 
 The `ergm` package has more advanced functionality that is not covered
@@ -76,7 +75,6 @@ install.packages('ergm')
 ```
 
 ```{r loadPackage}
-#
 library(ergm)
 ```
 
@@ -548,15 +546,15 @@ The terms that can be used in a model also depend on the type of network being a
 
 The `ergm` package provides myriad terms, and it can be difficult to absorb the full array of available model
 terms in any one place.  This is particularly true with the release of `ergm` version 4.0, which expands the
-user's ability to create terms even further through the use of operators.  As mentioned
-[above in Section 1](ergm_tutorial.html#the-model-statistics-gy-ergm-terms), it is possible to search for specific
+user's ability to create terms even further, for example through the use of operators.  As mentioned
+above in [Section 1](ergm_tutorial.html#the-model-statistics-gy-ergm-terms), it is possible to search for specific
 topics using `search.ergmTerms` or to obtain
 help on the full array of terms using `help("ergm-terms")`.  
 
 The list of all terms is quite lengthy, so it may be helpful to start with a more concise list such as the one found
 [here](https://statnet.github.io/nme/d2-ergmterms.html).
 A more detailed discussion can be found in
-the 'Specifications' paper in the [*Journal of Statistical Software v24(4)*](http://www.jstatsoft.org/v24/i04)
+[volume 24, issue 4 of the *Journal of Statistical Software*](http://www.jstatsoft.org/v24/i04).
 
 To appreciate the expanded capabilities of the `ergm` package as of the release of version 4.0, we recommend
 [Krivitsky et al (2021)](https://arxiv.org/abs/2106.04997).  In this article, Section 3 describes the enhanced flexibility
@@ -566,7 +564,7 @@ further extend the types of terms at the user's disposal.
 ### Coding new ergm-terms
 
 There is a `statnet` package, `ergm.userterms`, that provides the utilities needed to write new
-`ergm` terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
+ergm-terms. The package is available on CRAN, and installing it will include the tutorial (ergmuserterms.pdf).  The tutorial can 
 also be found in the 
 [*Journal of Statistical Software 52(2)*](http://www.jstatsoft.org/v52/i02), and some introductory slides and
 installation instructions from the workshop we teach on coding ergm-terms can be found
@@ -978,13 +976,16 @@ a network.
 ## References
 
 For a general orientation to the `statnet` packages,
-the best place to start is the special issue of the *Journal of Statistical Software* (JSS) devoted to `statnet`:  [link](https://www.jstatsoft.org/issue/view/v024)
+the best place to start is the special volume of the *Journal of Statistical Software* (JSS) devoted to `statnet`, 
+vol. 24:  [https://www.jstatsoft.org/issue/view/v024](https://www.jstatsoft.org/issue/view/v024)
 The nine papers in this volume cover a wide range of theoretical and practical topics related to ERGMs, and their implementation in `statnet`.
-However, this volume was written in 2008.  The `statnet` code base has evolved considerably since that time, and with the release of
-`ergm` version 4.0, the most current paper describing the capabilities of the `ergm` package is
-[Krivitsky et al (2021)](https://arxiv.org/abs/2106.04997).
 
-so some of the syntax specified in the articles may no longer work (in most cases because it has been replace with something better).
+However, this volume was written in 2008.  The `statnet` code base has evolved considerably since that time, and with the release of
+`ergm` version 4.0, the most current paper describing the capabilities of the `ergm` package is the following preprint:
+
+Krivitsky, P. N., David R. Hunter, Martina Morris, and Chad Klumb (2021).
+ergm 4.0:  New Features and Improvements.
+[https://arxiv.org/abs/2106.04997](https://arxiv.org/abs/2106.04997).
 
 For social scientists, a good introductory application paper is:
 
