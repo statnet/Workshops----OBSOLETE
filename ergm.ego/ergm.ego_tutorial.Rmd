@@ -257,10 +257,10 @@ and the networks simulated from the fitted model will be centered on the (scaled
 observed statistics.
 
 
-### Practical issues
+### Practical issues {.tabset}
 
 In practice, egocentric sample statistics generally need to be 
-adjusted for network size and some types of observable discrepancies. 
+adjusted for network size and some types of observable discrepancies. This is one of the key differences between working with sampled and unsampled network data.
 
 #### Network Size
 
@@ -269,14 +269,15 @@ obvious way that egocentric estimation differs
 from a standard ERGM estimation on a completely observed
 network.  With a network census, the network size is known;
 by contrast, with a network sample, we don't typically know the size of the network from
-which it is drawn.  However, if the
-statistics we observe in the sample scale in a known way with network size, then
+which it is drawn.  
+
+If the statistics we observe in the sample scale in a known way with network size, then
 we can adjust for this in the estimation, and the resulting parameter estimates
 (with the exception of the edges term) will be "size invariant".
 
 Here we will follow Krivitsky, Handcock, and Morris (2011), who showed that one can
 obtain a "per capita" size invariant parameterization for dyad-independent
-statistics by using an offset, approximately equal to $-\log(n)$, where $n$ is
+statistics in any network by using an offset, approximately equal to $-\log(N)$, where $N$ is
 the number of nodes in the network.  The intuition
 is that this transforms the density-based parameterization (ties per dyad) 
 that is the natural scale for ERGMs into a mean degree-based parameterization
@@ -285,12 +286,12 @@ $$
 \text{Mean Degree} = \frac{2\times\text{ties}}{\text{nodes}} = \frac{2T}{n}
 $$
 $$
-\text{Density} = \frac{\text{ties}}{\text{dyads}} = \frac{T}{\frac{n(n-1)}{2}} = \frac{\text{Mean Degree}}{(n-1)}
+\text{Density} = \frac{\text{ties}}{\text{dyads}} = \frac{T}{\frac{N(N-1)}{2}} = \frac{\text{Mean Degree}}{(N-1)}
 $$
 
 Once the number of edges is adjusted to preserve the mean degree, Krivitsky et al. show that all of the dyad
 independent terms are properly scaled.  For degree-based terms, we would want, by
-analogy, for per capita invariance to preserve the degree probability distribution.  
+analogy, for *per-capita* invariance to preserve the degree probability distribution.  
 Experimental results suggest that the mean-degree preserving offset has this
 property, but a mathematical proof is elusive.
 
@@ -314,20 +315,18 @@ the number of ties for that ego-alter tie configuration.  If you know the
 source of the discrepancy, or want to make a different assumption
 you may want to address this before fitting the data in `ergm.ego`.
 
-#### Constructing the egocentric **target statistics**
+#### Egocentric **target statistics**
 
-Now that we have a simple way to construct a consistent set of egocentric statistics
-and implement a size-invariant parameterization, we can set up the *target statistics*
-for the ERGM estimation: instead of using $|N|$ we use $|N'|$.
+Once the network size-invariant parameterization and consistency issues are addressed we have a simple way to construct the *target statistics*
+needed for ERGM estimation: we instruct `ergm.ego` to scale the values of the sample statistics to the desired network size.  
 
-The resulting values are the target statistics that we pass to `ergm`.
+The way we do this is by specifying an `offset` term in the model to scale the estimates to the network size we want.  The `offset` used will depend on the context.
 
-If we wanted to obtain population estimates from `ergm.ego` for a population
-with a known size $N$, we would fit the model with an
-offset of $\log(N/{N'})=\log(N) - \log(N')$.  In general, however, we do not know $N$.  So we often
-fit with an offset of $-\log(N')$, which will return
-the per capita estimates that can
-be easily rescaled to any value for simulation purposes.
+* *For unweighted samples:*  To obtain population estimates from `ergm.ego` from an unweighted sample of size $|S|$ to a population with a known (or specified) size $N$, fit the model with an offset of $\log(N/{S})=\log(N) - \log(S)$.  
+
+* *For weighted samples:*  To obtain population estimates from `ergm.ego` from a weighted sample to a population with a known (or specified) size $N$, first choose a network size, $|N'|$, to be used for estimation (a *pseudo-population* that will have the correct nodal attribute distribution specified by the weights), and then fit the model with an offset of $\log(N/{N'})=\log(N) - \log(N')$.  The criteria for choosing a good value of $|N'|$ are discussed in the [Example section below](#preliminaries).
+
+* *If the population network size is unknown:*  This is the most general case.  If we do not know $N$ or wish to specify it we often fit with an offset of $-\log(S)$ (for the unweighted sample) or $-\log(N')$ (for the weighted sample).  This will return *per-capita* estimates that can be easily rescaled to any value post-estimation, e.g., for simulation purposes.
 
 ## Statistical Inference
 
@@ -366,7 +365,7 @@ package has an example you can run the example for more information:
 example(sample.egor)
 ```
 
-# The package `ergm.ego`
+# The package `ergm.ego` {.tabset}
 
 Since `ergm.ego` is essentially a wrapper around `ergm`, there are relatively few
 functions in the `ergm.ego` package itself.  The functions that are there deal with
@@ -422,17 +421,6 @@ For more information:
 ?as.egor
 ```
 
-
-<!-- WE NEED A QUICK OVERVIEW OF SURVEY DESIGN AND WEIGHTS IN EGOR -->
-
-<!-- Some special methods are also implemented for working with `egor` objects -->
-
-<!-- * `sample` -- takes a sample of the egos, bringing along their alters and alter-alter ties into a new `egor` object. -->
-<!-- * `subset` -- allows you to define a condition for the subset of egos, alters, or alter--alter ties to choose -->
-<!-- * `na.omit` -- returns an `egodata` object without NAs in their -->
-<!-- (or their alter's) columns -->
-<!-- * `ego.design` can be used to query or set the sampling design. -->
-<!-- * `alter.design` can be used to query or set the alter selection information. -->
 
 ## Model terms
 
