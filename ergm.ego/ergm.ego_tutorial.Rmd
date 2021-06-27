@@ -825,7 +825,7 @@ You can also force one of these two regimes by setting `ppopsize` to `"samp"` or
 
 For more information, see
 
-```{r, message=F}
+```{r, message=F, eval=FALSE}
 ?control.ergm.ego
 ```
 
