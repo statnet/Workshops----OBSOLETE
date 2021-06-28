@@ -22,7 +22,7 @@ _Last updated `r Sys.Date()`_
 ```{r dev, child = '../statnetDevTeam.Rmd'}
 ```
    
-The network modeling software demonstrated in this tutorial is authored by Pavel Krivitsky (`ergm.ego`).
+The network modeling software demonstrated in this tutorial is authored by Pavel Krivitsky (`ergm.ego`), with contributions from Michał Bojanowski.
 
 ---
 
@@ -1188,47 +1188,7 @@ round(se.compare, 3)
 As with ordinary statistics, standard error is inverse-proportional to
 the square root of the sample size.
 
-### Oversample small group
 
-Suppose that we oversample the minority groups in inverse proportion to the square root of their subpopulation size.
-
-```{r, message=F}
-race_counts <- table(fmh %v% "Race")
-w <- as.vector(1/sqrt(race_counts[fmh %v% "Race"]))
-fmh.egosampN4w <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
-head(fmh.egosampN4w)
-```
-For example, for every Black student, there are about `r round(race_counts["White"]/race_counts["Black"])` students, and under the sampling design, there are about `r round(sum(fmh.egosampN4w$ego$variables$Race=="White")/sum(fmh.egosampN4w$ego$variables$Race=="Black"))`.
-
-```{r, message=F}
-egofitN4w<-ergm.ego(fmh.egosampN4w ~ degree(0:3) 
-                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
-                    + nodefactor("Sex") + nodematch("Sex")
-                    + absdiff("Grade"),
-                    popsize=N)
-```
-
-Which standard errors are improved by this sampling scheme?
-
-```{r, message=F}
-
-# compare the coef
-coef.compare <- data.frame(
-  "NW est" = coef(fit.ergm), 
-  "Ego SampN4 est" = coef(egofitN4)[-1],
-  "Ego OSamp est" = coef(egofitN4w)[-1])
- 
-round(coef.compare, 3)
-
-# compare the s.e.'s
-se.compare <- data.frame(
-  "NW SE" = model.se(fit.ergm),
-  "Ego Samp4 SE" = model.se(egofitN4)[-1],
-  "Ego OSamp SE" = model.se(egofitN4w)[-1])
-
-round(se.compare, 3)
-
-```
 
 # Package Development
 
