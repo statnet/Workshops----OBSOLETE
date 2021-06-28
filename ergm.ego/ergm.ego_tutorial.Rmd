@@ -154,6 +154,8 @@ Link-trace designs have traditionally been used to sample hard-to-reach populati
 this too is a study design variable,
 and alter recruitment may be investigator-driven, or respondent-driven.  This gives rise to a wide range of possible link-trace designs.  When the decision to elicit a new wave of alters depends on an attribute of the current node (e.g., is this node an injection drug user) the design is called an adaptive sample.
 
+___
+
 ### Egocentric Designs
 
 Egocentric network sampling comprises a range of designs developed specifically 
@@ -184,6 +186,7 @@ in which alters cannot be uniquely identified and alter matrices are not collect
 The minimal design is more common, and the data are more widely available,
 largely because it is less invasive and less time-consuming than designs which include identifiable alter matrices. However, deveopment of estimation where alter--alter matrices are available is being planned.
 
+___
 
 ## Methods for sampled network data {.tabset}
 
@@ -203,6 +206,8 @@ Cons:
 : * Might not scale.
 : * Requires knowledge of the *population* distribution of actor attributes used in the model.
 
+___
+
 ### Design-based
 
 **Krivitsky and Morris (2017)** Use design-based estimators for sufficient statistics of the ERGM of interest and then transfers their properties to the ERGM estimate.
@@ -218,6 +223,8 @@ Cons:
 : * Relies on independent sampling form population of interest in some form.
 : * Cannot be fit to more complex (e.g., RDS) designs.
 : * Requires knowledge of the *population* distribution of actor attributes used in the model.
+
+___
 
 # Theoretical Framework
 
@@ -295,6 +302,8 @@ analogy, for *per-capita* invariance to preserve the degree probability distribu
 Experimental results suggest that the mean-degree preserving offset has this
 property, but a mathematical proof is elusive.
 
+___
+
 #### Observable discrepancies
 
 What we mean by discrepancy is: undirected tie subtotals that are 
@@ -315,6 +324,8 @@ the number of ties for that ego-alter tie configuration.  If you know the
 source of the discrepancy, or want to make a different assumption
 you may want to address this before fitting the data in `ergm.ego`.
 
+___
+
 #### Egocentric **target statistics**
 
 Once the network size-invariant parameterization and consistency issues are addressed we have a simple way to construct the *target statistics*
@@ -327,6 +338,8 @@ The way we do this is by specifying an `offset` term in the model to scale the e
 * *For weighted samples:*  To obtain population estimates from `ergm.ego` from a weighted sample to a population with a known (or specified) size $N$, first choose a network size, $|N'|$, to be used for estimation (a *pseudo-population* that will have the correct nodal attribute distribution specified by the weights), and then fit the model with an offset of $\log(N/{N'})=\log(N) - \log(N')$.  The criteria for choosing a good value of $|N'|$ are discussed in the [Example section below](#preliminaries).
 
 * *If the population network size is unknown:*  This is the most general case.  If we do not know $N$ or wish to specify it we often fit with an offset of $-\log(S)$ (for the unweighted sample) or $-\log(N')$ (for the weighted sample).  This will return *per-capita* estimates that can be easily rescaled to any value post-estimation, e.g., for simulation purposes.
+
+___
 
 ## Statistical Inference
 
@@ -358,8 +371,7 @@ The `ergm.ego` package can be used with weighted survey data and complex samplin
 `ego` tibble into a [`srvyr`](https://cran.r-project.org/web/packages/srvyr/index.html) object.  The `srvyr` package can be used for descriptive statistics, and `ergm.ego` will incorporate the survey design into its estimation
 and inference.
 
-This topic is beyond the scope of this introductory workshop but the
-package has an example you can run the example for more information:
+This topic is beyond the scope of this introductory workshop but the `ergm.ego` package has an example you can run for more information:
 
 ```{r, eval=F}
 example(sample.egor)
@@ -421,6 +433,7 @@ For more information:
 ?as.egor
 ```
 
+___
 
 ## Model terms
 
@@ -446,25 +459,30 @@ help('ergm.ego-terms')
 
 As in `ergm`, these terms can be used on the right-hand side of formulas in calls to model and simulation functions
 
+___
+
 ## Model-related functions
 
 Function    | Purpose
------------ | -----------------------------------------------------------------
+:---------- | :----------------------------------------------------------------
 `summary`| takes an `ergm` formula with an 'egodata' object on the LHS and `ergm` terms on the RHS, and returns the observed values of the statistics on the RHS.  When used on an `ergm.ego` object, this returns a summary of the model fit.
 `ergm.ego`| the main function used to fit an ERGM to the egodata object.  In addition to the arguments that are specific to fitting from egocentrically sampled data, you can pass the usual arguments to `ergm` for controlling the fitting algorithm.
 `control.ergm.ego`| a set of control parameters specifically needed for fitting ERGMs to egocentrically sampled data, as well a method for passing other control parameters to `ergm`.
 `vcov`| returns the variance--covariance matrix of the estimate for $\theta$.
+
+___
 
 ## Simulation related functions
 
 There are three current functions, again mimicking the equivalent functions in `ergm'
 
 Function    | Purpose
------------ | -----------------------------------------------------------------
+:---------- | :----------------------------------------------------------------
 `simulate`| Simulates complete networks (of any size) from the fitted model.  You can either pass the `ergm.ego` object (which contains the results of the model fit) to simulate, or pass a formula as the object, along with a vector of coefficients.
 `gof` | Uses the simulation function above to compare observed statistics to statistics from networks simulated from the model.  Constrained by the data to the model terms, degree distribution, and the ESP distribution (if the alter--alter ties are observed).
 `control.simulate.ergm.ego`| Allows you to control how to resolve fractional numbers of vertices when this is produced by the sample weights and the population size selected.  Also provides a way to pass controls to SAN and `ergm` simulate.
 
+___
 
 # Example Analysis
 
@@ -545,7 +563,7 @@ mesa.ego$ego # first few rows of the ego table
 ```
 
 
-The alter table is a type of edgelist: it lists the edges for each ego.  It contains the alter ID (`.alt`), the corresponding ego ID, and a set of alter nodal attributes.  Note that this is a slightly different data structure than a standard network edgelist.
+The alter table is a type of edgelist: it lists the edges for each ego.  It contains the alter ID (`.altID`), the corresponding ego ID, and a set of alter nodal attributes.  Note that this is a slightly different data structure than a standard network edgelist.
 
 * The standard network edgelist contains one unique record for each edge; both ego and alter ID may appear more than once (depending on their degree), but each link is only represented once.  
 
@@ -565,6 +583,8 @@ The aatie table lists the egoID, and the IDs of the two alters that have tie.  T
 ```{r, message=F}
 mesa.ego$aatie # first few rows of the alter table
 ```
+
+___
 
 ### From external data
 
@@ -610,6 +630,7 @@ example("egor")
 
 We will explore some of the other functions available for manipulating the `egor` object in a later section.
 
+___
 
 ## Exploratory analysis
   
@@ -1118,6 +1139,8 @@ degree distribution.
 plot(gof(egofit, GOF="degree"))
 ```
 
+___
+
 ### Sample same size
 
 What if we only had an equally large sample, instead of an egocentric census?
@@ -1151,6 +1174,8 @@ se.compare <- data.frame(
 
 round(se.compare, 3)
 ```
+
+___
 
 ### Smaller sample 
 
@@ -1188,11 +1213,11 @@ round(se.compare, 3)
 As with ordinary statistics, standard error is inverse-proportional to
 the square root of the sample size.
 
-
+___
 
 # Package Development
 
-The `ergm.ego` package is under active development on GitHub at [statnet/ergm.ego](github.com/statnet/ergm.ego). This repository is the place to go to report bugs or request features (feature requests accompanied by a pull request are especially appreciated).  If you are interested in contributing to the development of `ergm.ego`, please contact us through the GitHub interface. 
+The `ergm.ego` package is under active development on GitHub at [statnet/ergm.ego](https://github.com/statnet/ergm.ego). This repository is the place to go to report bugs or request features (feature requests accompanied by a pull request are especially appreciated).  If you are interested in contributing to the development of `ergm.ego`, please contact us through the GitHub interface. 
 
 Additional functionality is planned in the near future:
 
