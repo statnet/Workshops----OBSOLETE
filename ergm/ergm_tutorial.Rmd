@@ -623,12 +623,12 @@ What this shows is statistics from the final iteration of the MCMC chain, on the
 
 This is what you want to see in the MCMC diagnostics:  the MCMC sample statistics are varying randomly around the observed values at each step (so the chain is "mixing" well),  the sampled values show little serial correlation (so they are independent draws from the graph space) and the difference between the observed and simulated values of the sample statistics have a roughly bell-shaped distribution, centered at 0.  The sawtooth pattern visible on the degree term deviation plot is due to the combination of discrete values and small range in the statistics:  the observed number of degree 1 nodes is 3, and only a few discrete values are produced by the simulations.  So the sawtooth pattern is is an inherent property of the statistic, not a problem with the fit.
 
-There are many control parameters for the MCMC algorithm ("help(control.ergm)"), and we'll play with some of these below.  To see what the algorithm is doing at each step, you can drop the sampling interval down to 1:
+There are many control parameters for the MCMC algorithm ("help(snctrl)"), and we'll play with some of these below.  To see what the algorithm is doing at each step, you can drop the sampling interval down to 1:
 
 ```{r flobusiness-MCMCinterval, eval=FALSE}
 set.seed(271828)
 fit <- ergm(flobusiness~edges+degree(1),
-            control=control.ergm(MCMC.interval=1))
+            control=snctrl(MCMC.interval=1))
 ```
 
 This runs a version with every network returned, and might be useful if you are trying to debug a bad model fit.
@@ -707,7 +707,7 @@ plot(flomodel.03.gof)
 set.seed(12345)
 mesamodel.02 <- ergm(mesa~edges)
 mesamodel.02.gof <- gof(mesamodel.02~degree + esp + distance, 
-                        control = control.gof.formula(nsim=10))
+                        control = snctrl(nsim=10))
 plot(mesamodel.02.gof)
 ```
 
@@ -756,7 +756,7 @@ If we try to fit this "simple" model:
 ```{r magnolia-triangle, eval=F}
 set.seed(100)
 fit <- ergm(magnolia~edges+triangle,
-            control=control.ergm(MCMLE.effectiveSize=NULL))
+            control=snctrl(MCMLE.effectiveSize=NULL))
 ```
 
 ```
@@ -781,7 +781,7 @@ Very interesting.  Instead of converging, the algorithm heads off into networks 
 ```{r magnolia-triangle-halted, eval=T, message=F, warning = F}
 set.seed(1000)
 fit <- ergm(magnolia~edges+triangle, 
-            control=control.ergm(MCMLE.maxit=2,MCMLE.effectiveSize=NULL))
+            control=snctrl(MCMLE.maxit=2,MCMLE.effectiveSize=NULL))
 ```
 
 ```
