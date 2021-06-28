@@ -1063,7 +1063,7 @@ Let's start by fitting an ERGM to the complete network, and looking at the coeff
 
 ```{r, message=F}
 fit.ergm <- ergm(fmh ~ degree(0:3) 
-                 + nodefactor("Race", levels=TRUE) + nodematch("Race")
+                 + nodefactor("Race", levels=TRUE) + nodematch("Race", diff=TRUE)
                  + nodefactor("Sex") + nodematch("Sex") 
                  + absdiff("Grade"))
 round(coef(fit.ergm), 3)
@@ -1082,7 +1082,7 @@ fmh.ego <- as.egor(fmh)
 head(fmh.ego)
 
 egofit <- ergm.ego(fmh.ego ~ degree(0:3) 
-                   + nodefactor("Race", levels=TRUE) + nodematch("Race")
+                   + nodefactor("Race", levels=TRUE) + nodematch("Race", diff=TRUE)
                    + nodefactor("Sex") + nodematch("Sex") 
                    + absdiff("Grade"), popsize=N,
 				  control=control.ergm.ego(ppopsize=N))
@@ -1130,7 +1130,7 @@ set.seed(1)
 ```{r, message=F}
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
 egofitN <- ergm.ego(fmh.egosampN ~ degree(0:3) 
-                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race", diff=TRUE) 
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
                     popsize=N)
@@ -1162,7 +1162,7 @@ set.seed(0) # Some samples have different sets of alter levels from ego levels.
 fmh.egosampN4 <- sample(fmh.ego, round(N/4), replace=TRUE)
 
 egofitN4 <- ergm.ego(fmh.egosampN4 ~ degree(0:3) 
-                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race", diff=TRUE) 
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
                     popsize=N)
@@ -1198,20 +1198,20 @@ w <- as.vector(1/sqrt(race_counts[fmh %v% "Race"]))
 fmh.egosampN4w <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
 head(fmh.egosampN4w)
 ```
-For example, for every Black student, there are about `r round(race_counts["White"]/race_counts["Black"])` students, and under the sampling design, there are about `r round(sum(fmh.egosampN4w$ego$variables$Race=="White")/sum(fmh.egosampN4w$ego$variables$Race=="Black"))`.
+For example, for every Black student, there are about `r round(race_counts["White"]/race_counts["Black"])` White students, and under the sampling design, there are about `r round(sum(fmh.egosampN4w$ego$variables$Race=="White")/sum(fmh.egosampN4w$ego$variables$Race=="Black"))`.
 
 ```{r, message=F}
 egofitN4w<-ergm.ego(fmh.egosampN4w ~ degree(0:3) 
-                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race", diff=TRUE)
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
-                    popsize=N)
+                    popsize=N) 
 ```
 
 Which standard errors are improved by this sampling scheme?
 
 ```{r, message=F}
-
+ 
 # compare the coef
 coef.compare <- data.frame(
   "NW est" = coef(fit.ergm), 
