@@ -334,9 +334,9 @@ The standard errors for coefficients in an `ergm.ego` fit are designed to repres
 uncertainty in our estimate.  For ERGMs, this uncertainty can be thought of as
 coming from three possible sources:
 
-* 1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
-* 2. The sampling process of egos: What other samples _could_ have been drawn? 
-* 3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
+1. A superpopulation of networks, from which this one network is a single realization: What other networks _could_ have been produced by the social process of interest?
+2. The sampling process of egos: What other samples _could_ have been drawn? 
+3. The stochastic MCMC algorithm used to estimate the coefficient: What other MCMC samples _could_ we have gotten?
 
 Most treatments of ERGM estimation treat the coefficient
 $\theta$ as a parameter of a superpopulation process 
@@ -504,7 +504,7 @@ We'll show 2 examples of how to create an `egor` object here.
 Read in the faux.mesa.high data:
 
 ```{r, message=F}
-data("faux.mesa.high")
+data(faux.mesa.high)
 mesa <- faux.mesa.high
 ```
 
@@ -1062,8 +1062,8 @@ N <- network.size(fmh)
 Let's start by fitting an ERGM to the complete network, and looking at the coefficients:
 
 ```{r, message=F}
-fit.ergm <- ergm(fmh ~ edges + degree(0:3) 
-                 + nodefactor("Race") + nodematch("Race")
+fit.ergm <- ergm(fmh ~ degree(0:3) 
+                 + nodefactor("Race", levels=TRUE) + nodematch("Race")
                  + nodefactor("Sex") + nodematch("Sex") 
                  + absdiff("Grade"))
 round(coef(fit.ergm), 3)
@@ -1081,14 +1081,14 @@ egocentric census compare to the complete-network ergm estimates?
 fmh.ego <- as.egor(fmh)
 head(fmh.ego)
 
-egofit <- ergm.ego(fmh.ego ~ edges + degree(0:3) 
-                   + nodefactor("Race") + nodematch("Race")
+egofit <- ergm.ego(fmh.ego ~ degree(0:3) 
+                   + nodefactor("Race", levels=TRUE) + nodematch("Race")
                    + nodefactor("Sex") + nodematch("Sex") 
                    + absdiff("Grade"), popsize=N,
 				  control=control.ergm.ego(ppopsize=N))
 
 # A convenience function.
-model.se <- function(fit) sqrt(diag(vcov(fit, sources="model"))) 
+model.se <- function(fit) sqrt(diag(vcov(fit)))
 
 # Parameters recovered:
 coef.compare <- data.frame(
@@ -1129,8 +1129,8 @@ set.seed(1)
 
 ```{r, message=F}
 fmh.egosampN <- sample(fmh.ego, N, replace=TRUE)
-egofitN <- ergm.ego(fmh.egosampN ~ edges + degree(0:3) 
-                    + nodefactor("Race") + nodematch("Race") 
+egofitN <- ergm.ego(fmh.egosampN ~ degree(0:3) 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
                     popsize=N)
@@ -1161,8 +1161,8 @@ set.seed(0) # Some samples have different sets of alter levels from ego levels.
 
 fmh.egosampN4 <- sample(fmh.ego, round(N/4), replace=TRUE)
 
-egofitN4 <- ergm.ego(fmh.egosampN4 ~ edges + degree(0:3) 
-                    + nodefactor("Race") + nodematch("Race") 
+egofitN4 <- ergm.ego(fmh.egosampN4 ~ degree(0:3) 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
                     popsize=N)
@@ -1190,17 +1190,19 @@ the square root of the sample size.
 
 ### Oversample small group
 
-Suppose that we oversample the minority groups by a factor of 4. We
-survey a non-white student 4 times more likely than in a simple random
-sample.
+Suppose that we oversample the minority groups in inverse proportion to the square root of their subpopulation size.
 
 ```{r, message=F}
-w <- 1+3*((fmh %v% "Race")!="White")
+race_counts <- table(fmh %v% "Race")
+w <- as.vector(1/sqrt(race_counts[fmh %v% "Race"]))
 fmh.egosampN4w <- sample(fmh.ego, round(N/4), replace=TRUE, prob=w)
-
 head(fmh.egosampN4w)
-egofitN4w<-ergm.ego(fmh.egosampN4w ~ edges + degree(0:3) 
-                    + nodefactor("Race") + nodematch("Race") 
+```
+For example, for every Black student, there are about `r round(race_counts["White"]/race_counts["Black"])` students, and under the sampling design, there are about `r round(sum(fmh.egosampN4w$ego$variables$Race=="White")/sum(fmh.egosampN4w$ego$variables$Race=="Black"))`.
+
+```{r, message=F}
+egofitN4w<-ergm.ego(fmh.egosampN4w ~ degree(0:3) 
+                    + nodefactor("Race", levels=TRUE) + nodematch("Race") 
                     + nodefactor("Sex") + nodematch("Sex")
                     + absdiff("Grade"),
                     popsize=N)
@@ -1222,7 +1224,7 @@ round(coef.compare, 3)
 se.compare <- data.frame(
   "NW SE" = model.se(fit.ergm),
   "Ego Samp4 SE" = model.se(egofitN4)[-1],
-  "Ego 0Samp SE" = model.se(egofitN4w)[-1])
+  "Ego OSamp SE" = model.se(egofitN4w)[-1])
 
 round(se.compare, 3)
 
