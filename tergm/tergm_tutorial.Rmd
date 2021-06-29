@@ -851,7 +851,7 @@ egmme.sim <- simulate(egmme.fit, nsim = 1,
 We can use `ndtv` to visualize the simulated network time series (we'll
 just look at the 1st 25 steps):
   
-```{r tsim1viz, message = FALSE, cache = FALSE}
+```{r tsim1viz, message = FALSE}
 wealthsize <- log(get.vertex.attribute(flobusiness, "wealth")) * 2/3
 
 # Set the ndtv animation parameter
@@ -959,7 +959,7 @@ It bears repeating that the terms in your dissolution model must be a subset of 
 To illustrate, let us reconsider Example 2, but with a mean relational duration of 100 time steps.  And this time, we'll fit both the `Persist()` and `Diss()` versions of the model to demonstrate.
 
 ```{r}
-theta.persist.100 <- log(100)
+theta.persist.100 <- log(99)
 theta.diss.100 <- -theta.persist.100
 ```
 
@@ -977,12 +977,13 @@ theta.form <- coef(ergm.fit)
 theta.form
 ```
 
-Next, we subtract the values of the dissolution $\theta$ from each of the corresponding values in the formation model. 
+Next, we subtract the log of the durations from the corresponding terms in the formation model.  In this approximation, we would use $\log{D}$ for sparse networks, and for dense networks $\log{D-1} = theta.persist$.  Our network density is about 
+round(network.density(flobusiness)), so we will use the sparse correction.
 
 In this example, the dissolution model contains only an edges term, so this coefficient should be subtracted from the starting value for the edges term in the formation model. 
 
 ```{r}
-theta.form[1] <- theta.form[1] - theta.persist.100
+theta.form[1] <- theta.form[1] - log(100)
 theta.form
 ```
 
