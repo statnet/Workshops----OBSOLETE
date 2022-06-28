@@ -1,0 +1,358 @@
+---
+title: Temporal net data structures and comparisons
+output:
+  html_document:
+    fig_width: 8
+    highlight: kate
+    theme: lumen
+    toc: yes
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+knitr::opts_chunk$set(cache=F, comment=NA, fig.align='center')
+```
+# Intro
+
+We work with 2 panels of the Sampson data to:
+
+1. Verify the values of the `nw.stats` for all of the operators
+
+2. Fit and simulate from the separable and joint models, showing that both produce an equilibrium target edgecount equal to 
+`summary(nw.series ~ edges)`
+
+# Setup & data
+```{r, message=F, warning=F}
+
+# loadedNamespaces()
+# unloadNamespace("ergm")
+# unloadNamespace("statnet.common")
+
+master_lib <- "~/R/GHmaster-library"
+
+# #Make lib 1st position in libPath
+defaultPaths <- .libPaths()
+.libPaths(c(master_lib, defaultPaths))
+.libPaths()
+
+#devtools::dev_mode(on=T, path = .libPaths()[1])
+library(network)
+library(ergm)
+library(tergm)
+library(tsna)
+
+sessioninfo::package_info(pkgs = c("statnet.common", "network", "rle",
+                                   "ergm", "tergm"),
+                          dependencies = FALSE)
+```
+
+# Types of networks
+
+## first network
+```{r, message=F, warning=F}
+data(samplk)
+samplk1
+```
+
+## list
+```{r, message=F, warning=F}
+# summary shows the nodes & edges at each slice
+samp.list <- list(samplk1,samplk2)
+samp.list
+```
+
+
+## NetSeries
+```{r, message=F, warning=F}
+# summary shows sum of cross-sectional node/edge counts after net1
+samp.series <- NetSeries(samp.list)
+samp.series
+samp.series  %ergmlhs% "constraints"
+```
+
+## networkDynamic
+
+Collapsed version shows the unique total node and edgecount.
+
+```{r, message=F, warning=F}
+# summary shows the unique # nodes and edges in both cases
+# we start at 1 to make the series index consistent with the other
+# network storage mechanisms
+
+samp.dyn <- networkDynamic(network.list = samp.list, start=1)
+samp.dyn
+samp.collapse <- network.collapse(samp.dyn)
+samp.collapse
+```
+
+# Descriptives 
+
+## Traditional
+
+Cross sectional stats and form/diss changes from tsna
+
+```{r, message=F, warning=F}
+samp.stats <- cbind(edges = tErgmStats(samp.dyn, "~edges"),
+                    form = tEdgeFormation(samp.dyn),
+                    diss = tEdgeDissolution(samp.dyn))
+
+samp.stats
+```
+
+## Term counts
+
+The ones with operator names replicate the edge counts performed by the operators.
+
+```{r, message=F, warning=F}
+
+start = network.edgecount(samplk1)
+cross = network.edgecount(samplk2)
+change = network.edgecount(xor(samplk1, samplk2))
+form = network.edgecount(samplk1 | samplk2)
+persist = network.edgecount(samplk1 & samplk2)
+diss = -persist
+dissolved = network.edgecount(samplk1) - persist
+
+cbind(start=start, cross=cross, change=change, 
+      form=form, persist=persist, diss=diss, dissolved=dissolved
+      )
+```
+
+# Edges only models
+
+Will work with the NetSeries object here.
+
+## Summary 
+
+```{r, message=F, warning=F}
+summary(samp.series ~
+          Cross(~edges) +
+          Change(~edges) +
+          Form(~edges) +
+          Diss(~edges))
+
+```
+
+## Fit {.tabset}
+
+### Separable
+```{r, message=F, warning=F}
+sep.fit <- tergm(
+  samp.series ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE"
+)
+
+summary(sep.fit)
+```
+
+### Joint
+```{r, message=F, warning=F}
+jnt.fit <- tergm(
+  samp.series ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE"
+)
+
+summary(jnt.fit)
+```
+
+## Simulation {.tabset }
+
+### Separable {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+sep.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(sep.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges) + Diss(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F}
+cbind(obs = sep.fit$nw.stats,
+      sim = colMeans(sep.sim$stats.gen))
+
+plot(sep.sim$stats.gen)
+
+```
+
+
+
+### Joint {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+jnt.sim <- simulate(jnt.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(jnt.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(jnt.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges) + Change(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = jnt.fit$nw.stats,
+      sim = colMeans(jnt.sim$stats.gen))
+
+plot(jnt.sim$stats.gen)
+```
+
+# Add mutuals
+
+## Summary 
+
+```{r, message=F, warning=F}
+summary(samplk1 ~edges + mutual)
+summary(samp.series ~
+          Cross(~edges + mutual) +
+          Change(~edges + mutual) +
+          Form(~edges + mutual) +
+          Diss(~edges + mutual))
+
+```
+
+## Fit {.tabset}
+
+### Separable
+```{r, message=F, warning=F}
+sep.fit <- tergm(
+  samp.series ~
+    Form(~edges + mutual) +
+    Diss(~edges + mutual),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+
+summary(sep.fit)
+
+mcmc.diagnostics(sep.fit, which="plots")
+```
+
+### Joint
+```{r, message=F, warning=F}
+jnt.fit <- tergm(
+  samp.series ~
+    Cross(~edges + mutual) +
+    Change(~edges + mutual),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+
+summary(jnt.fit)
+```
+
+## Simulation {.tabset }
+
+### Separable {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+sep.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(sep.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges + mutual) + Diss(~edges + mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F, fig.height=9}
+cbind(obs = sep.fit$nw.stats,
+      sim = colMeans(sep.sim$stats.gen),
+      ratio = with(data.frame(obs = sep.fit$nw.stats,
+                              sim = colMeans(sep.sim$stats.gen)),
+                     obs/sim))
+
+plot(sep.sim$stats.gen)
+
+```
+
+
+
+### Joint {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+jnt.sim <- simulate(jnt.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(jnt.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(jnt.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges + mutual) + Change(~edges + mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F, fig.height=9}
+cbind(obs = jnt.fit$nw.stats,
+      sim = colMeans(jnt.sim$stats.gen),
+      ratio = with(data.frame(obs = jnt.fit$nw.stats,
+                              sim = colMeans(jnt.sim$stats.gen)),
+                     obs/sim))
+
+plot(jnt.sim$stats.gen)
+```

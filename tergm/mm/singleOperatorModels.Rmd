@@ -1,0 +1,293 @@
+---
+title: Single Operator(~edges) CMLE
+output:
+  html_document:
+    fig_width: 8
+    highlight: kate
+    theme: lumen
+    toc: yes
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+knitr::opts_chunk$set(cache=F, comment=NA, fig.align='center',
+                      fig.height = 4)
+```
+# Intro
+
+We work with 2 panels of the Sampson data to:
+
+1. Fit and simulate from the single Operator(~edges) models, to see what they produce in equilibrium
+
+2. Verify that the estimated coefs = logit(p(component change))
+
+# Setup
+```{r, message=F, warning=F}
+library(tergm)
+#library(tsna)
+library(dplyr)
+
+sessioninfo::package_info(pkgs = c("network",
+                                   "ergm", "tergm"),
+                          dependencies = FALSE)
+```
+
+# Data
+
+```{r, message=F, warning=F}
+data(samplk)
+samp.series <- NetSeries(list(samplk1,samplk2))
+samp.series
+samp.dyn <- networkDynamic(network.list = list(samplk1,samplk2), start=1)
+
+```
+
+# Descriptives 
+
+Cross sectional stats and form/diss changes from tsna
+
+```{r, message=F, warning=F}
+samp.stats <- cbind(edges = tsna::tErgmStats(samp.dyn, "~edges"),
+                    form = tsna::tEdgeFormation(samp.dyn),
+                    diss = tsna::tEdgeDissolution(samp.dyn))
+
+samp.stats
+
+dyads = network.dyadcount(samplk1)
+type <- c("form", "diss", "cross", "change")
+
+prob.form = samp.stats[2,"form"]/(dyads-samp.stats[1,"edges"])
+prob.diss = samp.stats[2,"diss"]/network.edgecount(samplk1)
+prob.cross = network.edgecount(samplk2)/dyads
+prob.change = network.edgecount(xor(samplk1, samplk2))/dyads
+
+def.form = "Fraction of empty dyads at t1 that formed a tie by t2"
+def.diss = "Fraction of ties at t1 that dissolved by t2"
+def.cross = "Density at t2 (probability of a tie)"
+def.change = "Fraction of all dyads at t1 that changed state by t2"
+
+data.frame(type = type,
+           defn = c(def.form, def.diss, def.cross, def.change),
+           prob = c(prob.form, prob.diss, prob.cross, prob.change)) %>%
+  kableExtra::kable(caption = "Probabilities of tie change components", 
+        digits=3) %>%
+  kableExtra::kable_styling(full_width=F,
+                            bootstrap_options = c("striped"))
+
+
+# target edgecount
+target.edges <- summary(samp.series ~ edges)
+```
+
+# Models
+
+## Form {.tabset}
+
+This model sets the tie formation rates based on the observed probability of tie formation from t1 to t2.  But the other free parameter is not set, so the effective tie dissolution coef is 0, which means ties dissolve with probability 0.5 (compared to the observed probability of `r round(prob.diss, 2)`).
+
+### Fit
+```{r, message=F, warning=F}
+form.fit <- tergm(
+  samp.series ~ Form(~edges),
+  estimate = "CMLE")
+
+summary(form.fit)
+```
+
+
+### Simulate 
+
+The net result is a lower predicted equilibrium tie count, compared to t2 (`r network.edgecount(samplk2)`)
+
+```{r, message=F, warning=F}
+form.sim <- simulate(form.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+
+plot(as.numeric(form.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges)",
+     ylab="edges") 
+abline(h=target.edges, col="red")
+
+print(form.mon <- cbind(obs = target.edges,
+                        sim = colMeans(form.sim$stats)))
+
+```
+
+
+## Diss {.tabset}
+
+This model sets the tie dissolution rates based on the observed probability of tie formation from t1 to t2.  But the other free parameter is not set, so the effective tie formation coef is 0, which means ties form with probability 0.5. (compared to the observed probability of `r round(prob.form, 2)`).
+
+### Fit
+```{r, message=F, warning=F}
+diss.fit <- tergm(
+  samp.series ~ Diss(~edges),
+  estimate = "CMLE")
+
+summary(diss.fit)
+```
+
+
+### Simulate 
+The net result is a much higher predicted equilibrium tie count, compared to t2 (`r network.edgecount(samplk2)`).
+
+```{r, message=F, warning=F}
+diss.sim <- simulate(diss.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+
+
+plot(as.numeric(diss.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Diss(~edges)",
+     ylab="edges") 
+abline(h=target.edges, col="red")
+
+print(diss.mon <- cbind(obs = target.edges,
+                        sim = colMeans(diss.sim$stats)))
+
+```
+
+
+## Cross {.tabset}
+
+This model sets the target cross-sectional tie count to the t2 observed value.  Both the formation and dissolution coefficients are effectively set to 0 in this case, so the rate of tie formation, and dissolution, is 0.5.
+
+### Fit
+```{r, message=F, warning=F}
+cross.fit <- tergm(
+  samp.series ~
+    Cross(~edges),
+  estimate = "CMLE")
+
+summary(cross.fit)
+```
+
+
+### Simulate 
+
+Here, the equilibrium tie count hovers around the t2 value.
+
+```{r, message=F, warning=F}
+cross.sim <- simulate(cross.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+
+plot(as.numeric(cross.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges)",
+     ylab="edges") 
+abline(h=target.edges, col="red")
+
+print(cross.mon <- cbind(obs = target.edges,
+                         sim = colMeans(cross.sim$stats)))
+
+```
+
+
+
+## Change {.tabset}
+
+This model sets the dyad change rates based on the observed probability of of a dyad changing state from t1 to t2.  There is no bias towards formation or dissolution, so if the starting network has density less than 0.5, you have more potential formations, and if greater, you have more potential dissolutions.
+
+### Fit
+```{r, message=F, warning=F}
+change.fit <- tergm(
+  samp.series ~
+  Change(~edges),
+  estimate = "CMLE")
+
+summary(change.fit)
+```
+
+
+### Simulate 
+
+The equilibrium density for this model is 0.5, well above the observed density at t2 (r round(`prob.cross, 2)).
+
+```{r, message=F, warning=F}
+change.sim <- simulate(change.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+
+
+plot(as.numeric(change.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Change(~edges)",
+     ylab="edges") 
+abline(h=target.edges, col="red")
+
+print(change.mon <- cbind(obs = target.edges,
+                          sim = colMeans(change.sim$stats)))
+
+```
+
+
+
+## Compare coefficients
+
+Here, we verify that the estimated `exp(coefficient)` values are equal to the odds of each tie component as calculated by hand. 
+
+They are equal, which means we can interpret the coefficients in terms of the probabilities of each change component.  The coefficients are on the log-odds scale, so to obtain the corresponding probability, we transform using 
+`p(tie change component) = 1/(1+exp(coef)))`.
+
+As with `ergm` coefficients, this can be interpreted in terms of the conditional probability at the dyad level.
+
+In the dynamic context, this is the probability of a dyad changing state, if that change satisfies the definition of this component.
+
+```{r}
+
+odds.form = prob.form / (1-prob.form)
+odds.diss = prob.diss / (1-prob.diss)
+odds.cross = prob.cross / (1-prob.cross)
+odds.change = prob.change / (1-prob.change)
+
+ecoef.form = exp(coef(form.fit))
+ecoef.diss = exp(coef(diss.fit))
+ecoef.cross = exp(coef(cross.fit))
+ecoef.change = exp(coef(change.fit))
+
+data.frame(
+  exp.coef = c(ecoef.form, ecoef.diss, ecoef.cross, ecoef.change),
+  handcalc.odds = c(odds.form, odds.diss, odds.cross, odds.change),
+  handcalc.prob = c(prob.form, prob.diss, prob.cross, prob.change)) %>%
+  kableExtra::kable(
+    caption = "Estimated exp(coef) vs. hand calculated odds and probabilities", 
+    digits=3) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+
+
+coef <- c(NA_real_,
+          coef(form.fit),
+          coef(diss.fit),
+          coef(cross.fit),
+          coef(change.fit))
+mon.edges <- c(form.mon[1],
+               form.mon[2],
+               diss.mon[2],
+               cross.mon[2],
+               change.mon[2])
+names(coef)[1] <- "obs"
+
+data.frame(coef=round(coef,1), edges=round(mon.edges)) %>% 
+  kableExtra::kable(caption = "Compare coefs and obs to equilibrium edgecounts", 
+        digits=3) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+
+```
