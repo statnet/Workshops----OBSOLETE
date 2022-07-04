@@ -1,0 +1,586 @@
+---
+title: "Modeling Relational Event Dynamics with statnet"
+author: "Carter T. Butts"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    fig_width: 8
+    highlight: kate
+    theme: cosmo
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(cache=F, comment=NA)
+# knitr::opts_chunk$set(tidy = "styler")
+knitr::opts_chunk$set(tidy.opts=list(indent=3, width.cutoff=60))
+```
+
+```{r outhook, include=FALSE}
+local({
+  hook_output <- knitr::knit_hooks$get('output')
+  knitr::knit_hooks$set(output = function(x, options) {
+    if (!is.null(options$max.height)) options$attr.output <- c(
+      options$attr.output,
+      sprintf('style="max-height: %s;"', options$max.height)
+    )
+    hook_output(x, options)
+  })
+})
+```
+
+_Last updated `r Sys.Date()`_
+
+```{r dev, child = '../statnetDevTeam.Rmd'}
+```
+   
+The network modeling software demonstrated in this tutorial is authored by Carter Butts (`relevent`, `sna`).
+
+---
+
+```{r project, child = '../statnetProject.Rmd'}
+```
+
+---
+
+
+## Section 0. Introduction to the Tutorial
+
+This workshop and tutorial provide an introduction to
+statistical modeling of relational event data 
+using `statnet` software.  This online tutorial is also designed
+for self-study, with example code and self-contained data.
+The `statnet` package we will be demonstrating is:
+
+* `relevent` -- modeling and simulation for relational event models
+
+Additional background on the tools, modeling framework, and data used in this tutorial may be found in the references at the bottom of this document.
+
+
+### 0.0 Prerequisites
+
+This workshop assumes basic familiarity with **R**, experience with
+network concepts, terminology and data, and familiarity with the
+general framework for statistical modeling and inference.  While
+previous experience with relational event models (REMs) is not required, some of the topics covered here may be difficult to understand without a strong
+background in linear and generalized linear models in statistics.
+
+### 0.1 Software installation
+
+Minimally, you will need to install the latest version of **R**
+[(available here)](https://cran.r-project.org)
+and the `statnet` packages `relevent`, `sna` and `network` to
+run the code presented here (`sna` will automatically install `network` when it is installed).
+
+The full set of installation instructions with details can be found on the [`statnet` workshop wiki](https://github.com/statnet/Workshops/wiki/Software-Installation-Instructions).
+
+If you have not already downloaded the `statnet` packages for this workshop, the quickest way to install these (and the other most commonly used packages from the `statnet` suite),  is to open an R session and type: 
+
+```{r install-relevent,eval=FALSE}
+install.packages(c("relevent","sna"))
+```
+
+```{r loadPackage}
+library(relevent)
+library(sna)
+```
+
+You can check the version number with:
+```{r version}
+packageVersion("relevent")
+```
+
+Throughout, we will set a random seed via `set.seed()` for commands in tutorial that require simulating random 
+values---this is not necessary, but it ensures that you will get the same results as the online tutorial.
+
+## Section 1. Dyadic Relational Event Models with  `rem.dyad`: Ordinal Timing
+
+Dyadic relational event models are intended to capture the behavior of systems in which individual social units (persons, organizations, animals, etc.) direct discrete actions towards other individuals in their environment. Within the `relevent` package, the `rem.dyad` function is the primary workhorse for modeling dyadic data. Although less flexible than `rem` (another `relevent` tool, not covered in this tutorial), `rem.dyad` contains many features that make it easier to work with in the dyadic case.
+
+Data for use with `rem.dyad` consists of dynamic edge lists, each edge being characterized by a sender, a recipient, and an event time. (Currently, self-edges and undirected edges are not supported -- this will change in future versions!) Ideally, event times are known exactly; however, under the piecewise constant hazard assumption (per Butts, 2008) the relational event family can still be identified up to a pacing constant so long as the order of events is known. Since the case of ordinal timing is somewhat simpler than that of exact timing, we consider it first.
+
+### 1.0 Loading the `relevent` package, and the workshop data
+
+```{r relevent-load, tidy=TRUE, eval=TRUE, tidy.opts=list(indent=3, width.cutoff=80)}
+library(relevent)                     #Load the relevent library
+load("relevent_workshop.Rdata")       #Load the workshop data - may need to change directory!
+```
+
+### 1.1 Getting a look at the WTC Police radio data
+
+The data we will use here comes from the World Trade Center radio communication data set coded by Butts et al. (2007). It consists of radio calls among 37 named communicants belonging to a police unit at the World Trade Center complex on the morning of 9/11/2001. The edgelist is contained in an object called `WTCPoliceCalls`; printing it should yield output like the following:
+
+```{r head-police, tidy=TRUE, eval=TRUE, max.height="200px"}
+WTCPoliceCalls
+```
+
+Note the form of the data: a matrix with the timing information, source (numbered from 1 to 37), and recipient (again numbered from 1 to 37) for each event (i.e., radio call). It is important to note that the WTC radio data was coded from transcripts that lacked detailed timing information; we do not therefore know precisely when these calls were made. We do, however, know the order in which calls were made, and can use this to fit relational event models with `rem.dyad`.
+
+Before analyzing the data, it is helpful to consider what it looks like in time aggregated form. The workshop-supplied helper function `as.sociomatrix.eventlist` is useful for this purpose: it converts an event list into a valued sociomatrix, of the form used by other `statnet` routines. Let's convert the data to sociomatrix form, and visualize it using the `gplot` function of the `sna` package:
+
+```{r plot-police, tidy=TRUE, eval=TRUE}
+WTCPoliceNet <- as.sociomatrix.eventlist(WTCPoliceCalls,37)
+gplot(WTCPoliceNet,edge.lwd=WTCPoliceNet^0.75,vertex.col=2+WTCPoliceIsICR,vertex.cex=1.25)
+```
+
+In this visualization, we have scaled edge widths by communication volume -- clearly, some pairs interact much more than others. Note also that we have colored vertices based on whether or not they occupy an institutionalized coordinative role (ICR), as indicated by the vector `WTCPoliceIsICR`. Those for whom this vector is TRUE (green) occupy roles within the police organization that would be expected to participate in coordinative activities; other actors were not identified as occupying such roles, based on the transcript data. In the analyses below, we will employ this covariate (as well as various endogenous mechanisms) to model the dynamics of radio communication within the WTC police network.
+
+### 1.2 A first model: exploring ICR effects
+
+Let's begin by fitting a very simple covariate model, in which the propensity of individuals to send and receive calls depends on whether they occupy institutionalized coordinative roles:
+
+```{r wtcfit1, tidy=TRUE, eval=TRUE}
+#First ICR effect - total interaction
+wtcfit1<-rem.dyad(WTCPoliceCalls,n=37,effects=c("CovInt"),covar=list(CovInt=WTCPoliceIsICR), hessian=TRUE)
+summary(wtcfit1)
+```
+
+The output gives us the covariate effect, as well as some uncertainty and goodness-of-fit information. The format is much like the output for a regression model, but coefficients should be interpreted per the relational event framework. In particular, the ICR role coefficient is the logged multiplier for the hazard of an event involving an ICR, versus a non-ICR event. (The effect is cumulative: an event in which one actor in an ICR calls another actor in an ICR gets twice the log increment.) We can see this impact in real terms as follows:
+
+```{r icrrate, tidy=TRUE, eval=TRUE}
+exp(wtcfit1$coef)      #Relative hazard for a non-ICR/ICR vs. a non-ICR/non-ICR event
+exp(2*wtcfit1$coef)    #Relative hazard for an ICR/ICR vs. a non-ICR/non-ICR event
+```
+
+We have here considered a homogeneous effect of ICR status on sending and receiving; is it worth treating these effects separately? To do so, we enter the ICR covariate as a sender and receiver covariate (respectively):
+
+```{r wtcfit2, tidy=TRUE, eval=TRUE}
+wtcfit2<-rem.dyad(WTCPoliceCalls,n=37,effects=c("CovSnd","CovRec"), covar=list(CovSnd=WTCPoliceIsICR,CovRec=WTCPoliceIsICR),hessian=TRUE)
+summary(wtcfit2)
+```
+Does the effect seem to differ? Let's see if fit improves (using the BIC):
+
+```{r wtc2v1-bic, tidy=TRUE, eval=TRUE}
+wtcfit1$BIC-wtcfit2$BIC       #Model 1 a bit lower - we prefer it
+```
+
+Model selection criteria are the preferred way to compare models, but one can also use a test of equality on the coefficients:
+
+```{r wtcfit2-wald, tidy=TRUE, eval=TRUE}
+wtcfit2$coef          #Extract the coefficients
+wtcfit2$cov           #Likewise, the posterior covariance matrix
+#Heuristic Wald test of equality (not Bayesian, but whatever)
+z<-diff(wtcfit2$coef)/sqrt(sum(diag(wtcfit2$cov))-2*wtcfit2$cov[1,2])
+z
+2*(1-pnorm(abs(z)))   #Not conventionally significant - not strongly detectable
+```
+
+There might be some difference between the ICR sender and receiver effects, but it doesn't seem large enough to worry about.  For now, we'll just stick with the simpler model (with a uniform effect on total interaction).
+
+### 1.3 Bringing in endogenous social dynamics
+
+One of the attractions of the relational event framework is its ability to capture endogenous social dynamics. In the following examples, we will examine several kinds of mechanisms that could conceivably impact communication among participants in the WTC police network. In each case, we first fit a candidate model, then compare that model to our best fitting model thus far identified. Where effects result in an improvement (as judged by the BIC), we include them in subsequent models. 
+
+To begin, we note that this is radio communication data. Radio communication is governed by strong conversational norms (in particular, radio SOP), which among other things mandate systematic turn-taking reciprocity. We can test for this via the use of participation shifts, particularly the AB-BA shift (a tendency for B to call A, given that A has just called B).
+
+```{r wtcfit3, tidy=TRUE, eval=TRUE}
+wtcfit3<-rem.dyad(WTCPoliceCalls, n=37, effects=c("CovInt","PSAB-BA"), covar=list(CovInt=WTCPoliceIsICR), hessian=TRUE)
+summary(wtcfit3)             #Looks like a strong effect...
+wtcfit1$BIC-wtcfit3$BIC      #We prefer model 3 to model 1 - reciprocity is in!
+exp(wtcfit3$coef["PSAB-BA"]) #Reciprocating events are >1500 times as likely
+```
+What about other conversational norms? In general, we may expect that the current participants in an interaction may be likely to initiate the next call, a tendency that can also be captured with P-shift effects.
+
+```{r wtcfit4, tidy=TRUE, eval=TRUE}
+wtcfit4<-rem.dyad(WTCPoliceCalls, n=37, effects=c("CovInt","PSAB-BA","PSAB-BY","PSAB-AY"), covar=list(CovInt=WTCPoliceIsICR), hessian=TRUE)
+summary(wtcfit4)          #Seems like the effects are present, but let's test GOF...
+wtcfit3$BIC-wtcfit4$BIC   #Yes, definite improvement
+```
+
+P-shift effects are "local," in that they depend only on the prior event. What about effects of recency (from the point of view of ego) on the tendency to send calls to others?
+
+```{r wtcfit5, tidy=TRUE, eval=TRUE}
+wtcfit5<-rem.dyad(WTCPoliceCalls, n=37, effects=c("CovInt","PSAB-BA","PSAB-BY", "PSAB-AY","RRecSnd","RSndSnd"), covar=list(CovInt=WTCPoliceIsICR), hessian=TRUE)
+summary(wtcfit5)          #Looks good; note that AB-BA is much smaller than before
+wtcfit4$BIC-wtcfit5$BIC   #Substantial improvement
+```
+
+Finally, recall what our relational event data looked like when viewed in time-aggregated form. We observed a strongly hub-dominated network, with a few actors doing most of the communication. Could this be explained in part via a preferential attachment mechanism (per de Sola Price and others), in which those having the most air time become the most attractive targets for others to call? We can investigate this by including normalized total degree as a predictor of tendency to receive calls:
+
+```{r wtcfit6, tidy=TRUE, eval=TRUE}
+wtcfit6<-rem.dyad(WTCPoliceCalls, n=37, effects=c("CovInt","PSAB-BA","PSAB-BY", "PSAB-AY","RRecSnd","RSndSnd","NTDegRec"), covar=list(CovInt=WTCPoliceIsICR), hessian=TRUE)
+summary(wtcfit6)           #PA is drawing from recency, ICR effect, but not P-shifts
+wtcfit5$BIC-wtcfit6$BIC    #Model is preferred
+```
+
+At this point, we've got a decent quorum of effects, and the deviance reduction is substantial. Of course, we could continue to investigate other mechanisms; see `?rem.dyad` for the full range of options.
+
+### 1.4 Assessing model adequacy
+
+Model adequacy is an important consideration: even given that our model is the best of those we've seen, is it good enough for our purposes? There are many ways to assess model adequacy; here, we focus on the ability of the relational event model to predict the next event in the sequence, given those that have come before. A natural question to ask when assessing the model is to ask when it is "surprised:" when does it encounter observations that are relatively poorly predicted? To investigate this, we can examine the deviance residuals:
+
+```{r wtc-deviance, tidy=TRUE, eval=TRUE}
+nullresid<- 2*log(37*36)   #What would be the deviance residual for the null?
+hist(wtcfit6$residuals)    #Deviance residuals - most well-predicted, some around chance levels
+abline(v=nullresid,col=2)
+mean(wtcfit6$residuals<nullresid) #Beating chance on almost all...
+mean(wtcfit6$residuals<3)         #Upper limit of lower cluster is about 3
+```
+
+We seem to be doing pretty well here. As another way of evaluating the deviance residuals for the ordinal model, it is useful to note that the quantity $\exp(DR/2)$ (where $DR$ is the deviance residual) is a "random guessing equivalent," or an effective number of events such that a random guess among such events as to which is coming next would be right as often as the model expects to be. We can easily compute this as follows:
+
+```{r wtc-guess, tidy=TRUE, eval=TRUE}
+quantile(exp(wtcfit6$residuals/2))   #"Random guessing equivalent" (ref is 1332)
+```
+
+Note that there are 1332 possible events, so we are doing much, much better than an uninformative baseline. Likewise, we've come a long way from our initial model:
+
+```{r wtc-quantres, tidy=TRUE, eval=TRUE}
+quantile(exp(wtcfit1$residuals/2))  #By comparison, first model much worse!
+```
+
+In addition to overall examination of residuals, it can be useful to ask which particular events seem to be sources of surprise:
+
+```{r wtc-surprise, tidy=TRUE, eval=TRUE, max.height="200px"}
+cbind(WTCPoliceCalls,wtcfit6$residuals>nullresid) #Which are the more surprising cases?
+```
+
+Using `as.sociomatrix.eventlist`, we can even pull out these events and view them in time-aggregated form. This can give us a better sense of the structural context in which they occur:
+
+```{r wtc-surprise-net, tidy=TRUE, eval=TRUE}
+surprising<-as.sociomatrix.eventlist(WTCPoliceCalls[wtcfit6$residuals>nullresid,],37)
+gplot(surprising)  #Plot in network form
+```
+
+```{r wtc-surprise-net2, tidy=TRUE, eval=TRUE}
+#Can also superimpose on the original network (coloring edges by fraction surprising)
+edgecol<-matrix(rgb(surprising/(WTCPoliceNet+0.01),0,0),37,37)   #Color me surprised
+gplot(WTCPoliceNet,edge.col=edgecol,edge.lwd=WTCPoliceNet^0.75,vertex.col=2+WTCPoliceIsICR)
+```
+
+Yet another approach to adequacy assessment is to consider the rank of the observed events in the predicted rate structure: that is, we ask to what extent the events viewed most likely to occur are in fact those that are observed.
+
+```{r wtc-recall, tidy=TRUE, eval=TRUE, max.height="200px"}
+hist(wtcfit6$observed.rank)
+cbind(WTCPoliceCalls,wtcfit6$observed.rank)  #Histogram of ranks
+#Rank on a per-event basis (low is good)
+#Sometimes useful to plot the ECDF of the observed ranks....
+plot(ecdf(wtcfit6$observed.rank/(37*36)), xlab="Prediction Threshold (Fraction of Possible Events)", ylab="Fraction of Observed Events Covered",main="Classification Accuracy")
+abline(v=c(0.05,0.1,0.25),col=2)
+```
+
+As the above indicates, we sometimes (in fact often) manage to get things exactly right: that is, the event predicted most likely to be the next in the sequence is in fact the one that is observed. Examining the match rate is a very strict notion of adequacy, but can be useful for assessing models that are strongly predictive.
+
+```{r wtc-predmatch, tidy=TRUE, eval=TRUE, max.height="200px"}
+wtcfit6$predicted.match #Exactly correct src/target 
+mean(apply(wtcfit6$predicted.match,1,any)) #Fraction for which something is right
+mean(apply(wtcfit6$predicted.match,1,all)) #Fraction entirely right
+colMeans(wtcfit6$predicted.match) #Fraction src/target, respectively
+```
+Despite its simplicity, this model seems to fit extremely well. Further improvement is possible, but for many purposes we might view it as an adequate representation of the event dynamics in this WTC police network.
+
+### 1.5 Simulating from the fitted model
+
+In addition to fitting REMs, `relevent` has tools for simulating from them.  These work a bit like the `simulate` commands in the `ergm` library, in that they can be used in two modes: we can simulate draws from a fitted `rem.dyad` model; or we can simulate draws from an *a priori* specified model.  For now, let's consider this first case.
+
+The syntax for the `rem.dyad` `simulate` method is as follows:
+```{r tidy=TRUE, eval=FALSE}
+simulate(object, nsim = object$m, seed = NULL, coef = NULL, covar = NULL, verbose = FALSE, ...)
+```
+`object` here is our fitted model object, `nsim` is the number of events to draw from the model (the length of the event series to simulate), `seed` is an optional random number seed to specify, `coef` is a (here optional) coefficient vector, `covar` is our usual covariate list, and `verbose` says whether we want to print tracking information.  By default, the coefficients used are taken from the fitted model, but specifying `coef` will allow them to be overridden (a useful tool for performing scenario analyses, as illustrated below).  Likewise, the function will by default simulate as many events as were in the original data, but this can be altered by changing `nsim`.  Note that we *do* have to specify any covariates being used when simulating, both because `rem.dyad` does not save the input covariates, and because (even if it did) the size of the covariate set in some cases depends on the number of events to be produced.
+
+Let's begin with the most basic use case: simulating a synthetic replicate of our original data, using our final model.  For this, we only need pass our model, and the covariates used:
+```{r wtcsim, tidy=TRUE, eval=TRUE, max.height="200px"}
+set.seed(1331)
+simwtc<-simulate(wtcfit6, covar=list(CovInt=WTCPoliceIsICR), verbose=TRUE)
+```
+We now have a simulated event sequence from the `wtcfit6` model!  Let's see what it looks like:
+```{r wtcsimhead, tidy=TRUE, eval=TRUE, max.height="200px"}
+simwtc
+```
+As we can see, we now have an event list that looks just like our original data (but that is synthetic).  Such synthetic replicates can be used for many purposes, including exploratory simulation, model adequacy checking, and aiding in model interpretation.  For instance, let's perform a very small simulation study to look at the relationship between occupying an ICR and betweenness, and probe the role of the AB-BA P-shift term in impacting that relationship.  We'll do this by simulating data first from our ICR-only model, then our final model, and lastly a version of the final model with the P-shift term zeroed out.  This is called an *in silico* "knock-out" experiment, and can be useful for understanding the role that specific effects play in generating aggregate outcomes.
+
+```{r wtc-knockout, tidy=TRUE, eval=TRUE}
+set.seed(1331)
+reps<-6                      #Number of replicate series to take
+kocoef<-wtcfit6$coef         #Knock-out coefs
+kocoef["PSAB-BA"]<-0
+ICRBetCor<-matrix(nrow=reps,ncol=3)
+for(i in 1:reps){
+  print(i)
+  simwtc<-simulate(wtcfit1, covar=list(CovInt=WTCPoliceIsICR))               #ICR only
+  ICRBetCor[i,1]<-cor(betweenness(as.sociomatrix.eventlist(simwtc, 37)), WTCPoliceIsICR)
+  simwtc<-simulate(wtcfit6, covar=list(CovInt=WTCPoliceIsICR))               #Final
+  ICRBetCor[i,2]<-cor(betweenness(as.sociomatrix.eventlist(simwtc, 37)), WTCPoliceIsICR)
+  simwtc<-simulate(wtcfit6, covar=list(CovInt=WTCPoliceIsICR), coef=kocoef)  #Knockout
+  ICRBetCor[i,3]<-cor(betweenness(as.sociomatrix.eventlist(simwtc, 37)), WTCPoliceIsICR)
+}
+boxplot(ICRBetCor, names=c("ICROnly", "Full", "NoABBA"))
+abline(h=cor(betweenness(as.sociomatrix.eventlist(WTCPoliceCalls, 37)), WTCPoliceIsICR),col=2)
+```
+
+We can see here that (perhaps unsurprisingly) the ICR-only model overstates the relationship between occupying an ICR and having high betweenness; our full model does much better, generally producing realizations that cover the observed data (though, with only a few replicates, you may find that it sometimes doesn't!).  What happens when we "turn off" the AB-BA shift?  It turns out that this greatly increases the relative betweenness of ICRs, telling us that the AB-BA shifts are helping to play a role in keeping ICRs from inappropriately dominating the network.  Why should turn taking matter here?  The short answer is that turn-taking effects create opportunities for non-ICR responders to gain airtime, and end up as emergent coordinators.  Taking out the AB-BA effect reduces emergent coordination, which in turn increases the relative centrality of the few individuals in institutionalized coordinative roles.
+
+## Section 2. Dyadic Relational Event Models with `rem.dyad`: Exact Timing
+
+In the previous section, we considered dyadic relational event models in the case for which only ordinal timing information is available. We now proceed to the case of exact timing, in which we know the time at which each event occurs (relative to the onset of observation, which is treated as time 0).
+
+### 2.0 The McFarland classroom data
+
+For this section, we will make use of data collected by Dan McFarland (and published in Bender-deMoll and McFarland, 2006) on interaction among students and instructors within a high school classroom. (Note that the data employed here has been slightly modified from the original for illustrative purposes, in that small timing adjustments have been made to separate closely spaced events; those interested in using it for purposes other than practice are directed to the above paper in the Journal of Social Structure.) To see the event data itself, we may print it as follows:
+
+```{r class, tidy=TRUE, eval=TRUE}
+head(Class)
+tail(Class)
+```
+
+As before, we have three columns: the event time, the event source (numbered from 1 to 20), and the event target (again, numbered 1 to 20). In this case, event time is given in increments of minutes from onset of observation. Note that the last row of the event list contains the time at which observation was terminated; it (and only it!) is allowed to contain `NAs`, since it has no meaning except to set the period during which events could have occurred. Where exact timing is used, the final entry in the edgelist is always interpreted in this way, and any source/target information on this row is ignored.
+
+In addition to the `Class` edgelist, we also observe the covariates `ClassIsTeacher` (an indicator for instructor role) and `ClassIsFemale` (an indicator for gender). Visualizing the data in time-aggregate form gives us the following:
+
+```{r class-net, tidy=TRUE, eval=TRUE}
+ClassNet<-as.sociomatrix.eventlist(Class,20)
+gplot(ClassNet, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2, edge.lwd=ClassNet^0.75)
+```
+
+A dynamic visualization for this data is also available in the above-cited paper, and is well worth examining!  (The `ndtv` package in `statnet` can be used to produce visualizations of this kind.)
+
+### 2.1 Modeling with covariates
+
+We begin our investigation of classroom dynamics with a trivial intercept model, containing only a vector of 1s (`ClassIntercept`) as a sending effect:
+
+```{r classfit1, tidy=TRUE, eval=TRUE}
+classfit1<-rem.dyad(Class, n=20, effects=c("CovSnd"), covar=list(CovSnd=ClassIntercept), ordinal=FALSE, hessian=TRUE)
+
+summary(classfit1)
+```
+
+Note that we must tell `rem.dyad` that we do not want to discard timing information (`ordinal=FALSE`). The model does not fit any better than the null because it is equivalent to the null model (but you must supply your own intercept, regardless!).  As one would expect from first principles, this is really just an exponential waiting time model, calibrated to the observed
+communication rate:
+
+```{r class-timing, tidy=TRUE, eval=TRUE}
+(classfit1$m-1)/max(Class[,1])    #Events per minute (on average)
+20*19*exp(classfit1$coef)         #Predicted events per minute (matches well!)
+```
+
+To make things more interesting, let's add effects for role and gender:
+
+```{r classfit2, tidy=TRUE, eval=TRUE}
+classfit2<-rem.dyad(Class, n=20, effects=c("CovSnd", "CovRec"), covar=list(CovSnd=cbind(ClassIntercept, ClassIsTeacher, ClassIsFemale), CovRec=cbind(ClassIsTeacher, ClassIsFemale)), ordinal=FALSE, hessian=TRUE)
+summary(classfit2)
+classfit1$BIC-classfit2$BIC   #Model is preferred
+```
+
+Note that covariate effects correspond to the order in which they were specified within the covar argument. It doesn't look here like gender affects propensity to send; given this, we might wonder whether dropping it gives us a better model.
+
+```{r classfit3, tidy=TRUE, eval=TRUE}
+classfit3<-rem.dyad(Class, n=20, effects=c("CovSnd", "CovRec"), covar=list(CovSnd=cbind(ClassIntercept, ClassIsTeacher), CovRec=cbind(ClassIsTeacher, ClassIsFemale)), ordinal=FALSE, hessian=TRUE)
+summary(classfit3)
+classfit2$BIC-classfit3$BIC    #Reduced model is indeed preferred
+```
+
+### 2.2 Endogenous social dynamics
+
+The above model is still relatively poor, in the sense that the reduction in deviance is unimpressive. What else might explain classroom communication? Recency effects would seem to be a reasonable bet:
+
+```{r classfit4, tidy=TRUE, eval=TRUE, tidy.opts=list(indent=3, width.cutoff=60)}
+classfit4<-rem.dyad(Class, n=20, effects=c("CovSnd", "CovRec", "RRecSnd", "RSndSnd"), covar=list(CovSnd=cbind(ClassIntercept, ClassIsTeacher), CovRec=cbind(ClassIsTeacher, ClassIsFemale)), ordinal=FALSE, hessian=TRUE)
+summary(classfit4)
+classfit3$BIC-classfit4$BIC   #Enhanced model is preferred
+```
+
+This certainly helps, but we may suspect that more structure is present. Although a classroom is not as structured as a radio channel, we might reasonably expect to see at least modest adherence to conversational norms such as turn-taking. Moreover, sequential address and "hand-offs" might also be expected to occur more frequently here than would be expected by chance. To examine these possibilities, we incorporate the appropriate P-shift effects into our cumulative model:
+
+```{r classfit5, tidy=TRUE, eval=TRUE}
+classfit5<-rem.dyad(Class, n=20, effects=c("CovSnd", "CovRec", "RRecSnd", "RSndSnd", "PSAB-BA", "PSAB-AY", "PSAB-BY"), covar=list(CovSnd=cbind(ClassIntercept, ClassIsTeacher), CovRec=cbind(ClassIsTeacher, ClassIsFemale)), ordinal=FALSE, hessian=TRUE)
+summary(classfit5)
+classfit4$BIC-classfit5$BIC    #Enhanced model is again preferred
+```
+
+Note that, while P-shift effects are certainly present, including them has led the remaining gender effect to fall out. This suggests the possibility that what seemed at first to be a difference in communication receipt tendency by gender was in fact a result of social dynamics (perhaps stemming from the fact that the instructors are male, with their inherent tendency to communicate more often amplified by local conversational norms). Does dropping gender now result in improved model fit? Let's check.
+
+```{r classfit6, tidy=TRUE, eval=TRUE}
+classfit6<-rem.dyad(Class, n=20, effects=c("CovSnd", "CovRec", "RRecSnd", "RSndSnd", "PSAB-BA", "PSAB-AY", "PSAB-BY"), covar=list(CovSnd=cbind(ClassIntercept, ClassIsTeacher), CovRec=ClassIsTeacher), ordinal=FALSE, hessian=TRUE)
+summary(classfit6)
+classfit5$AICC-classfit6$AICC  #Reduced model is indeed preferred
+```
+
+At this point, we have a relatively simple model that incorporates some plausible social mechanisms. We could continue to elaborate it, but for instructional purposes we stop our search here.
+
+
+### 2.3 Using a fitted model to investigate event timing
+
+One use of a fitted relational event model is to consider the inter-event times predicted to be observed under various scenarios.  For this purpose, it is useful to remember that, under the piecewise constant hazard assumption, event waiting times are conditionally exponentially distributed. This allows us to easily work out the consequences of various model effects for social dynamics, at least within the context of a particular scenario.  
+
+In interpreting coefficient effects, recall that they act as logged hazard multipliers. For instance:
+
+```{r classfit6-timing, tidy=TRUE, eval=TRUE}
+exp(classfit6$coef["PSAB-BA"]) #Response events have apx 100 times the hazard of other events
+```
+
+Remember, however, that the fact that an event has an unusually high hazard does not mean that it will necessarily occur. For instance, while a response of B to a communication from A has a hazard that is (*ceteris paribus*) about 100 times as great as the hazard of a non B$\to$A event, there are many more events of the latter type. Here, indeed, there are 379 other events "competing" with the B$\to$A response, and thus the chance that the latter will occur next is smaller than it may appear. Both relative rates and combinatorics (i.e., the number of possible ways that an event type may occur) govern the result.
+
+One basic use of the model coefficients is to examine the expected inter-event times under specific scenarios. E.g.:
+
+```{r class-timing-scenarios, tidy=TRUE, eval=TRUE}
+#Mean inter-event time if nothing else going on....
+1/(20*19*exp(classfit6$coef["CovSnd.1"]))
+
+#Mean teacher-student time (again, if nothing else happened)
+1/(2*18*exp(sum(classfit6$coef[c("CovSnd.1","CovSnd.2")])))
+
+#Sequential address by teacher w/out prior interaction, given a prior teacher-student
+#interaction, and assuming nothing else happened
+1/(17*exp(sum(classfit6$coef[c("CovSnd.1","CovSnd.2","PSAB-AY")])))
+
+#Teacher responding to a specific student, given an immediate event
+1/(exp(sum(classfit6$coef[c("CovSnd.1","CovSnd.2","PSAB-BA","RRecSnd")])))
+
+#Student responding to a specific teacher, given an immediate event
+1/(exp(sum(classfit6$coef[c("CovSnd.1","CovRec.1","PSAB-BA","RRecSnd")])))
+```
+
+Again, the number of ways that an event type can occur and the propensity of such events to occur both matter!
+
+### 2.4 Assessing model adequacy
+
+Model adequacy assessment in the exact timing case is much like that of the ordinal case. We cannot here use a fixed null residual or guessing equivalent, but can still look at "surprise" based on deviance residuals:
+
+```{r class-surprise, tidy=TRUE, eval=TRUE}
+#Where is the model "surprised"? Can't use null residual trick, but can see
+#what the distribution looks like
+hist(classfit6$residuals)    #Deviance residuals - lumpier by far, most smallish
+```
+
+The fit here doesn't seem to be as good as it was for the WTC police data. Let's look at classification:
+```{r class-predmatch, tidy=TRUE, eval=TRUE, max.height="200px"}
+mean(apply(classfit6$predicted.match,1,all))    #Exactly right about 33%
+mean(apply(classfit6$predicted.match,1,any))    #Get one party exactly right 52%
+colMeans(classfit6$predicted.match)             #Better at sender than receiver!
+classfit6$observed.rank
+cbind(Class,c(classfit6$observed.rank,NA))
+```
+
+It looks like there is some structure in the errors: we aren't able to capture certain kinds of intrusive events. Does looking at the "surprising" events (say, those for which the observed event is not in the top 5\% of those predicted) in time-aggregate form help?
+
+```{r class-surprise-net, tidy=TRUE, eval=TRUE}
+#Get the surprising events, and display as a network
+surprising<-as.sociomatrix.eventlist(Class[classfit6$observed.rank>19,],20)
+gplot(surprising, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2)
+
+#Show how the "surprising" events fit into the broader communication structure
+edgecol<-matrix(rgb(surprising/(ClassNet+0.01),0,0),20,20) #Color me surprised
+gplot(ClassNet, edge.col=edgecol, edge.lwd=ClassNet^0.75, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2)
+```
+
+The visualization gives us more of a clue about what we're missing: various side discussions occur that are not well-captured by the current model. This could be due to the fact that things like P-shift effects fail to capture simultaneous side conversations (each of which may have its own set of turn-taking patterns), or to a lack of covariates to capture the enhanced propensity of subgroup members to address each other. Further elaboration could be helpful here. On the other hand, we seem to be doing reasonably well at capturing the main line of discussion within the classroom, particularly vis a vis the instructors. Whether or not this is adequate depends on the purpose to which the model is to be put; as always, adequacy must be considered in light of specific scientific goals.
+
+### 2.5 Simulating from the fitted model
+
+Simulation from fitted models with exact timing proceeds exactly as in the ordinal timing case: we can use the `simulate` method for `rem.dyad` to generate trajectories from the fitted model object.
+
+For instance, to generate a new trajectory from the final classroom model, we would use the code
+```{r class-sim, tidy=TRUE, eval=TRUE, max.height="200px"}
+set.seed(1331)
+ClassSim<-simulate(classfit6, covar=list(CovSnd=cbind(ClassIntercept,ClassIsTeacher), CovRec=ClassIsTeacher))
+
+ClassSim  #Examine the resulting trajectory
+```
+
+As we saw in section 1.5, running the `simulate` command on the fitted model object produces a new trajectory of identical length to the original, with the same coefficients.  Note that the new trajectory is identical in terms of the number of *realized events* it contains, and it will not in general cover the same *time period.*  Some disparity between the two is normal (and, indeed, will happen with probability 1); however, when the total mean time period of the replicate sequences is substantially different from that of the original data, this suggests that the pacing of the model is off.
+
+In section 1.5, we showed how an *in silico* knock-out study could be used to gain insights into model behavior.  Another useful strategy can be to simulate trajectories from a fitted model with alternative choices of covariates.  For instance, what might we expect if we replaced the teachers in our classroom with students?  This anarchic state of affairs can be probed by conditional simulation with a different set of covariates:
+```{r anarchy-sim, tidy=TRUE, eval=TRUE, max.height="200px"}
+set.seed(1331)
+AnarchSim<-simulate(classfit6, covar=list(CovSnd=cbind(ClassIntercept,rep(0,20)), CovRec=rep(0,20)))
+
+AnarchSim  #Examine the trajectory
+
+#Plot the network structure of the simulations, and the observed data
+par(mfrow=c(2,2), mar=c(2,2,2,2))
+gplot(ClassNet, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2, edge.lwd=ClassNet^0.75, main="Observed Network", edge.col=rgb(0,0,0,(1-1/(1+ClassNet))^3))
+SimNet<-as.sociomatrix.eventlist(ClassSim,20)  #Create a network from the fitted sim
+gplot(SimNet, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2, edge.lwd=SimNet^0.75, main="Simulated Network", edge.col=rgb(0,0,0,(1-1/(1+SimNet))^3))
+AnarchNet<-as.sociomatrix.eventlist(AnarchSim,20)  #Create a network from the anarchy sim
+gplot(AnarchNet, vertex.col=4-2*ClassIsFemale, vertex.sides=3+ClassIsTeacher, vertex.cex=2,edge.lwd=AnarchNet^0.75, main="Anarchic Network", edge.col=rgb(0,0,0,(1-1/(1+AnarchNet))^3))
+
+#Plot the valued degree distributions
+plot(density(degree(ClassNet),bw="SJ"),lwd=3,main="Degree Distribution")
+lines(density(degree(SimNet),bw="SJ"),lwd=3,col=2)
+lines(density(degree(AnarchNet),bw="SJ"),lwd=3,col=4)
+legend("topright",legend=c("Obs","Sim","Anarch"),lwd=3,col=c(1,2,4))
+```
+
+Comparing the plots, we can see several things.  First, we note some limitations of our fitted model: while it does relatively well at ensuring that the teachers are central, enduring that many of the strongest interactions are student-teacher interactions, creating a network in which strong interactions are localized to a fairly small number of (highly reciprocal) dyads, and reproducing the overall valued degree distribution, it also produces a large "halo" of weak side-interactions among the students that is not seen in the observed network. This suggests the potential for further model improvement.  
+
+Turning to our "anarchy in the classroom" model, however, we see that the effect of removing teachers is substantively reasonable.  The nodes that were formerly teachers no longer have any particular significance, and are now well-mixed with their peers; likewise, without the teachers to focus attention, the network is as a whole much less centralized.  Thus, the model does plausibly produce many of the effects one would expect to see from such a change in group composition.  Such scenario-based probes can be a useful tool for assessing model behavior, as well as being of possible substantive interest in and of themselves.
+
+
+## Section 3. Simulating *De Novo* Dyadic Relational Event Models
+
+We have seen how the `simulate` command can be used to simulate draws from fitted `rem.dyad` objects, and even how these may be modified by switching coefficients or covariates for particular purposes.  What if we want to create a *de novo* simulation?  This can also be done, using `rem.dyad` to create a *model skeleton* that can subsequently be used for simulation.
+
+### 3.0 Creating a model skeleton
+
+To set up a REM for simulation, we need to create an object that records the system size (i.e., number of vertices), effects involved, and other critical information.  When we fit models using `rem.dyad'', this information was encoded in the model object.  In the *de novo* case, we use the same approach - except that we simply omit the data!
+
+To see how this is done, let's consider an example.  Let us say that we want to create a model for a 25-node REM with a baseline intercept, an AB-BA P-shift, and a recency effect of sending on future sending (`RSndSnd`).  We then proceed by creating a model just as we would normally, but with `NULL` where the data should be:
+
+```{r modskel, tidy=TRUE, eval=TRUE}
+ModInt<-rep(1,25)
+modskel <- rem.dyad(NULL, n=25, effects=c("CovSnd", "PSAB-BA", "RSndSnd"), covar=list(CovSnd=ModInt))
+modskel
+```
+
+Note that the model is correctly identified as a skeleton, with a reminder that it was not fit to data.  It also comes equipped with "default" coefficients, but these are not very useful: if a seed coefficient is not passed, `rem.dyad` always initializes with perturbed coefficients near zero.  If one knows what coefficients one wants to embed in the skeleton, one can set them using the `coef.seed` argument.
+
+Note that none of the inferential or other arguments to `rem.dyad` are needed here, since no fitting is done.  Perhaps less obviously, we do not need to set the `ordinal` variable, since all REM simulation is done in continuous time.  (The resulting trajectories can, of course, be interpreted ordinally, if the pacing constant used was arbitrary.)
+
+### 3.1 Simulating from the model skeleton
+
+Simulation from the model skeleton is then performed just as simulation with fitted model objects, except that one needs to pass the number of draws to take (`nsim`, which was optional before) and `coef` (unless one already embedded the coefficients one wants in the model object).  Be sure to enter your coefficients in the order stored in the skeleton, which may not be the order you initially specified the effects!  Let's see how this works, using our example: 
+
+```{r modskel-sim, tidy=TRUE, eval=TRUE}
+set.seed(1331)
+modsim<-simulate(modskel, nsim=100, coef=c(0.25,-1,4), covar=list(CovSnd=ModInt))
+head(modsim)                                  #See the trajectory
+grecip(as.sociomatrix.eventlist(modsim,25), measure="edgewise")    #Relatively reciprocal
+```
+
+Any number of events may be simulated in this way.
+
+### 3.2 Simulation with time-varying covariates
+
+Time-varying covariates must, by definition, be specified at each time step.  `rem.dyad` understands several covariate formats (see `?rem.dyad`):
+
+* Single covariate, time invariant: For `CovSnd`, `CovRec`, or `CovInt`, a vector or single-column matrix/array.  For `CovEvent`, an `n` by `n` matrix or array.
+* Multiple covariates, time invariant: For `CovSnd`, `CovRec`, or `CovInt`, a two-dimensional `n` by `p` matrix/array whose columns contain the respective covariates.  For `CovEvent`, a `p` by `n` by `n` array, whose first dimension indexes the covariate matrices.
+* Single or multiple covariates, time varying: For `CovSnd`, `CovRec`, or `CovInt`, an `m` by `n` by `p` array whose respective dimensions index time (i.e., event number), covariate, and actor.  For `CovEvent`, a `m` by `p` by `n` by `n` array, whose dimensions are analogous to the previous case.
+
+Thus, in the time-varying case, the dimensions of the covariate object must be consistent with `nsim`.  Let's see a simple example, involving a 10-person group with an initial activity covariate that decays with time.  We will simulate for 100 time steps, so need to create a 100 by 1 by 10 matrix to hold the covariate (the *i*th slice containing the covariate values ``going into'' the *i*th event).  When creating the skeleton, it is currently necessary to pass covariates as if they are static, since there are not yet multiple time points; the checks that are performed to ensure that the covariates are legal will object if too many time points are given.  (This will probably change in the future.)  The time-varying version is then passed to the simulator.
+
+```{r modyncov, tidy=TRUE, eval=TRUE}
+set.seed(1331)
+#Set up the model
+tcovar<-array(sweep(sapply(1:10,rep,100),1,1/1.05^(0:99),"*"),dim=c(100,10,1))
+SndInt<-rep(1,10)
+#Note that, in making the skeleton, we need to pass the covariates as if
+#they are static - that's because the model doesn't contain time points yet.
+modskel2<-rem.dyad(NULL, n=10, effects=c("CovSnd", "CovInt"), coef.seed=c(-1,1), covar=list(CovSnd=SndInt, CovInt=tcovar[1,,1]))
+
+#Simulate draws
+modsim2<-simulate(modskel2, nsim=100, covar=list(CovSnd=SndInt, CovInt=tcovar))
+
+#Note that dynamics slow down, and participation evens out
+plot(diff(modsim2[,1]), col=hsv(modsim2[,2]/10*0.6), pch=19, ylab="Inter-event Time")
+lines(supsmu(x=2:100, y=diff(modsim2[,1])))
+```
+
+On average, dynamics slow down, as we would expect, and more low-numbered (redder) vertices interact after the initial period.
+
+
+## References
+
+Butts, Carter T.  (2008).  "A Relational Event Framework for Social Action."  *Sociological Methodology*, 38(1), 155-200.
+
+Butts, Carter T. and Marcum, Christopher S.  (2017).  "A Relational Event Approach to Modeling Behavioral Dynamics."  In Andrew Pilney and Marshall Scott Poole (Eds.), *Group Processes: Data-Driven Computational Approaches*.  Springer.
+
+Butts, Carter T.; Petrescu-Prahova, Miruna; and Cross, B. Remy.  (2007).  "Responder Communication Networks in the World Trade Center Disaster: Implications for Modeling of Communication Within Emergency Settings."  *Journal of Mathematical Sociology,*  31(2), 121-147.
+
+Marcum, Christopher S. and Butts, Carter T.  (2015).  "Constructing and Modifying Sequence Statistics for `relevent` using `informR` in `R`."  *Journal of Statistical Software*, 64(5).  [https://doi.org/10.18637/jss.v064.i05]
+
+Bender-deMoll, Skye and McFarland, Daniel A.  (2006).  ``The Art and Science of Dynamic Network Visualization.'' *Journal of Social Structure*, 7. [https://www.cmu.edu/joss/content/articles/volume7/deMollMcFarland/]
+

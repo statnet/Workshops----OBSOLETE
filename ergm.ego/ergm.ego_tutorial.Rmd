@@ -60,6 +60,9 @@ To install the package the `ergm.ego`,
 
 ```{r, eval=F}
 install.packages('ergm.ego')
+
+# alternative location
+#https://statnet.r-universe.dev
 ```
 
 This will install all of the "dependencies" -- the other R packages that `ergm.ego` needs.  Then load the package into **R** and verify the package version:
@@ -179,10 +182,6 @@ the survey instrument. As a result, these methods are easily
 integrated into population-based 
 surveys, and, as we show below, inherit many of the inferential benefits.
 
-For the moment `ergm.ego` uses the minimal egocentric network study design,
-in which alters cannot be uniquely identified and alter matrices are not collected 
-<!-- (see Smith (2012) and Gjoka, Smith, and Butts (2014a) for  -->
-<!-- considerations of when they are). -->
 The minimal design is more common, and the data are more widely available,
 largely because it is less invasive and less time-consuming than designs which include identifiable alter matrices. However, deveopment of estimation where alter--alter matrices are available is being planned.
 

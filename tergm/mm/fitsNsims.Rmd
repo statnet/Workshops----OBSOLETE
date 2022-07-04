@@ -1,0 +1,546 @@
+---
+title: Temporal net data structures and comparisons
+output:
+  html_document:
+    fig_width: 8
+    highlight: kate
+    theme: lumen
+    toc: yes
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+knitr::opts_chunk$set(cache=F, comment=NA, fig.align='center')
+```
+# Intro
+
+We work with 2 panels of the Sampson data to:
+
+1. Verify the values of the `nw.stats` for all of the operators
+
+2. Fit and simulate from the separable and joint models, showing that both produce an equilibrium target edgecount equal to 
+`summary(nw.series ~ edges)`
+
+# Setup & data
+```{r, message=F, warning=F}
+# 
+# # loadedNamespaces()
+# # unloadNamespace("ergm")
+# # unloadNamespace("statnet.common")
+# 
+# master_lib <- "~/R/GHmaster-library"
+# 
+# # #Make lib 1st position in libPath
+# defaultPaths <- .libPaths()
+# .libPaths(c(master_lib, defaultPaths))
+# .libPaths()
+
+#devtools::dev_mode(on=T, path = .libPaths()[1])
+
+library(tergm)
+library(tsna)
+
+sessioninfo::package_info(pkgs = c("network",
+                                   "ergm", "tergm"),
+                          dependencies = FALSE)
+```
+
+# Data
+
+```{r, message=F, warning=F}
+data(samplk)
+samp.series <- NetSeries(list(samplk1,samplk2))
+samp.series
+samp.dyn <- networkDynamic(network.list = list(samplk1,samplk2), start=1)
+
+```
+
+# Descriptives 
+
+Cross sectional stats and form/diss changes from tsna
+
+```{r, message=F, warning=F}
+samp.stats <- cbind(edges = tErgmStats(samp.dyn, "~edges"),
+                    form = tEdgeFormation(samp.dyn),
+                    diss = tEdgeDissolution(samp.dyn))
+
+samp.stats
+```
+
+The ones with operator names replicate the edge counts performed by the operators.
+
+```{r, message=F, warning=F}
+
+start = network.edgecount(samplk1)
+cross = network.edgecount(samplk2)
+change = network.edgecount(xor(samplk1, samplk2))
+form = network.edgecount(samplk1 | samplk2)
+persist = network.edgecount(samplk1 & samplk2)
+diss = -persist
+dissolved = network.edgecount(samplk1) - persist
+
+cbind(start=start, cross=cross, change=change, 
+      form=form, persist=persist, diss=diss, dissolved=dissolved
+      )
+```
+
+# Edges only models
+
+## Separable {.tabset}
+
+### Fit {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+sep.fit <- tergm(
+  samp.series ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE"
+)
+```
+
+#### summary
+```{r, message=F, warning=F}
+summary(sep.fit)
+```
+
+
+### Simulate {.tabset  .tabset-pills}
+```{r, message=F, warning=F}
+sep.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(sep.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges) + Diss(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F}
+cbind(obs = sep.fit$nw.stats,
+      sim = colMeans(sep.sim$stats.gen))
+
+plot(sep.sim$stats.gen)
+
+```
+
+
+## Joint {.tabset}
+
+### Fit {.tabset} {.tabset .tabset-pills}
+```{r, message=F, warning=F}
+jnt.fit <- tergm(
+  samp.series ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE"
+)
+```
+
+#### summary
+```{r, message=F, warning=F}
+summary(jnt.fit)
+```
+
+
+### Simulate {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+jnt.sim <- simulate(jnt.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(jnt.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(jnt.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges) + Change(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = jnt.fit$nw.stats,
+      sim = colMeans(jnt.sim$stats.gen))
+
+plot(jnt.sim$stats.gen)
+```
+
+# Add mutuals
+
+## Separable {.tabset}
+
+### Fit {.tabset} {.tabset .tabset-pills}
+```{r, message=F, warning=F}
+sep.fit <- tergm(
+  samp.series ~
+    Form(~edges + mutual) +
+    Diss(~edges + mutual),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5))
+```
+  
+#### summary
+```{r, message=F, warning=F}
+summary(sep.fit)
+```
+
+#### mcmc dx
+```{r, message=F, warning=F}
+mcmc.diagnostics(sep.fit)
+```
+
+### Simulate {.tabset  .tabset-pills}
+```{r, message=F, warning=F}
+sep.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(sep.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges+mutual) + Diss(~edges+mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F, fig.height = 9}
+cbind(obs = sep.fit$nw.stats,
+      sim = colMeans(sep.sim$stats.gen))
+
+plot(sep.sim$stats.gen)
+
+```
+
+
+## Joint {.tabset}
+```{r, message=F, warning=F}
+jnt.fit <- tergm(
+  samp.series ~
+    Cross(~edges + mutual) +
+    Change(~edges + mutual),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+```
+
+#### summary
+```{r, message=F, warning=F}
+summary(jnt.fit)
+```
+
+#### mcmc dx
+```{r, message=F, warning=F}
+mcmc.diagnostics(jnt.fit)
+```
+
+
+### Simulate {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+jnt.sim <- simulate(jnt.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(jnt.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(jnt.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges+mutual) + Change(~edges+mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = jnt.fit$nw.stats,
+      sim = colMeans(jnt.sim$stats.gen))
+
+plot(jnt.sim$stats.gen)
+```
+
+# One term only
+`
+## Form {.tabset}
+
+### Fit {.tabset} {.tabset .tabset-pills}
+```{r, message=F, warning=F}
+form.fit <- tergm(
+  samp.series ~
+    Form(~edges),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5))
+
+summary(form.fit)
+```
+
+
+### Simulate {.tabset  .tabset-pills}
+```{r, message=F, warning=F}
+form.sim <- simulate(form.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+print(form.mon <- cbind(obs = summary(samp.series ~ edges),
+                        sim = colMeans(form.sim$stats)))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(form.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F}
+cbind(obs = form.fit$nw.stats,
+      sim = colMeans(form.sim$stats.gen))
+
+plot(form.sim$stats.gen)
+
+```
+
+
+## Diss {.tabset}
+
+### Fit
+```{r, message=F, warning=F}
+diss.fit <- tergm(
+  samp.series ~
+    Diss(~edges),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+
+summary(diss.fit)
+```
+
+
+### Simulate {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+diss.sim <- simulate(diss.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+print(diss.mon <- cbind(obs = summary(samp.series ~ edges),
+                        sim = colMeans(diss.sim$stats)))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(diss.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Diss(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = diss.fit$nw.stats,
+      sim = colMeans(diss.sim$stats.gen))
+
+plot(diss.sim$stats.gen)
+```
+
+
+## Cross {.tabset}
+
+### Fit
+```{r, message=F, warning=F}
+cross.fit <- tergm(
+  samp.series ~
+    Cross(~edges),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+
+summary(cross.fit)
+```
+
+
+### Simulate {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+cross.sim <- simulate(cross.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+print(cross.mon <- cbind(obs = summary(samp.series ~ edges),
+                         sim = colMeans(cross.sim$stats)))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(cross.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = cross.fit$nw.stats,
+      sim = colMeans(cross.sim$stats.gen))
+
+plot(cross.sim$stats.gen)
+```
+
+## Change {.tabset}
+
+### Fit
+```{r, message=F, warning=F}
+change.fit <- tergm(
+  samp.series ~
+    Change(~edges),
+  estimate = "CMLE",
+  snctrl = list(CMLE.MCMC.interval = 1e5)
+)
+
+summary(change.fit)
+```
+
+
+### Simulate {.tabset} {.tabset .tabset-pills}
+
+```{r, message=F, warning=F}
+change.sim <- simulate(change.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+print(change.mon <- cbind(obs = summary(samp.series ~ edges),
+                          sim = colMeans(change.sim$stats)))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(change.sim$stats), type="l",
+     main = "change-sectional edgecount in simulated network timeseries",
+     sub = "Model: Change(~edges)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r message=F, warning=F}
+cbind(obs = change.fit$nw.stats,
+      sim = colMeans(change.sim$stats.gen))
+
+plot(change.sim$stats.gen)
+```
+
+## Compare
+
+```{r}
+model <- c("obs", "form", "diss", "cross", "change")
+coef <- c(NA_real_,
+          coef(form.fit),
+          coef(diss.fit),
+          coef(cross.fit),
+          coef(change.fit))
+mon.edges <- c(form.mon[1],
+               form.mon[2],
+               diss.mon[2],
+               cross.mon[2],
+               change.mon[2])
+
+data.frame(model=model, coef=round(coef,1), edges=round(mon.edges))
+
+samp.stats
+
+dyads = network.dyadcount(samplk1)
+
+prob.form = samp.stats[2,"form"]/(dyads-samp.stats[1,"edges"])
+prob.diss = samp.stats[2,"diss"]/network.edgecount(samplk1)
+prob.cross = network.edgecount(samplk2)/dyads
+prob.change = network.edgecount(xor(samplk1, samplk2))/dyads
+
+logit.form = prob.form / (1-prob.form)
+logit.diss = prob.diss / (1-prob.diss)
+logit.cross = prob.cross / (1-prob.cross)
+logit.change = prob.change / (1-prob.change)
+
+ecoef.form = exp(coef(form.fit))
+ecoef.diss = exp(coef(diss.fit))
+ecoef.cross = exp(coef(cross.fit))
+ecoef.change = exp(coef(change.fit))
+```

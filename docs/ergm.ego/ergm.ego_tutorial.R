@@ -1,20 +1,7 @@
-## ----setup, include=FALSE-------------------------------------------------------------------
-library(knitr)
-knitr::opts_chunk$set(cache=T, comment=NA, fig.align='center')
-
-
-## ----dev, child = '../statnetDevTeam.Rmd'---------------------------------------------------
-
-
-
-
-## ----project, child = '../statnetProject.Rmd'-----------------------------------------------
-
-
-
 
 ## ---- eval=F--------------------------------------------------------------------------------
 install.packages('ergm.ego')
+#install.packages('ergm.ego', repos='https://statnet.r-universe.dev')
 
 
 ## -------------------------------------------------------------------------------------------

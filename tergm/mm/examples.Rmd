@@ -1,0 +1,645 @@
+---
+title: tergm tests
+output:
+  html_document:
+    fig_width: 8
+    highlight: kate
+    theme: lumen
+    toc: yes
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+knitr::opts_chunk$set(cache=F, comment=NA, fig.align='center')
+```
+
+# Setup & data
+```{r,  message=F}
+
+# loadedNamespaces()
+# unloadNamespace("ergm")
+# unloadNamespace("statnet.common")
+
+master_lib <- "~/R/GHmaster-library"
+
+# #Make lib 1st position in libPath
+# defaultPaths <- .libPaths()
+# .libPaths(c(master_lib, defaultPaths))
+# .libPaths()
+
+#devtools::dev_mode(on=T, path = .libPaths()[1])
+#library(network)
+#library(ergm)
+library(tergm, lib.loc = master_lib)
+library(tsna)
+
+sessioninfo::package_info(pkgs = c("statnet.common", "network", "rle",
+                                   "ergm", "tergm"),
+                          dependencies = FALSE)
+```
+
+# Types of networks {.tabset}
+
+## first network
+
+Standard network summary
+
+```{r,  message=F}
+data(samplk)
+samplk1
+```
+
+## list
+
+Replicates the standard summary for each network
+
+```{r,  message=F}
+# summary shows the nodes & edges at each slice
+samp.list <- list(samplk1,samplk2,samplk3)
+samp.list
+```
+
+## network.list
+
+Only shows us that there are 3 network objects in this list
+
+```{r,  message=F}
+# summary only shows there are 3 network objects as components
+samp.netlist <- network.list(samp.list)
+samp.netlist
+```
+
+## NetSeries
+
+Summary shows what `tergm` will send to `ergm` for term construction and estimation: the sum of the second and third neworks.
+
+```{r,  message=F}
+# summary shows nodes(2) + nodes(3), and edges(2) + edges(3)
+samp.series <- NetSeries(samp.list)
+samp.series
+```
+
+## networkDynamic
+
+Summary shows the unique total node and edgecount (verified with the collapsed version).
+
+```{r,  message=F}
+# summary shows the unique # nodes and edges in both cases
+# we start at 1 to make the series index consistent with the other
+# network storage mechanisms
+
+samp.dyn <- networkDynamic(network.list = samp.list, start=1)
+samp.dyn
+samp.collapse <- network.collapse(samp.dyn, onset=1, terminus=4)
+samp.collapse
+```
+
+## Term counts for 2 panels: using base R
+
+These replicate the edge counts performed by the operators, which makes it easier to verify.  But it only works for 2 panels.  Show the code for more info.
+
+```{r}
+form = network.edgecount(samplk1 | samplk2)
+persist = network.edgecount(samplk1 & samplk2)
+diss = -persist
+dissolved = network.edgecount(samplk1) - persist
+cross = network.edgecount(samplk2)
+change = network.edgecount(xor(samplk1, samplk2))
+
+cbind(form=form, persist=persist, diss=diss, dissolved=dissolved,
+      cross=cross, change=change)
+```
+
+# Descriptives
+
+Cross sectional stats and form/diss changes from tsna
+
+```{r,  message=F}
+samp.stats <- cbind(edges = tErgmStats(samp.dyn, "~edges"),
+                    form = tEdgeFormation(samp.dyn),
+                    diss = tEdgeDissolution(samp.dyn))
+
+samp.stats
+```
+
+# Netstats and fits {.tabset}
+
+These will be model-specific.  So we'll show results for different specifications.
+
+## `Form + Diss` {.tabset .tabset-pills}
+
+### summary_formula 
+
+Works on NetSeries and nD (but not lists or netlists), and results are very different for these two, because they represent the network differently.
+
+```{r,  message=F}
+# summary.list <- summary(samp.list ~
+#                             Form(~edges) +
+#                             Diss(~edges))
+# 
+# summary.netlist <- summary(samp.netlist ~
+#                             Form(~edges) +
+#                             Diss(~edges))
+
+summary.fd.series <- summary(samp.series ~
+                        Form(~edges) +
+                        Diss(~edges))
+summary.fd.series
+
+summary.fd.nD <- summary(samp.dyn ~
+                        Form(~edges) +
+                        Diss(~edges),
+                      at=0:3)
+summary.fd.nD
+```
+
+### fit 
+
+Works for all data structures
+
+```{r,  message=F}
+fit.fd.list <- tergm(
+  samp.list ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.fd.netlist <- tergm(
+  samp.netlist ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.fd.series <- tergm(
+  samp.series ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE" #,  times = c(1:3)
+)
+
+fit.fd.nD <- tergm(
+  samp.dyn ~
+    Form(~edges) +
+    Diss(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+```
+
+### Compare fit output
+
+All give the same output.
+
+```{r,  message=F}
+cat("Coefs")
+rbind(list=coef(fit.fd.list), 
+      netlist = coef(fit.fd.netlist),
+      netseries = coef(fit.fd.series),
+      nD=coef(fit.fd.nD))
+
+cat("nw.stats")
+rbind(list=fit.fd.list$nw.stats, 
+      netlist = fit.fd.netlist$nw.stats,
+      netseries = fit.fd.series$nw.stats,
+      nD= fit.fd.nD$nw.stats)
+
+```
+
+## `Form + Persist` {.tabset .tabset-pills}
+
+### summary_formula 
+
+Works on NetSeries and nD (but not lists or netlists), and results are very different for these two, because they represent the network differently.
+
+```{r,  message=F}
+# summary.list <- summary(samp.list ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+# 
+# summary.netlist <- summary(samp.netlist ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+
+summary.fp.series <- summary(samp.series ~
+                        Form(~edges) +
+                        Persist(~edges))
+summary.fp.series
+
+summary.fp.nD <- summary(samp.dyn ~
+                        Form(~edges) +
+                        Persist(~edges),
+                      at=0:3)
+summary.fp.nD
+```
+
+### fit 
+
+Works for all data structures
+
+```{r,  message=F}
+fit.fp.list <- tergm(
+  samp.list ~
+    Form(~edges) +
+    Persist(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.fp.netlist <- tergm(
+  samp.netlist ~
+    Form(~edges) +
+    Persist(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.fp.series <- tergm(
+  samp.series ~
+    Form(~edges) +
+    Persist(~edges),
+  estimate = "CMLE" #,  times = c(1:3)
+)
+
+fit.fp.nD <- tergm(
+  samp.dyn ~
+    Form(~edges) +
+    Persist(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+```
+
+### Compare fit output
+
+All give the same output.
+
+```{r,  message=F}
+cat("Coefs")
+rbind(list=coef(fit.fp.list), 
+      netlist = coef(fit.fp.netlist),
+      netseries = coef(fit.fp.series),
+      nD=coef(fit.fp.nD))
+
+cat("nw.stats")
+rbind(list=fit.fp.list$nw.stats, 
+      netlist = fit.fp.netlist$nw.stats,
+      netseries = fit.fp.series$nw.stats,
+      nD= fit.fp.nD$nw.stats)
+
+```
+
+## `Cross + Change` {.tabset .tabset-pills}
+
+### summary_formula 
+
+Works on NetSeries and nD (but not lists or netlists), and results are very different for these two, because they represent the network differently.
+
+```{r,  message=F}
+# summary.list <- summary(samp.list ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+# 
+# summary.netlist <- summary(samp.netlist ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+
+summary.cc.series <- summary(samp.series ~
+                        Cross(~edges) +
+                        Change(~edges))
+summary.cc.series
+
+summary.cc.nD <- summary(samp.dyn ~
+                        Cross(~edges) +
+                        Change(~edges),
+                      at=0:3)
+summary.cc.nD
+```
+
+### fit 
+
+Works for all data structures
+
+```{r,  message=F}
+fit.cc.list <- tergm(
+  samp.list ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.cc.netlist <- tergm(
+  samp.netlist ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.cc.series <- tergm(
+  samp.series ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE" #,  times = c(1:3)
+)
+
+fit.cc.nD <- tergm(
+  samp.dyn ~
+    Cross(~edges) +
+    Change(~edges),
+  estimate = "CMLE",  times = c(1:3)
+)
+```
+
+### Compare fit output
+
+All give the same output.
+
+```{r,  message=F}
+cat("Coefs")
+rbind(list=coef(fit.cc.list), 
+      netlist = coef(fit.cc.netlist),
+      netseries = coef(fit.cc.series),
+      nD=coef(fit.cc.nD))
+
+cat("nw.stats")
+rbind(list=fit.cc.list$nw.stats, 
+      netlist = fit.cc.netlist$nw.stats,
+      netseries = fit.cc.series$nw.stats,
+      nD= fit.cc.nD$nw.stats)
+
+```
+
+## Bare terms (no operators) {.tabset .tabset-pills}
+
+### summary_formula 
+
+Works on NetSeries and nD (but not lists or netlists), and results are very different for these two, because they represent the network differently.
+
+```{r,  message=F}
+# summary.list <- summary(samp.list ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+# 
+# summary.netlist <- summary(samp.netlist ~
+#                             Form(~edges) +
+#                             Persist(~edges))
+
+summary.bare.series <- summary(samp.series ~ edges)
+summary.bare.series
+
+summary.bare.nD <- summary(samp.dyn ~ edges,
+                          at=0:3)
+summary.bare.nD
+```
+
+### fit 
+
+Works for all data structures
+
+```{r,  message=F}
+fit.bare.list <- tergm(
+  samp.list ~edges,
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.bare.netlist <- tergm(
+  samp.netlist ~edges,
+  estimate = "CMLE",  times = c(1:3)
+)
+
+fit.bare.series <- tergm(
+  samp.series ~ edges,
+  estimate = "CMLE" #,  times = c(1:3)
+)
+
+fit.bare.nD <- tergm(
+  samp.dyn ~ edges,
+  estimate = "CMLE",  times = c(1:3)
+)
+```
+
+### Compare fit output
+
+All give the same output.
+
+```{r,  message=F}
+cat("Coefs")
+rbind(list=coef(fit.bare.list), 
+      netlist = coef(fit.bare.netlist),
+      netseries = coef(fit.bare.series),
+      nD=coef(fit.bare.nD))
+
+cat("nw.stats")
+rbind(list=fit.bare.list$nw.stats, 
+      netlist = fit.bare.netlist$nw.stats,
+      netseries = fit.bare.series$nw.stats,
+      nD= fit.bare.nD$nw.stats)
+
+```
+
+# Summary
+
+**The simple descriptives:**
+
+```{r,  message=F}
+samp.stats
+
+test <- rbind(names(coef(fit.cc.nD)), round(coef(fit.cc.nD), 3))
+```
+____
+
+**The model stats for each model**
+
+model | names | nw.stats
+:---- | :--- | :---
+Form + Diss:  | `r names(fit.fd.nD$nw.stats)` | `r fit.fd.nD$nw.stats`  
+Form + Persist: | `r names(fit.fp.nD$nw.stats)` | `r fit.fp.nD$nw.stats`  
+Cross + Change: | `r names(fit.cc.nD$nw.stats)` | `r fit.cc.nD$nw.stats`  
+Bare, no operators:  | `r names(fit.bare.nD$nw.stats)` | `r fit.bare.nD$nw.stats`
+
+____
+
+**The model coefs for each model**
+
+model | names | coefs
+:---- | :--- | :---
+Form + Diss: | `r names(coef(fit.fd.nD))` | `r round(coef(fit.fd.nD), 3)`  
+Form + Persist: | `r names(coef(fit.fp.nD))` | `r round(coef(fit.fp.nD), 3)`  
+Cross + Change: | `r names(coef(fit.cc.nD))` | `r round(coef(fit.cc.nD), 3)`  
+Bare, no operators: | `r names(coef(fit.bare.nD))` | `r round(coef(fit.bare.nD), 3)`
+
+
+Note that:
+
+The `Form + Persist` coefs are: `r round(coef(fit.fp.nD), 3)`
+
+The `Cross + Change` coefs are:  `r round(coef(fit.cc.nD), 3)`
+
+By inspection and implication:
+
+
+* `Form = Cross + Change`:  -2.498 = -0.896 + (-1.602)
+
+`Form` operates on the union of $Y_t$ and $Y_{t+1}$.  `Cross` operates on $Y_{t+1}$, `Change` operates on the ties formed, and the ties dissolved (xor($Y_t, Y_{t+1}$)).  So taking the union of `Cross` with `Change` is  $Y_{t+1}$ plus the dissolved ties, the union of $Y_t$ and $Y_{t+1}$
+
+    * Cross = Form - Change
+
+* `Persist = Cross - Change`:  0.707 = -0.896 - (-1.602)
+
+Persist operates on the intersection
+ 
+
+And from Pavel:
+
+When there are 3 time points, both `Cross()` and bare terms will not "see" the first network. t1 network will only affect `Change(), Form(), and Diss()/Persist().`
+
+# Simulation {tabset}
+
+We'll just use the fit from the `NetSeries` object
+
+## Separable model
+```{r, message=F, warning=F}
+sep.sim <- simulate(fit.fd.series, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first",
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+target = summary(samp.series ~ edges)
+
+cbind(obs = target,
+      sim = colMeans(sep.sim$stats))
+
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges + mutual) + Diss(~edges + mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+# Add mutuals
+
+## Summary 
+
+```{r, message=F, warning=F}
+summary(samplk1 ~edges + mutual)
+summary(samp.series ~
+          Cross(~edges + mutual) +
+          Change(~edges + mutual) +
+          Form(~edges + mutual) +
+          Diss(~edges + mutual))
+
+```
+
+## Fit {.tabset}
+
+### Separable
+```{r, message=F, warning=F}
+sep.fit <- tergm(
+  samp.series ~
+    Form(~edges + mutual) +
+    Diss(~edges + mutual),
+  estimate = "CMLE"
+)
+
+summary(sep.fit)
+```
+
+### Joint
+```{r, message=F, warning=F}
+jnt.fit <- tergm(
+  samp.series ~
+    Cross(~edges + mutual) +
+    Change(~edges + mutual),
+  estimate = "CMLE"
+)
+
+summary(jnt.fit)
+```
+
+## Simulation {.tabset }
+
+### Separable
+
+```{r, message=F, warning=F}
+sep.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first", 
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+
+target = summary(samp.series ~ edges)
+
+cbind(obs = target,
+      sim = colMeans(sep.sim$stats))
+
+plot(as.numeric(sep.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Form(~edges + mutual) + Diss(~edges + mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+```{r, message=F, warning=F}
+cbind(obs = sep.fit$nw.stats,
+      sim = colMeans(sep.sim$stats.gen),
+      ratio = with(data.frame(obs = sep.fit$nw.stats,
+                              sim = colMeans(sep.sim$stats.gen)),
+                     obs/sim))
+
+plot(sep.sim$stats.gen)
+
+```
+
+
+
+### Joint
+
+```{r, message=F, warning=F}
+jnt.sim <- simulate(sep.fit, nsim = 1, 
+                    time.slices = 1000, 
+                    nw.start = "first", 
+                    monitor = ~edges,
+                    stats = T,
+                    output = "stats")
+```
+
+#### Monitor stats: edges
+```{r, message=F, warning=F}
+cbind(obs = summary(samp.series ~ edges),
+      sim = colMeans(jnt.sim$stats))
+
+target = summary(samp.series ~ edges)
+plot(as.numeric(jnt.sim$stats), type="l",
+     main = "Cross-sectional edgecount in simulated network timeseries",
+     sub = "Model: Cross(~edges + mutual) + Change(~edges + mutual)",
+     ylab="edges") 
+abline(h=target, col="red")
+
+```
+
+#### Model stats
+
+```{r eval=F}
+cbind(obs = jnt.fit$nw.stats,
+      sim = colMeans(jnt.sim$stats.gen),
+      ratio = with(data.frame(obs = jnt.fit$nw.stats,
+                              sim = colMeans(jnt.sim$stats.gen)),
+                     obs/sim))
+
+plot(jnt.sim$stats.gen)
+```
+
+

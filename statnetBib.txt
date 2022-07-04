@@ -1,0 +1,781 @@
+﻿@book{RN273,
+   author = {Airoldi, E.M. and Blei, D.M. and Fienberg, S.E. and Goldenberg, A. and Xing, E.P. and Zheng, A.X.},
+   title = {Statistical Network Analysis: Models, Issues, and New Directions: ICML 2006 Workshop on Statistical Network Analysis, Pittsburgh, PA, USA, June 29, 2006, Revised Selected Papers},
+   publisher = {Springer Berlin Heidelberg},
+   ISBN = {9783540731337},
+   url = {https://books.google.com/books?id=ks1sCQAAQBAJ},
+   year = {2008},
+   type = {Book}
+}
+
+@article{RN287,
+   author = {Almquist, Zack W. and Butts, Carter T.},
+   title = {Logistic Network Regression for Scalable Analysis of Networks with Joint Edge/Vertex Dynamics},
+   journal = {Sociological Methodology},
+   volume = {44},
+   number = {1},
+   pages = {273-321},
+   DOI = {doi:10.1177/0081175013520159},
+   url = {http://journals.sagepub.com/doi/abs/10.1177/0081175013520159},
+   year = {2014},
+   type = {Journal Article}
+}
+
+@article{RN308,
+   author = {Almquist, Z. W. and Butts, C. T.},
+   title = {DYNAMIC NETWORK ANALYSIS WITH MISSING DATA: THEORY AND METHODS},
+   journal = {Statistica Sinica},
+   volume = {28},
+   number = {3},
+   pages = {1245-1264},
+   ISSN = {1017-0405},
+   DOI = {10.5705/ss.202016.0108},
+   url = {<Go to ISI>://WOS:000450215100007},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN316,
+   author = {Armbruster, B. and Wang, L. and Morris, M.},
+   title = {Forward reachable sets: Analytically derived properties of connected components for dynamic networks},
+   journal = {Network Science},
+   volume = {5},
+   number = {3},
+   pages = {328-354},
+   ISSN = {2050-1242},
+   DOI = {10.1017/nws.2017.10},
+   url = {<Go to ISI>://WOS:000408564600005},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN299,
+   author = {Ben Gibson, C. and Sutton, J. and Vos, S. K. and Butts, C. T.},
+   title = {Practical Methods for Imputing Follower Count Dynamics},
+   journal = {Sociological Methods & Research},
+   pages = {26},
+   ISSN = {0049-1241},
+   DOI = {10.1177/0049124120926210},
+   url = {<Go to ISI>://WOS:000558559100001},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN201,
+   author = {Bender-deMoll, S.},
+   title = {Potential Human Rights Uses of Network Analysis and Mapping A report to the Science and Human Rights Program of the American Association for the Advancement of Science},
+   url = {http://shr01.aaas.org/networkmapping/Net_Mapping_Report.pdf},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN309,
+   author = {Boessen, A. and Hipp, J. R. and Butts, C. T. and Nagle, N. N. and Smith, E. J.},
+   title = {The built environment, spatial scale, and social networks: Do land uses matter for personal network structure?},
+   journal = {Environment and Planning B-Urban Analytics and City Science},
+   volume = {45},
+   number = {3},
+   pages = {400-416},
+   ISSN = {2399-8083},
+   DOI = {10.1177/2399808317690158},
+   url = {<Go to ISI>://WOS:000432060800002},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN288,
+   author = {Butts, Carter T.},
+   title = {A relational event framework for social action},
+   journal = {Sociological Methodology},
+   volume = {38},
+   number = {1},
+   pages = {155-200},
+   ISSN = {1467-9531},
+   DOI = {10.1111/j.1467-9531.2008.00203.x},
+   url = {http://dx.doi.org/10.1111/j.1467-9531.2008.00203.x},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN202,
+   author = {Butts, C. T.},
+   title = {Bayesian meta-analysis of social network data via conditional uniform graph quantiles},
+   journal = {Sociological Methodology},
+   url = {http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9531.2011.01240.x/full},
+   year = {2011},
+   type = {Journal Article}
+}
+
+@article{RN203,
+   author = {Butts, C. T.},
+   title = {Bernoulli Graph Bounds for General Random Graphs},
+   journal = {Sociological Methodology},
+   volume = {41},
+   number = {1},
+   pages = {299-345},
+   url = {http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9531.2011.01246.x/full},
+   year = {2011},
+   type = {Journal Article}
+}
+
+@article{RN310,
+   author = {Butts, C. T.},
+   title = {A perfect sampling method for exponential family random graph models},
+   journal = {Journal of Mathematical Sociology},
+   volume = {42},
+   number = {1},
+   pages = {17-36},
+   ISSN = {0022-250X},
+   DOI = {10.1080/0022250x.2017.1396985},
+   url = {<Go to ISI>://WOS:000431081800002},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN305,
+   author = {Butts, C. T.},
+   title = {A dynamic process interpretation of the sparse ERGM reference model},
+   journal = {Journal of Mathematical Sociology},
+   volume = {43},
+   number = {1},
+   pages = {40-57},
+   ISSN = {0022-250X},
+   DOI = {10.1080/0022250x.2018.1490737},
+   url = {<Go to ISI>://WOS:000453291100003},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{RN300,
+   author = {Butts, C. T.},
+   title = {A dynamic process reference model for sparse networks with reciprocity},
+   journal = {Journal of Mathematical Sociology},
+   pages = {27},
+   ISSN = {0022-250X},
+   DOI = {10.1080/0022250x.2020.1795652},
+   url = {<Go to ISI>://WOS:000552557400001},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{RN301,
+   author = {Butts, C. T.},
+   title = {Phase transitions in the edge/concurrent vertex model},
+   journal = {Journal of Mathematical Sociology},
+   pages = {13},
+   ISSN = {0022-250X},
+   DOI = {10.1080/0022250x.2020.1746298},
+   url = {<Go to ISI>://WOS:000558846500001},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN204,
+   author = {Caimo, A. and Friel, N.},
+   title = {Bayesian inference for exponential random graph models},
+   journal = {Social Networks},
+   volume = {33},
+   number = {1},
+   pages = {41-55},
+   url = {http://www.sciencedirect.com/science/article/pii/S0378873310000493},
+   year = {2011},
+   type = {Journal Article}
+}
+
+@article{RN270,
+   author = {Carnegie, N. B. and Krivitsky, P. N. and Hunter, D. R. and Goodreau, S. M.},
+   title = {An Approximation Method for Improving Dynamic Network Model Fitting},
+   journal = {Journal of Computational and Graphical Statistics},
+   volume = {24},
+   number = {2},
+   pages = {502-519},
+   ISSN = {1061-8600},
+   DOI = {10.1080/10618600.2014.903087},
+   url = {<Go to ISI>://WOS:000356365700010},
+   year = {2015},
+   type = {Journal Article}
+}
+
+@article{RN211,
+   author = {Emilie, M. and Hafner-Burton, M. K.},
+   title = {Network analysis for international relations},
+   journal = {International Organization},
+   volume = {63},
+   pages = {559-92},
+   url = {http://journals.cambridge.org/production/action/cjoGetFulltext?fulltextid=5916432},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN306,
+   author = {Fitzhugh, S. M. and Butts, C. T.},
+   title = {Patterns of co-membership: Techniques for identifying subgraph composition},
+   journal = {Social Networks},
+   volume = {55},
+   pages = {1-10},
+   ISSN = {0378-8733},
+   DOI = {10.1016/j.socnet.2018.03.006},
+   url = {<Go to ISI>://WOS:000444666300001},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN213,
+   author = {Gile, K. J. and Handcock, M. S.},
+   title = {Network model-assisted inference from respondent-driven sampling data},
+   journal = {J R Stat Soc Ser A },
+   volume = {178},
+   number = {3},
+   pages = {619-639},
+   DOI = {10.1111/rssa.12091},
+   url = {http://arxiv.org/abs/1108.0298},
+   year = {2015},
+   type = {Journal Article}
+}
+
+@article{RN216,
+   author = {Goodreau, S. M. and Handcock, M. S. and Hunter, D. R. and Butts, C. T. and Morris, M.},
+   title = {A statnet Tutorial},
+   journal = {Journal of Statistical Software},
+   volume = {24},
+   number = {9},
+   url = {https://www.jstatsoft.org/article/view/v024i09},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN303,
+   author = {Grazioli, G. and Yu, Y. and Unhelkar, M. H. and Martin, R. W. and Butts, C. T.},
+   title = {Algorithms for Parameterizing Network Hamiltonians for Simulations of Amyloid Fibril Self-assembly},
+   journal = {Biophysical Journal},
+   volume = {118},
+   number = {3},
+   pages = {306A-306A},
+   ISSN = {0006-3495},
+   url = {<Go to ISI>://WOS:000513023202034},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@unpublished{RN271,
+   author = {Handcock, Mark S.},
+   title = {Assessing Degeneracy in Statistical Models of Social Networks},
+   booktitle = {CSSS working papers},
+   publisher = {University of Washington},
+   address = {Seattle},
+   url = {https://csss.uw.edu/research/working-papers/assessing-degeneracy-statistical-models-social-networks},
+   year = {2003},
+   type = {Unpublished Work}
+}
+
+@article{RN281,
+   author = {Handcock, M. S. and Gile, K. J.},
+   title = {Modeling social networks from sampled data},
+   journal = {Annals of Applied Statistics},
+   volume = {4},
+   number = {1},
+   pages = {5-25},
+   ISSN = {1932-6157},
+   DOI = {10.1214/08-aoas221},
+   url = {<Go to ISI>://WOS:000283528300002},
+   year = {2010},
+   type = {Journal Article}
+}
+
+@article{RN282,
+   author = {Hummel, R. M. and Hunter, D. R. and Handcock, M. S.},
+   title = {Improving Simulation-Based Algorithms for Fitting ERGMs},
+   journal = {Journal of Computational and Graphical Statistics},
+   volume = {21},
+   number = {4},
+   pages = {920-939},
+   ISSN = {1061-8600},
+   DOI = {10.1080/10618600.2012.679224},
+   url = {<Go to ISI>://WOS:000313311100006},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{RN285,
+   author = {Hunter, David R.},
+   title = {Curved Exponential Family Models for Social Networks},
+   journal = {Social networks},
+   volume = {29},
+   number = {2},
+   pages = {216-230},
+   ISSN = {0378-8733},
+   DOI = {10.1016/j.socnet.2006.08.005},
+   url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2031865/},
+   year = {2007},
+   type = {Journal Article}
+}
+
+@article{RN289,
+   author = {Hunter, D. R. and Goodreau, S. M. and Handcock, M. S.},
+   title = {Goodness of fit of social network models},
+   journal = {Journal of the American Statistical Association},
+   volume = {103},
+   number = {481},
+   pages = {248-258},
+   ISSN = {0162-1459},
+   DOI = {10.1198/016214507000000446},
+   url = {<Go to ISI>://WOS:000254311500029},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN224,
+   author = {Hunter, D. R. and Goodreau, S. M. and Handcock, M. S.},
+   title = {ergm.userterms: A Template Package for Extending statnet},
+   journal = {Journal of Statistical Software},
+   volume = {52},
+   number = {2},
+   url = {https://www.jstatsoft.org/article/view/v052i02},
+   year = {2013},
+   type = {Journal Article}
+}
+
+@article{RN272,
+   author = {Hunter, David R. and Handcock, Mark S.},
+   title = {Inference in Curved Exponential Family Models for Networks},
+   journal = {Journal of Computational and Graphical Statistics},
+   volume = {15},
+   number = {3},
+   pages = {565-583},
+   ISSN = {1061-8600},
+   DOI = {10.1198/106186006X133069},
+   url = {http://dx.doi.org/10.1198/106186006X133069},
+   year = {2006},
+   type = {Journal Article}
+}
+
+@article{RN225,
+   author = {Hunter, D. R. and Handcock, M. S. and Butts, C. T. and Goodreau, S. M. and Morris, M.},
+   title = {ergm: A package to fit, simulate and diagnose exponential-family models for networks},
+   journal = {Journal of Statistical Software},
+   volume = {24},
+   number = {3},
+   pages = {nihpa54860-nihpa54860},
+   url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2743438/},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN276,
+   author = {Hunter, D. R. and Krivitsky, P. N. and Schweinberger, M.},
+   title = {Computational Statistical Methods for Social Network Models},
+   journal = {Journal of Computational and Graphical Statistics},
+   volume = {21},
+   number = {4},
+   pages = {856-882},
+   ISSN = {1061-8600},
+   DOI = {10.1080/10618600.2012.732921},
+   url = {<Go to ISI>://WOS:000313311100003},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{RN226,
+   author = {Illenberger, J. and FlÃ¶tterÃ¶d, G. and Nagel, K.},
+   title = {An approach to correct biases induced by snowball sampling},
+   url = {http://svn.vsp.tu-berlin.de/repos/public-svn/publications/vspwp/2008/08-16/snowball.pdf},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN314,
+   author = {Jenness, S. M. and Goodreau, S. M. and Morris, M.},
+   title = {EpiModel: An R Package for Mathematical Modeling of Infectious Disease over Networks},
+   journal = {Journal of Statistical Software},
+   volume = {84},
+   number = {8},
+   pages = {1-47},
+   ISSN = {1548-7660},
+   DOI = {10.18637/jss.v084.i08},
+   url = {<Go to ISI>://WOS:000430530400001},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN227,
+   author = {Jin, I. H. and Liang, F.},
+   title = {Bayesian analysis for exponential random graph models using the double Metropolis-Hastings sampler},
+   journal = {Unpublished working paper},
+   url = {http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.182.2922&rep=rep1&type=pdf},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN297,
+   author = {Jose, R. and Hipp, J. R. and Butts, C. T. and Wang, C. and Lakon, C. M.},
+   title = {A multi-contextual examination of non-school friendships and their impact on adolescent deviance and alcohol use},
+   journal = {Plos One},
+   volume = {16},
+   number = {2},
+   pages = {23},
+   ISSN = {1932-6203},
+   DOI = {10.1371/journal.pone.0245837},
+   url = {<Go to ISI>://WOS:000617737300001},
+   year = {2021},
+   type = {Journal Article}
+}
+
+@article{RN295,
+   author = {Karwa, V. and Krivitsky, P. N. and Slavkovic, A. B.},
+   title = {Sharing social network data: differentially private estimation of exponential family random-graph models},
+   journal = {Journal of the Royal Statistical Society Series C-Applied Statistics},
+   volume = {66},
+   number = {3},
+   pages = {481-500},
+   ISSN = {0035-9254},
+   DOI = {10.1111/rssc.12185},
+   url = {<Go to ISI>://WOS:000400593200003},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN269,
+   author = {Krivitsky, P. N.},
+   title = {Exponential-family random graph models for valued networks},
+   journal = {Electronic Journal of Statistics},
+   volume = {6},
+   pages = {1100-1128},
+   ISSN = {1935-7524},
+   DOI = {10.1214/12-ejs696},
+   url = {<Go to ISI>://WOS:000306918600001},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{RN279,
+   author = {Krivitsky, Pavel N.},
+   title = {Modeling of Dynamic Networks based on Egocentrically-Sampled Data},
+   journal = {JRSS-B},
+   volume = {submitted},
+   year = {2016},
+   type = {Journal Article}
+}
+
+@article{RN296,
+   author = {Krivitsky, P. N.},
+   title = {Using contrastive divergence to seed Monte Carlo MLE for exponential-family random graph models},
+   journal = {Computational Statistics & Data Analysis},
+   volume = {107},
+   pages = {149-161},
+   ISSN = {0167-9473},
+   DOI = {10.1016/j.csda.2016.10.015},
+   url = {<Go to ISI>://WOS:000391774200011},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN291,
+   author = {Krivitsky, Pavel N. and Butts, Carter T.},
+   title = {Exponential-family Random Graph Models for Rank-order Relational Data},
+   journal = {Sociological Methodology},
+   volume = {47},
+   number = {1},
+   pages = {68-112},
+   ISSN = {0081-1750},
+   DOI = {10.1177/0081175017692623},
+   url = {https://doi.org/10.1177/0081175017692623},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN278,
+   author = {Krivitsky, Pavel N. and Handcock, Mark S.},
+   title = {Fitting Position Latent Cluster Models for Social Networks with latentnet},
+   journal = { Journal of Statistical Software},
+   volume = {24},
+   number = {5},
+   pages = {1-23},
+   ISSN = {1548-7660
+},
+   url = {http://www.jstatsoft.org/v24/i05},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN231,
+   author = {Krivitsky, P. N. and Handcock, M. S.},
+   title = {A separable model for dynamic networks},
+   journal = {Journal of the Royal Statistical Society, Series B },
+   volume = {76},
+   number = {1},
+   pages = {29-46},
+   url = {http://arxiv.org/abs/1011.1937},
+   year = {2014},
+   type = {Journal Article}
+}
+
+@article{RN268,
+   author = {Krivitsky, Pavel N. and Handcock, Mark S. and Morris, Martina},
+   title = {Adjusting for Network Size and Composition Effects in Exponential-Family Random Graph Models},
+   journal = { Statistical Methodology},
+   volume = {8},
+   number = {4},
+   pages = {319–339},
+   year = {2011},
+   type = {Journal Article}
+}
+
+@article{RN277,
+   author = {Krivitsky, P. N. and Handcock, M. S. and Raftery, A. E. and Hoff, P. D.},
+   title = {Representing degree distributions, clustering, and homophily in social networks with latent cluster random effects models},
+   journal = {Social Networks},
+   volume = {31},
+   number = {3},
+   pages = {204-213},
+   ISSN = {0378-8733},
+   DOI = {10.1016/j.socnet.2009.04.001},
+   url = {<Go to ISI>://WOS:000267838900004},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN293,
+   author = {Krivitsky, P. N. and Koehly, L. M. and Marcum, C. S.},
+   title = {Exponential-Family Random Graph Models for Multi-Layer Networks},
+   journal = {Psychometrika},
+   volume = {85},
+   number = {3},
+   pages = {630-659},
+   ISSN = {0033-3123},
+   DOI = {10.1007/s11336-020-09720-7},
+   url = {<Go to ISI>://WOS:000575698700001},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN274,
+   author = {Krivitsky, P. N. and Kolaczyk, E. D.},
+   title = {On the Question of Effective Sample Size in Network Modeling: An Asymptotic Inquiry},
+   journal = {Statistical Science},
+   volume = {30},
+   number = {2},
+   pages = {184-198},
+   ISSN = {0883-4237},
+   DOI = {10.1214/14-sts502},
+   url = {<Go to ISI>://WOS:000356644100007},
+   year = {2015},
+   type = {Journal Article}
+}
+
+@article{RN286,
+   author = {Krivitsky, P. N. and Morris, M.},
+   title = {Inference for social network models from egocentrically sampled data, with application to understanding persistent racial disparities in HIV prevalence in the US},
+   journal = {Annals of Applied Statistics},
+   volume = {11},
+   number = {1},
+   pages = {427-455},
+   ISSN = {1932-6157},
+   DOI = {10.1214/16-aoas1010},
+   url = {<Go to ISI>://WOS:000398965400019},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN294,
+   author = {Mazur, L. and Suesse, T. and Krivitsky, P. N.},
+   title = {Investigating foreign portfolio investment holdings: Gravity model with social network analysis},
+   journal = {International Journal of Finance & Economics},
+   pages = {17},
+   ISSN = {1076-9307},
+   DOI = {10.1002/ijfe.2168},
+   url = {<Go to ISI>://WOS:000567065800001},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN315,
+   author = {Moody, J. and Adams, J. and Morris, M.},
+   title = {Epidemic potential by sexual activity distributions},
+   journal = {Network Science},
+   volume = {5},
+   number = {4},
+   pages = {461-475},
+   ISSN = {2050-1242},
+   DOI = {10.1017/nws.2017.3},
+   url = {<Go to ISI>://WOS:000416732200003},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN283,
+   author = {Morris, Martina and Handcock, Mark S. and Hunter, David R.},
+   title = {Specification of Exponential-Family Random Graph Models: Terms and Computational Aspects},
+   journal = {Journal of Statistical Software},
+   volume = {24},
+   number = {4},
+   pages = {24},
+   ISSN = {1548-7660},
+   DOI = {10.18637/jss.v024.i04},
+   url = {https://www.jstatsoft.org/index.php/jss/article/view/v024i04},
+   year = {2008},
+   type = {Journal Article}
+}
+
+@article{RN240,
+   author = {Morris, M. and Kurth, A. E. and Hamilton, D. T. and Moody, J. and Wakefield, S.},
+   title = {Concurrent partnerships and HIV prevalence disparities by race: linking science and public health practice},
+   journal = {American Journal of Public Health},
+   volume = {99},
+   number = {6},
+   pages = {1023-1023},
+   url = {http://ajph.aphapublications.org/cgi/content/abstract/99/6/1023},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN304,
+   author = {Olson, M. K. and Sutton, J. and Vos, S. C. and Prestley, R. and Renshaw, S. L. and Butts, C. T.},
+   title = {Build community before the storm: The National Weather Service's social media engagement},
+   journal = {Journal of Contingencies and Crisis Management},
+   volume = {27},
+   number = {4},
+   pages = {359-373},
+   ISSN = {0966-0879},
+   DOI = {10.1111/1468-5973.12267},
+   url = {<Go to ISI>://WOS:000494691200007},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{RN292,
+   author = {Schweinberger, M. and Krivitsky, P. N. and Butts, C. T. and Stewart, J. R.},
+   title = {Exponential-Family Models of Random Graphs: Inference in Finite, Super and Infinite Population Scenarios},
+   journal = {Statistical Science},
+   volume = {35},
+   number = {4},
+   pages = {627-662},
+   ISSN = {0883-4237},
+   DOI = {10.1214/19-sts743},
+   url = {<Go to ISI>://WOS:000591728200003},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN298,
+   author = {Schweinberger, M. and Krivitsky, P. N. and Butts, C. T. and Stewart, J. R.},
+   title = {Exponential-Family Models of Random Graphs: Inference in Finite, Super and Infinite Population Scenarios},
+   journal = {Statistical Science},
+   volume = {35},
+   number = {4},
+   pages = {627-662},
+   ISSN = {0883-4237},
+   DOI = {10.1214/19-sts743},
+   url = {<Go to ISI>://WOS:000591728200003},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN256,
+   author = {Snijders, T. A. B.},
+   title = {Specification and estimation of exponential random graph models for social (and other) networks},
+   url = {http://www.stats.ox.ac.uk/~snijders/p12_ergm.pdf},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN313,
+   author = {Stewart, J. and Schweinberger, M. and Bojanowski, M. and Morris, M.},
+   title = {Multilevel network data facilitate statistical inference for curved ERGMs with geometrically weighted terms},
+   journal = {Social Networks},
+   volume = {59},
+   pages = {98-119},
+   ISSN = {0378-8733},
+   DOI = {10.1016/j.socnet.2018.11.003},
+   url = {<Go to ISI>://WOS:000487171000009},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{RN260,
+   author = {Tomas, A. and Gile, K. J.},
+   title = {The effect of differential recruitment, non-response and non-recruitment on estimators for respondent-driven sampling},
+   journal = {Electronic Journal of Statistics},
+   volume = {5},
+   pages = {899-934},
+   url = {http://projecteuclid.org/euclid.ejs/1314018119},
+   year = {2011},
+   type = {Journal Article}
+}
+
+@article{RN261,
+   author = {van Duijn, M. A. J. and Gile, K. J. and Handcock, M. S.},
+   title = {A framework for the comparison of maximum pseudo-likelihood and maximum likelihood estimation of exponential family random graph models},
+   journal = {Social Networks},
+   volume = {31},
+   number = {1},
+   pages = {52-62},
+   url = {http://www.sciencedirect.com/science/article/pii/S0378873308000543},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN302,
+   author = {Wang, C. and Butts, C. T. and Hipp, J. and Lakon, C. M.},
+   title = {Model Adequacy Checking/Goodness-of-fit Testing for Behavior in Joint Dynamic Network/Behavior Models, with an Extension to Two-mode Networks},
+   journal = {Sociological Methods & Research},
+   pages = {34},
+   ISSN = {0049-1241},
+   DOI = {10.1177/0049124120914933},
+   url = {<Go to ISI>://WOS:000527785800001},
+   year = {2020},
+   type = {Journal Article}
+}
+
+@article{RN311,
+   author = {Wang, C. and Hipp, J. R. and Butts, C. T. and Jose, R. and Lakon, C. M.},
+   title = {Peer Influence, Peer Selection and Adolescent Alcohol Use: a Simulation Study Using a Dynamic Network Model of Friendship Ties and Alcohol Use},
+   journal = {Prevention Science},
+   volume = {18},
+   number = {4},
+   pages = {382-393},
+   ISSN = {1389-4986},
+   DOI = {10.1007/s11121-017-0773-5},
+   url = {<Go to ISI>://WOS:000400083600002},
+   year = {2017},
+   type = {Journal Article}
+}
+
+@article{RN307,
+   author = {Wang, C. and Hipp, J. R. and Butts, C. T. and Lakon, C. M.},
+   title = {The interdependence of cigarette, alcohol, and marijuana use in the context of school-based social networks},
+   journal = {Plos One},
+   volume = {13},
+   number = {7},
+   pages = {22},
+   ISSN = {1932-6203},
+   DOI = {10.1371/journal.pone.0200904},
+   url = {<Go to ISI>://WOS:000439396900024},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{RN263,
+   author = {Wang, P. and Sharpe, K. and Robins, G. L. and Pattison, P. E.},
+   title = {Exponential random graph (p*) models for affiliation networks},
+   journal = {Social Networks},
+   volume = {31},
+   number = {1},
+   pages = {12-25},
+   url = {http://www.sciencedirect.com/science/article/pii/S0378873308000403},
+   year = {2009},
+   type = {Journal Article}
+}
+
+@article{RN312,
+   author = {Weiss, K. M. and Goodreau, S. M. and Morris, M. and Prasad, P. and Ramaraju, R. and Sanchez, T. and Jenness, S. M.},
+   title = {Egocentric sexual networks of men who have sex with men in the United States: Results from the ARTnet study},
+   journal = {Epidemics},
+   volume = {30},
+   pages = {10},
+   ISSN = {1755-4365},
+   DOI = {10.1016/j.epidem.2020.100386},
+   url = {<Go to ISI>://WOS:000522664200004},
+   year = {2020},
+   type = {Journal Article}
+}
+
