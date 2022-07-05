@@ -42,8 +42,8 @@ using `statnet` software.  This online tutorial is also designed
 for self-study, with example code and self-contained data.
 The `statnet` packages we will be demonstrating are:
 
-* `network` -- storage and manipulation of network data
-* `ergm` -- statistical tools for estimating ERGMs, model assessment, and network simulation.
+* `network` --- storage and manipulation of network data
+* `ergm` --- statistical tools for estimating ERGMs, model assessment, and network simulation.
 
 The `ergm` package has more advanced functionality that is not covered
 in this workshop.  An overview can be found in [this preprint](http://arxiv.org/abs/2106.04997).
@@ -428,8 +428,8 @@ legend('bottomleft',fill=7:12,
 
 ```{r mesa-ergm}
 fauxmodel.01 <- ergm(mesa ~edges + 
-                       nodefactor('Grade') + nodematch('Grade',diff=T) +
-                       nodefactor('Race') + nodematch('Race',diff=T))
+        nodefactor('Grade') + nodematch('Grade',diff=T) +
+        nodefactor('Race') + nodematch('Race',diff=T))
 summary(fauxmodel.01)
 ```
 
@@ -669,7 +669,7 @@ rbind("obs"=summary(flomarriage~edges+nodecov("wealth")),
 ```
 By default, our `network.list` object contains all ten of the networks
 we simulated.  If it were important to save memory, we could have asked that
-only the network statistics be stored by passing the `statsonly=TRUE` option to the
+only the network statistics be stored by passing the `output="stats"` option to the
 earlier `simulate` command; see `?simulate.ergm` for more details.  Let's take
 a look at the seventh network in our list of ten:
 ```{r flomarriage-simulate3}
@@ -688,7 +688,7 @@ examining the range of variation that can be expected from this model, both in t
 
 Next, we will examine a primary use of simulation in the `ergm` package:  we simulate networks from a fitted model to evaluate goodness of fit to the observed network.
 
-## 6. Examining the quality of model fit -- GOF
+## 6. Examining the quality of model fit --- GOF
 ERGMs can be seen as generative models when they represent
 the process that governs the global patterns of tie prevalence 
 from a local perspective, i.e., the perspective of the nodes involved in the particular micro-configurations represented by the ergm-terms in the model.
@@ -961,23 +961,32 @@ There are now a number of excellent packages developed by others that extend the
 look at the "reverse depends" of the `ergm` package on 
 [CRAN](https://cran.org/packages).  Examples include:
 
-* `Bergm` -- Bayesian Exponential Random Graph Models
-* `btergm` -- Temporal Exponential Random Graph Models by Bootstrapped Pseudolikelihood
-* `hergm` -- hierarchical ERGMs for multi-level network data
-* `xergm` -- extensions to ERGM modeling
+* `Bergm` --- Bayesian Exponential Random Graph Models
+* `btergm` --- Temporal Exponential Random Graph Models by Bootstrapped Pseudolikelihood
+* `hergm` --- hierarchical ERGMs for multi-level network data
+* `xergm` --- extensions to ERGM modeling
 
 ### Statnet Commons: The development group
 
 Mark S. Handcock `<handcock@stat.ucla.edu>`
+
 David R. Hunter `<dhunter@stat.psu.edu>`
+
 Carter T. Butts `<buttsc@uci.edu>`
+
 Steven M. Goodreau `<goodreau@u.washington.edu>`
+
 Skye Bender-deMoll `<skyebend@skyeome.net>`
+
 Martina Morris `<morrism@u.washington.edu>`
+
 Pavel N. Krivitsky `<p.krivitsky@unsw.edu.au>`
+
 Samuel M. Jenness `<samuel.m.jenness@emory.edu>`
-Michal Bojanowski `<mbojanowski@kozminski.edu.pl>`
+
 Chad Klumb `<cklumb@gmail.com>`
+
+Michal Bojanowski `<mbojanowski@kozminski.edu.pl>`
 
 ## Appendix A: Clarifying the terms "ergm" and "network"
 You will see the terms ergm and network used in multiple contexts
