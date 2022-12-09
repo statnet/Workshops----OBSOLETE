@@ -1,5 +1,7 @@
-# Workshops
-Source materials for Statnet Workshops
+# Workshops (now Obsolete)
+This repository holds source materials for Statnet Workshops prior to 2022.
+
+Current Statnet workshops are now each held in a separate repository, with a name like `workshop-ergm`.  You can find the complete list of workshop repositories by filtering from the [main organization page](https://github.com/statnet) for `workshop`.
 
 Please see [statnet.github.io](https://github.com/statnet/Workshops/wiki) for our online training materials and software installation instructions.
 
