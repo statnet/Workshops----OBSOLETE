@@ -1,7 +1,13 @@
 # Workshops (now Obsolete)
 This repository holds source materials for Statnet Workshops prior to 2022.
 
-Current Statnet workshops are now each held in a separate repository, with a name like `workshop-ergm`.  You can find the complete list of workshop repositories by filtering from the [main organization page](https://github.com/statnet) for `workshop`.
+Current Statnet workshops are now held in a separate repositories, with a name like `workshop-ergm`.  There are two ways to access the public materials from these repositories:
+
+* For a list of all workshops and links to their public materials, please see the [workshops page](https://statnet.org/workshops/) on the Statnet website.
+
+* If you know which specific workshop you are looking for, you can navigate directly to that workshop with a url like [https://statnet.org/workshop-ergm/](https://statnet.org/workshop-ergm) (this example is for the ergm workshop).
+
+Members of the statnet development team can find the complete list of workshop repositories by filtering from the [main organization page](https://github.com/statnet) for `workshop`.
 
 We are leaving this respository online for the convenience of users who have links to it.
 
