@@ -5,7 +5,7 @@ Current Statnet workshops are now held in a separate repositories, with a name l
 
 * For a list of all workshops and links to their public materials, please see the [workshops page](https://statnet.org/workshops/) on the Statnet website.
 
-* If you know which specific workshop you are looking for, you can navigate directly to that workshop with a url like [https://statnet.org/workshop-ergm/](https://statnet.org/workshop-ergm) (this example is for the ergm workshop).
+* If you know which specific workshop you are looking for, you can navigate directly to that workshop with a url like [https://statnet.org/workshop-ergm](https://statnet.org/workshop-ergm) (this example is for the ergm workshop).
 
 Members of the statnet development team can find the complete list of workshop repositories by filtering from the [main organization page](https://github.com/statnet) for `workshop`.
 
